@@ -1,8 +1,8 @@
 package com.example.realworld.domain.service.impl;
 
-import com.example.realworld.domain.entity.User;
+import com.example.realworld.domain.entity.persistent.User;
+import com.example.realworld.domain.repository.UserRepository;
 import com.example.realworld.domain.service.UsersService;
-import com.example.realworld.repository.UserRepository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 

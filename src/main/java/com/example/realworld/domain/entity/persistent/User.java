@@ -1,4 +1,4 @@
-package com.example.realworld.domain.entity;
+package com.example.realworld.domain.entity.persistent;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;

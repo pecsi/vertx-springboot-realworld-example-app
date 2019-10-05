@@ -1,7 +1,7 @@
-package com.example.realworld.repository.impl;
+package com.example.realworld.domain.repository.impl;
 
-import com.example.realworld.domain.entity.User;
-import com.example.realworld.repository.UserRepository;
+import com.example.realworld.domain.entity.persistent.User;
+import com.example.realworld.domain.repository.UserRepository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;

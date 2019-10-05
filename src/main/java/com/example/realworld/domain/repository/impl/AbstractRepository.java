@@ -1,4 +1,4 @@
-package com.example.realworld.repository.impl;
+package com.example.realworld.domain.repository.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;

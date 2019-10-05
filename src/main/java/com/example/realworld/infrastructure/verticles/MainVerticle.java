@@ -1,9 +1,13 @@
 package com.example.realworld.infrastructure.verticles;
 
+import com.example.realworld.domain.repository.UserRepository;
+import com.example.realworld.domain.repository.impl.UserRepositoryImpl;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.domain.service.impl.UsersServiceImpl;
-import com.example.realworld.repository.UserRepository;
-import com.example.realworld.repository.impl.UserRepositoryImpl;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -15,6 +19,9 @@ import io.vertx.ext.sql.SQLConnection;
 import io.vertx.serviceproxy.ServiceBinder;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +56,10 @@ public class MainVerticle extends AbstractVerticle {
                           DeploymentOptions deploymentOptions =
                               new DeploymentOptions().setConfig(config);
                           deployVerticle(
-                                  new UsersAPIVerticle(getProxy(UsersService.class)),
+                                  new UsersAPIVerticle(
+                                      getProxy(UsersService.class),
+                                      wrapUnwrapRootValueObjectMapper(),
+                                      validator()),
                                   deploymentOptions)
                               .setHandler(
                                   deployVerticleAsyncResult -> {
@@ -179,5 +189,24 @@ public class MainVerticle extends AbstractVerticle {
                     }
                   });
         });
+  }
+
+  private Validator validator() {
+    ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+    return validatorFactory.getValidator();
+  }
+
+  private ObjectMapper wrapUnwrapRootValueObjectMapper() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+    objectMapper.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
+    objectMapper.registerModule(new JavaTimeModule());
+    return objectMapper;
+  }
+
+  private ObjectMapper defaultObjectMapper() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+    return objectMapper;
   }
 }

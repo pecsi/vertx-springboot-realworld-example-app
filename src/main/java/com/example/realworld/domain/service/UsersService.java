@@ -1,6 +1,6 @@
 package com.example.realworld.domain.service;
 
-import com.example.realworld.domain.entity.User;
+import com.example.realworld.domain.entity.persistent.User;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
