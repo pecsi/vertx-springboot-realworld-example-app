@@ -15,5 +15,15 @@ public class UsersAPIVerticle extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     startPromise.complete();
+
+    usersService.create(
+        "user1",
+        "user1@mail.com",
+        "user123",
+        createUserAR -> {
+          if (createUserAR.succeeded()) {
+            createUserAR.result();
+          }
+        });
   }
 }

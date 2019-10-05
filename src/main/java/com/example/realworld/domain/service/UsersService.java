@@ -1,28 +1,19 @@
 package com.example.realworld.domain.service;
 
-import com.example.realworld.domain.service.impl.UsersServiceImpl;
+import com.example.realworld.domain.entity.User;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
-import io.vertx.core.Vertx;
-import io.vertx.serviceproxy.ServiceProxyBuilder;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 
 @ProxyGen
 @VertxGen
 public interface UsersService {
 
-  String SERVICE_ADDRESS = "users-event-bus-service";
-  String SERVICE_NAME = "service.users";
+  String SERVICE_ADDRESS = "users-service-event-bus";
 
-  static UsersService create(Vertx vertx) {
-    return new UsersServiceImpl(vertx);
-  }
+  void create(String username, String email, String password, Handler<AsyncResult<User>> handler);
 
-  static UsersService createProxy(Vertx vertx, String address) {
-    return new ServiceProxyBuilder(vertx).setAddress(address).build(UsersService.class);
-  }
-
-  //  User create(String username, String email, String password);
-  //
   //  User login(String email, String password);
   //
   //  User findById(Long id);
