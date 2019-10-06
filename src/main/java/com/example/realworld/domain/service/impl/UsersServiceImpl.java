@@ -5,13 +5,17 @@ import com.example.realworld.domain.repository.UserRepository;
 import com.example.realworld.domain.service.UsersService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.jwt.JWTAuth;
 
 public class UsersServiceImpl implements UsersService {
 
   private UserRepository userRepository;
+  private JWTAuth jwtProvider;
 
-  public UsersServiceImpl(UserRepository userRepository) {
+  public UsersServiceImpl(UserRepository userRepository, JWTAuth jwtProvider) {
     this.userRepository = userRepository;
+    this.jwtProvider = jwtProvider;
   }
 
   @Override
@@ -23,6 +27,32 @@ public class UsersServiceImpl implements UsersService {
     user.setEmail(email);
     user.setPassword(password);
 
-    userRepository.create(user, handler);
+    userRepository.create(
+        user,
+        createUserAsyncResult -> {
+          if (createUserAsyncResult.succeeded()) {
+
+            User resultUser = createUserAsyncResult.result();
+
+            resultUser.setToken(
+                jwtProvider.generateToken(new JsonObject().put("sub", resultUser.getId())));
+
+            userRepository.update(
+                resultUser,
+                updateUserAsyncResult -> {
+                  if (updateUserAsyncResult.succeeded()) {
+
+                    userRepository.find(resultUser.getId(), handler);
+
+                  } else {
+                    handler.handle(updateUserAsyncResult);
+                  }
+                });
+
+          } else {
+
+            handler.handle(createUserAsyncResult);
+          }
+        });
   }
 }

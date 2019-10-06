@@ -4,15 +4,15 @@ import com.example.realworld.domain.repository.UserRepository;
 import com.example.realworld.domain.repository.impl.UserRepositoryImpl;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.domain.service.impl.UsersServiceImpl;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.example.realworld.infrastructure.Constants;
+import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
+import com.example.realworld.infrastructure.web.config.ObjectMapperConfig;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.*;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
@@ -42,38 +42,58 @@ public class MainVerticle extends AbstractVerticle {
     getConfig()
         .setHandler(
             configAR -> {
-              JsonObject config = configAR.result();
+              if (configAR.succeeded()) {
 
-              SQLClient sqlClient =
-                  JDBCClient.createShared(vertx, config.getJsonObject("database_config"));
+                JsonObject config = configAR.result();
 
-              createApplicationSchema(sqlClient, config)
-                  .setHandler(
-                      createApplicationSchemaAR -> {
-                        if (createApplicationSchemaAR.succeeded()) {
-                          registerServices(sqlClient);
+                SQLClient sqlClient =
+                    JDBCClient.createShared(
+                        vertx, config.getJsonObject(Constants.DATA_BASE_CONFIG_KEY));
 
-                          DeploymentOptions deploymentOptions =
-                              new DeploymentOptions().setConfig(config);
-                          deployVerticle(
-                                  new UsersAPIVerticle(
-                                      getProxy(UsersService.class),
-                                      wrapUnwrapRootValueObjectMapper(),
-                                      validator()),
-                                  deploymentOptions)
-                              .setHandler(
-                                  deployVerticleAsyncResult -> {
-                                    if (deployVerticleAsyncResult.succeeded()) {
-                                      startPromise.complete();
-                                    } else {
-                                      startPromise.fail(deployVerticleAsyncResult.cause());
-                                    }
-                                  });
-                        } else {
-                          startPromise.fail(createApplicationSchemaAR.cause());
-                        }
-                      });
+                createApplicationSchema(sqlClient, config)
+                    .setHandler(
+                        createApplicationSchemaAR -> {
+                          if (createApplicationSchemaAR.succeeded()) {
+
+                            JWTAuth jwtProvider = getJwtAuth(config);
+
+                            registerServices(sqlClient, jwtProvider);
+
+                            DeploymentOptions deploymentOptions =
+                                new DeploymentOptions().setConfig(config);
+                            deployVerticle(
+                                    new UsersAPIVerticle(
+                                        getProxy(UsersService.class),
+                                        ObjectMapperConfig.wrapUnwrapRootValueObjectMapper(),
+                                        validator()),
+                                    deploymentOptions)
+                                .setHandler(
+                                    deployVerticleAsyncResult -> {
+                                      if (deployVerticleAsyncResult.succeeded()) {
+                                        startPromise.complete();
+                                      } else {
+                                        startPromise.fail(deployVerticleAsyncResult.cause());
+                                      }
+                                    });
+                          } else {
+                            startPromise.fail(createApplicationSchemaAR.cause());
+                          }
+                        });
+
+              } else {
+
+                startPromise.fail(configAR.cause());
+              }
             });
+  }
+
+  private JWTAuth getJwtAuth(JsonObject config) {
+    JsonObject jwtConfig = config.getJsonObject(Constants.JWT_CONFIG_KEY);
+
+    return AuthProviderConfig.jwtProvider(
+        vertx,
+        jwtConfig.getString(Constants.JWT_CONFIG_ALGORITHM_KEY),
+        jwtConfig.getString(Constants.JWT_CONFIG_SECRET_KEY));
   }
 
   private Future<Void> createApplicationSchema(SQLClient sqlClient, JsonObject config) {
@@ -126,7 +146,7 @@ public class MainVerticle extends AbstractVerticle {
     return schema.replaceAll("\n", "");
   }
 
-  private void registerServices(SQLClient sqlClient) {
+  private void registerServices(SQLClient sqlClient, JWTAuth jwtProvider) {
 
     UserRepository userRepositoryProxy =
         register(
@@ -137,7 +157,7 @@ public class MainVerticle extends AbstractVerticle {
     register(
         UsersService.class,
         UsersService.SERVICE_ADDRESS,
-        new UsersServiceImpl(userRepositoryProxy));
+        new UsersServiceImpl(userRepositoryProxy, jwtProvider));
   }
 
   private <T> T register(Class<T> clazz, String address, T instance) {
@@ -194,19 +214,5 @@ public class MainVerticle extends AbstractVerticle {
   private Validator validator() {
     ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
     return validatorFactory.getValidator();
-  }
-
-  private ObjectMapper wrapUnwrapRootValueObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
-    objectMapper.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
-    objectMapper.registerModule(new JavaTimeModule());
-    return objectMapper;
-  }
-
-  private ObjectMapper defaultObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.registerModule(new JavaTimeModule());
-    return objectMapper;
   }
 }

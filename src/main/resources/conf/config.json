@@ -1,5 +1,10 @@
 {
   "server_port": 8080,
+  "context_path": "/api",
+  "jwt_config": {
+    "algorithm": "HS256",
+    "secret": "secret"
+  },
   "database_schema_file": "db/ddl.sql",
   "database_config": {
     "url": "jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1",

@@ -4,8 +4,10 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
+import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
+import io.vertx.ext.sql.UpdateResult;
 import io.vertx.serviceproxy.ServiceException;
 
 public class AbstractRepository {
@@ -18,8 +20,7 @@ public class AbstractRepository {
     this.sqlClient = sqlClient;
   }
 
-  protected void updateWithParams(
-      String sql, JsonArray params, Handler<AsyncResult<Long>> handler) {
+  protected void create(String sql, JsonArray params, Handler<AsyncResult<Long>> handler) {
     createConnection(
         createConnectionAsyncResult -> {
           if (createConnectionAsyncResult.succeeded()) {
@@ -41,15 +42,37 @@ public class AbstractRepository {
         });
   }
 
+  protected void update(String sql, JsonArray params, Handler<AsyncResult<UpdateResult>> handler) {
+    createConnection(
+        createConnectionAsyncResult -> {
+          if (createConnectionAsyncResult.succeeded()) {
+            SQLConnection sqlConnection = createConnectionAsyncResult.result();
+            sqlConnection.updateWithParams(
+                sql,
+                params,
+                updateStatementAsyncResult -> {
+                  if (updateStatementAsyncResult.succeeded()) {
+                    UpdateResult updateResult = updateStatementAsyncResult.result();
+                    handler.handle(Future.succeededFuture(updateResult));
+                  } else {
+                    handler.handle(updateStatementAsyncResult);
+                  }
+                });
+          }
+        });
+  }
+
+  protected void find(String sql, JsonArray params, Handler<AsyncResult<ResultSet>> handler) {
+    this.sqlClient.queryWithParams(sql, params, handler);
+  }
+
   private void createConnection(Handler<AsyncResult<SQLConnection>> handler) {
     this.sqlClient.getConnection(
         sqlConnectionAsyncResult -> {
           if (sqlConnectionAsyncResult.succeeded()) {
             handler.handle(Future.succeededFuture(sqlConnectionAsyncResult.result()));
           } else {
-            handler.handle(
-                ServiceException.fail(
-                    CONNECTION_FAILURE_CODE, sqlConnectionAsyncResult.cause().getMessage()));
+            handler.handle(sqlConnectionAsyncResult);
           }
         });
   }

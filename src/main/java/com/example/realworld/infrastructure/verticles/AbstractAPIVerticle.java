@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.verticles;
 
 import com.example.realworld.infrastructure.Constants;
+import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AbstractVerticle;
@@ -8,6 +9,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 import javax.validation.ConstraintViolation;
@@ -60,5 +63,34 @@ public class AbstractAPIVerticle extends AbstractVerticle {
     } catch (JsonProcessingException e) {
       routingContext.fail(e);
     }
+  }
+
+  protected Router subRouter(Router router) {
+    final Router baseRouter = Router.router(vertx);
+    configApiErrorHandler(baseRouter);
+    String contextPath = config().getString("context_path");
+    return baseRouter.mountSubRouter(contextPath, router);
+  }
+
+  private void configApiErrorHandler(Router baseRouter) {
+    baseRouter
+        .route()
+        .failureHandler(
+            failureRoutingContext -> {
+              HttpServerResponse response = failureRoutingContext.response();
+              response.end(
+                  writeValueAsString(
+                      new ErrorResponse(failureRoutingContext.failure().getMessage())));
+            });
+  }
+
+  protected String writeValueAsString(Object value) {
+    String result;
+    try {
+      result = objectMapper.writeValueAsString(value);
+    } catch (JsonProcessingException ex) {
+      throw new RuntimeException(ex);
+    }
+    return result;
   }
 }

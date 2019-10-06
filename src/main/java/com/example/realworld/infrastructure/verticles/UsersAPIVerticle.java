@@ -33,13 +33,14 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
 
-    final Router router = Router.router(vertx);
-    router.route().handler(BodyHandler.create());
+    final Router usersRouter = Router.router(vertx);
 
-    router.post().handler(this::create);
+    usersRouter.route().handler(BodyHandler.create());
+
+    usersRouter.post().handler(this::create);
 
     createHttpServer(
-        router,
+        subRouter(usersRouter),
         httpServerAsyncResult -> {
           if (httpServerAsyncResult.succeeded()) {
             logger.info(

@@ -12,4 +12,8 @@ public interface UserRepository {
   String SERVICE_ADDRESS = "user-repository-event-bus";
 
   void create(User user, Handler<AsyncResult<User>> handler);
+
+  void update(User user, Handler<AsyncResult<User>> handler);
+
+  void find(Long id, Handler<AsyncResult<User>> handler);
 }
