@@ -1,21 +1,24 @@
 package com.example.realworld.infrastructure.verticles;
 
-import com.example.realworld.domain.repository.UserRepository;
-import com.example.realworld.domain.repository.impl.UserRepositoryImpl;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.domain.service.impl.UsersServiceImpl;
+import com.example.realworld.domain.statement.UserStatements;
+import com.example.realworld.domain.statement.impl.UserStatementsImpl;
 import com.example.realworld.infrastructure.Constants;
 import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
 import com.example.realworld.infrastructure.web.config.ObjectMapperConfig;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.*;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.jwt.JWTAuth;
-import io.vertx.ext.jdbc.JDBCClient;
-import io.vertx.ext.sql.SQLClient;
-import io.vertx.ext.sql.SQLConnection;
+import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
+import io.vertx.reactivex.ext.jdbc.JDBCClient;
+import io.vertx.reactivex.ext.sql.SQLConnection;
 import io.vertx.serviceproxy.ServiceBinder;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 
@@ -46,7 +49,7 @@ public class MainVerticle extends AbstractVerticle {
 
                 JsonObject config = configAR.result();
 
-                SQLClient sqlClient =
+                JDBCClient sqlClient =
                     JDBCClient.createShared(
                         vertx, config.getJsonObject(Constants.DATA_BASE_CONFIG_KEY));
 
@@ -96,13 +99,13 @@ public class MainVerticle extends AbstractVerticle {
         jwtConfig.getString(Constants.JWT_CONFIG_SECRET_KEY));
   }
 
-  private Future<Void> createApplicationSchema(SQLClient sqlClient, JsonObject config) {
+  private Future<Void> createApplicationSchema(JDBCClient jdbcClient, JsonObject config) {
 
     String finalSchema = readSchema(config);
 
     return Future.future(
         createApplicationSchemaPromise -> {
-          sqlClient.getConnection(
+          jdbcClient.getConnection(
               sqlConnectionAsyncResult -> {
                 if (sqlConnectionAsyncResult.succeeded()) {
 
@@ -146,29 +149,25 @@ public class MainVerticle extends AbstractVerticle {
     return schema.replaceAll("\n", "");
   }
 
-  private void registerServices(SQLClient sqlClient, JWTAuth jwtProvider) {
+  private void registerServices(JDBCClient jdbcClient, JWTAuth jwtProvider) {
 
-    UserRepository userRepositoryProxy =
-        register(
-            UserRepository.class,
-            UserRepository.SERVICE_ADDRESS,
-            new UserRepositoryImpl(sqlClient));
+    UserStatements userStatements = new UserStatementsImpl();
 
     register(
         UsersService.class,
         UsersService.SERVICE_ADDRESS,
-        new UsersServiceImpl(userRepositoryProxy, jwtProvider));
+        new UsersServiceImpl(userStatements, jwtProvider, jdbcClient));
   }
 
   private <T> T register(Class<T> clazz, String address, T instance) {
-    new ServiceBinder(vertx).setAddress(address).register(clazz, instance);
+    new ServiceBinder(vertx.getDelegate()).setAddress(address).register(clazz, instance);
     T proxy = createProxy(clazz, address);
     this.proxyMap.put(clazz, proxy);
     return proxy;
   }
 
   private <T> T createProxy(Class<T> clazz, String address) {
-    return new ServiceProxyBuilder(vertx).setAddress(address).build(clazz);
+    return new ServiceProxyBuilder(vertx.getDelegate()).setAddress(address).build(clazz);
   }
 
   private <T> T getProxy(Class<T> clazz) {
@@ -199,7 +198,7 @@ public class MainVerticle extends AbstractVerticle {
                   .setConfig(new JsonObject().put("path", "conf/config.json"));
           ConfigRetrieverOptions configRetrieverOptions =
               new ConfigRetrieverOptions().addStore(fileStore);
-          ConfigRetriever.create(vertx, configRetrieverOptions)
+          ConfigRetriever.create(vertx.getDelegate(), configRetrieverOptions)
               .getConfig(
                   ar -> {
                     if (ar.succeeded()) {

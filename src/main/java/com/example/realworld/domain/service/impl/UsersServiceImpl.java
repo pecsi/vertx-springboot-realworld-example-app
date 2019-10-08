@@ -1,21 +1,30 @@
 package com.example.realworld.domain.service.impl;
 
 import com.example.realworld.domain.entity.persistent.User;
-import com.example.realworld.domain.repository.UserRepository;
 import com.example.realworld.domain.service.UsersService;
+import com.example.realworld.domain.statement.Statement;
+import com.example.realworld.domain.statement.UserStatements;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.jwt.JWTAuth;
+import io.vertx.ext.sql.ResultSet;
+import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
+import io.vertx.reactivex.ext.jdbc.JDBCClient;
+import io.vertx.reactivex.ext.sql.SQLClientHelper;
 
 public class UsersServiceImpl implements UsersService {
 
-  private UserRepository userRepository;
+  private UserStatements userStatements;
   private JWTAuth jwtProvider;
+  private JDBCClient jdbcClient;
 
-  public UsersServiceImpl(UserRepository userRepository, JWTAuth jwtProvider) {
-    this.userRepository = userRepository;
+  public UsersServiceImpl(
+      UserStatements userStatements, JWTAuth jwtProvider, JDBCClient jdbcClient) {
+    this.userStatements = userStatements;
     this.jwtProvider = jwtProvider;
+    this.jdbcClient = jdbcClient;
   }
 
   @Override
@@ -27,32 +36,54 @@ public class UsersServiceImpl implements UsersService {
     user.setEmail(email);
     user.setPassword(password);
 
-    userRepository.create(
-        user,
-        createUserAsyncResult -> {
-          if (createUserAsyncResult.succeeded()) {
+    SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection -> {
+              Statement<JsonArray> createUserStatement = userStatements.create(user);
 
-            User resultUser = createUserAsyncResult.result();
+              return sqlConnection
+                  .rxUpdateWithParams(createUserStatement.sql(), createUserStatement.params())
+                  .map(
+                      updateResult -> {
+                        Long id = updateResult.getKeys().getLong(0);
+                        user.setId(id);
+                        return user;
+                      })
+                  .flatMap(
+                      createdUser -> {
+                        createdUser.setToken(
+                            jwtProvider.generateToken(
+                                new JsonObject().put("sub", createdUser.getId())));
 
-            resultUser.setToken(
-                jwtProvider.generateToken(new JsonObject().put("sub", resultUser.getId())));
+                        Statement<JsonArray> updateUserStatement =
+                            userStatements.update(createdUser);
+                        return sqlConnection.rxUpdateWithParams(
+                            updateUserStatement.sql(), updateUserStatement.params());
+                      })
+                  .flatMap(
+                      updateResult -> {
+                        Statement<JsonArray> findByIdStatement =
+                            userStatements.findById(user.getId());
+                        return sqlConnection.rxQueryWithParams(
+                            findByIdStatement.sql(), findByIdStatement.params());
+                      });
+            })
+        .map(this::toUser)
+        .subscribe(
+            resultUser -> handler.handle(Future.succeededFuture(resultUser)),
+            throwable -> handler.handle(Future.failedFuture(throwable)));
+  }
 
-            userRepository.update(
-                resultUser,
-                updateUserAsyncResult -> {
-                  if (updateUserAsyncResult.succeeded()) {
-
-                    userRepository.find(resultUser.getId(), handler);
-
-                  } else {
-                    handler.handle(updateUserAsyncResult);
-                  }
-                });
-
-          } else {
-
-            handler.handle(createUserAsyncResult);
-          }
-        });
+  private User toUser(ResultSet resultSet) {
+    JsonObject row = resultSet.getRows().get(0);
+    User user = new User();
+    user.setId(row.getLong("ID"));
+    user.setUsername(row.getString("USERNAME"));
+    user.setBio(row.getString("BIO"));
+    user.setImage(row.getString("IMAGE"));
+    user.setPassword(row.getString("PASSWORD"));
+    user.setEmail(row.getString("EMAIL"));
+    user.setToken(row.getString("TOKEN"));
+    return user;
   }
 }

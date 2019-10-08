@@ -1,9 +1,11 @@
 package com.example.realworld.infrastructure.verticles;
 
 import com.example.realworld.infrastructure.Constants;
+import com.example.realworld.infrastructure.web.exceptions.RequestValidationException;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -39,19 +41,41 @@ public class AbstractAPIVerticle extends AbstractVerticle {
   }
 
   protected <T> T getBody(RoutingContext routingContext, Class<T> clazz) {
-    T result = null;
+    T result;
     try {
       result = objectMapper.readValue(routingContext.getBodyAsString(), clazz);
     } catch (IOException ex) {
-      routingContext.fail(ex);
+      throw new RuntimeException(ex);
     }
     return result;
   }
 
   protected <T> T getBodyAndValid(RoutingContext routingContext, Class<T> clazz) {
     T result = getBody(routingContext, clazz);
-    Set<ConstraintViolation<T>> violations = validator.validate(result);
+    validateRequestBody(result);
     return result;
+  }
+
+  private void handlerRequestValidation(
+      HttpServerResponse httpServerResponse,
+      RequestValidationException requestValidationException) {
+
+    httpServerResponse
+        .setStatusCode(HttpResponseStatus.UNPROCESSABLE_ENTITY.code())
+        .end(writeValueAsString(requestValidationException.getErrorResponse()));
+  }
+
+  private <T> void validateRequestBody(T body) {
+
+    Set<ConstraintViolation<T>> violations = validator.validate(body);
+
+    if (!violations.isEmpty()) {
+
+      ErrorResponse errorResponse = new ErrorResponse();
+      violations.forEach(constraint -> errorResponse.getBody().add(constraint.getMessage()));
+
+      throw new RequestValidationException(errorResponse);
+    }
   }
 
   protected <T> void response(RoutingContext routingContext, int statusCode, T response) {
@@ -78,9 +102,18 @@ public class AbstractAPIVerticle extends AbstractVerticle {
         .failureHandler(
             failureRoutingContext -> {
               HttpServerResponse response = failureRoutingContext.response();
-              response.end(
-                  writeValueAsString(
-                      new ErrorResponse(failureRoutingContext.failure().getMessage())));
+
+              if (failureRoutingContext.failure() instanceof RequestValidationException) {
+
+                handlerRequestValidation(
+                    response, (RequestValidationException) failureRoutingContext.failure());
+
+              } else {
+
+                response.end(
+                    writeValueAsString(
+                        new ErrorResponse(failureRoutingContext.failure().getMessage())));
+              }
             });
   }
 
