@@ -81,6 +81,17 @@ public class UserStatementsImpl implements UserStatements {
     return new JsonArrayStatement(sql, params);
   }
 
+  @Override
+  public Statement<JsonArray> existBy(String field, String value) {
+
+    String sql =
+        String.format("SELECT COUNT(*) FROM USERS WHERE UPPER(%s) = ?", field.toUpperCase());
+
+    JsonArray params = new JsonArray().add(value.toUpperCase().trim());
+
+    return new JsonArrayStatement(sql, params);
+  }
+
   private boolean isPresent(String value) {
     return value != null && !value.isEmpty();
   }

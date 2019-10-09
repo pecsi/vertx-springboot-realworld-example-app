@@ -10,4 +10,6 @@ public interface UserStatements {
   Statement<JsonArray> update(User user);
 
   Statement<JsonArray> findById(Long id);
+
+  Statement<JsonArray> existBy(String field, String value);
 }

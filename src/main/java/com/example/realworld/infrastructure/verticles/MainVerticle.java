@@ -1,12 +1,7 @@
 package com.example.realworld.infrastructure.verticles;
 
-import com.example.realworld.domain.service.UsersService;
-import com.example.realworld.domain.service.impl.UsersServiceImpl;
-import com.example.realworld.domain.statement.UserStatements;
-import com.example.realworld.domain.statement.impl.UserStatementsImpl;
-import com.example.realworld.infrastructure.Constants;
-import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
-import com.example.realworld.infrastructure.web.config.ObjectMapperConfig;
+import com.example.realworld.infrastructure.context.ApplicationContext;
+import com.example.realworld.infrastructure.context.impl.ApplicationContextImpl;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -16,28 +11,25 @@ import io.vertx.core.Promise;
 import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
-import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
-import io.vertx.serviceproxy.ServiceBinder;
-import io.vertx.serviceproxy.ServiceProxyBuilder;
 
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class MainVerticle extends AbstractVerticle {
 
-  private Map<Class<?>, Object> proxyMap = new HashMap<>();
+  private ApplicationContext applicationContext;
+
+  public MainVerticle() {
+    super();
+    this.applicationContext = new ApplicationContextImpl();
+  }
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
@@ -49,27 +41,21 @@ public class MainVerticle extends AbstractVerticle {
 
                 JsonObject config = configAR.result();
 
-                JDBCClient sqlClient =
-                    JDBCClient.createShared(
-                        vertx, config.getJsonObject(Constants.DATA_BASE_CONFIG_KEY));
+                applicationContext.instantiateServices(vertx, config);
 
-                createApplicationSchema(sqlClient, config)
+                JDBCClient jdbcClient = applicationContext.getInstance(JDBCClient.class);
+
+                createApplicationSchema(jdbcClient, config)
                     .setHandler(
                         createApplicationSchemaAR -> {
                           if (createApplicationSchemaAR.succeeded()) {
 
-                            JWTAuth jwtProvider = getJwtAuth(config);
-
-                            registerServices(sqlClient, jwtProvider);
+                            UsersAPIVerticle usersAPIVerticle =
+                                applicationContext.getInstance(UsersAPIVerticle.class);
 
                             DeploymentOptions deploymentOptions =
                                 new DeploymentOptions().setConfig(config);
-                            deployVerticle(
-                                    new UsersAPIVerticle(
-                                        getProxy(UsersService.class),
-                                        ObjectMapperConfig.wrapUnwrapRootValueObjectMapper(),
-                                        validator()),
-                                    deploymentOptions)
+                            deployVerticle(usersAPIVerticle, deploymentOptions)
                                 .setHandler(
                                     deployVerticleAsyncResult -> {
                                       if (deployVerticleAsyncResult.succeeded()) {
@@ -88,15 +74,6 @@ public class MainVerticle extends AbstractVerticle {
                 startPromise.fail(configAR.cause());
               }
             });
-  }
-
-  private JWTAuth getJwtAuth(JsonObject config) {
-    JsonObject jwtConfig = config.getJsonObject(Constants.JWT_CONFIG_KEY);
-
-    return AuthProviderConfig.jwtProvider(
-        vertx,
-        jwtConfig.getString(Constants.JWT_CONFIG_ALGORITHM_KEY),
-        jwtConfig.getString(Constants.JWT_CONFIG_SECRET_KEY));
   }
 
   private Future<Void> createApplicationSchema(JDBCClient jdbcClient, JsonObject config) {
@@ -149,31 +126,6 @@ public class MainVerticle extends AbstractVerticle {
     return schema.replaceAll("\n", "");
   }
 
-  private void registerServices(JDBCClient jdbcClient, JWTAuth jwtProvider) {
-
-    UserStatements userStatements = new UserStatementsImpl();
-
-    register(
-        UsersService.class,
-        UsersService.SERVICE_ADDRESS,
-        new UsersServiceImpl(userStatements, jwtProvider, jdbcClient));
-  }
-
-  private <T> T register(Class<T> clazz, String address, T instance) {
-    new ServiceBinder(vertx.getDelegate()).setAddress(address).register(clazz, instance);
-    T proxy = createProxy(clazz, address);
-    this.proxyMap.put(clazz, proxy);
-    return proxy;
-  }
-
-  private <T> T createProxy(Class<T> clazz, String address) {
-    return new ServiceProxyBuilder(vertx.getDelegate()).setAddress(address).build(clazz);
-  }
-
-  private <T> T getProxy(Class<T> clazz) {
-    return clazz.cast(this.proxyMap.get(clazz));
-  }
-
   private Future<Void> deployVerticle(Verticle verticle, DeploymentOptions deploymentOptions) {
     return Future.future(
         promise ->
@@ -208,10 +160,5 @@ public class MainVerticle extends AbstractVerticle {
                     }
                   });
         });
-  }
-
-  private Validator validator() {
-    ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
-    return validatorFactory.getValidator();
   }
 }

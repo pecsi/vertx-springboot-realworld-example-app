@@ -39,6 +39,8 @@ public class UsersServiceImpl implements UsersService {
     SQLClientHelper.inTransactionSingle(
             jdbcClient,
             sqlConnection -> {
+              Statement<JsonArray> existByUsernameStatement =
+                  userStatements.existBy("username", username);
               Statement<JsonArray> createUserStatement = userStatements.create(user);
 
               return sqlConnection
