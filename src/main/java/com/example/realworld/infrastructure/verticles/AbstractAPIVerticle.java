@@ -1,7 +1,8 @@
 package com.example.realworld.infrastructure.verticles;
 
 import com.example.realworld.infrastructure.Constants;
-import com.example.realworld.infrastructure.web.exceptions.RequestValidationException;
+import com.example.realworld.infrastructure.web.exception.RequestValidationException;
+import com.example.realworld.infrastructure.web.exception.mapper.BusinessExceptionMapper;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +15,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.serviceproxy.ServiceException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -22,12 +24,20 @@ import java.util.Set;
 
 public class AbstractAPIVerticle extends AbstractVerticle {
 
-  private ObjectMapper objectMapper;
+  private ObjectMapper wrapUnwrapRootValueObjectMapper;
+  private ObjectMapper defaultObjectMapper;
   private Validator validator;
+  private BusinessExceptionMapper businessExceptionMapper;
 
-  public AbstractAPIVerticle(ObjectMapper objectMapper, Validator validator) {
+  public AbstractAPIVerticle(
+      ObjectMapper wrapUnwrapRootValueObjectMapper,
+      ObjectMapper defaultObjectMapper,
+      Validator validator,
+      BusinessExceptionMapper businessExceptionMapper) {
     this.validator = validator;
-    this.objectMapper = objectMapper;
+    this.wrapUnwrapRootValueObjectMapper = wrapUnwrapRootValueObjectMapper;
+    this.defaultObjectMapper = defaultObjectMapper;
+    this.businessExceptionMapper = businessExceptionMapper;
   }
 
   protected void createHttpServer(
@@ -43,7 +53,7 @@ public class AbstractAPIVerticle extends AbstractVerticle {
   protected <T> T getBody(RoutingContext routingContext, Class<T> clazz) {
     T result;
     try {
-      result = objectMapper.readValue(routingContext.getBodyAsString(), clazz);
+      result = wrapUnwrapRootValueObjectMapper.readValue(routingContext.getBodyAsString(), clazz);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
@@ -83,7 +93,7 @@ public class AbstractAPIVerticle extends AbstractVerticle {
       routingContext
           .response()
           .setStatusCode(statusCode)
-          .end(objectMapper.writeValueAsString(response));
+          .end(wrapUnwrapRootValueObjectMapper.writeValueAsString(response));
     } catch (JsonProcessingException e) {
       routingContext.fail(e);
     }
@@ -92,7 +102,7 @@ public class AbstractAPIVerticle extends AbstractVerticle {
   protected Router subRouter(Router router) {
     final Router baseRouter = Router.router(vertx);
     configApiErrorHandler(baseRouter);
-    String contextPath = config().getString("context_path");
+    String contextPath = config().getString(Constants.CONTEXT_PATH_KEY);
     return baseRouter.mountSubRouter(contextPath, router);
   }
 
@@ -108,6 +118,13 @@ public class AbstractAPIVerticle extends AbstractVerticle {
                 handlerRequestValidation(
                     response, (RequestValidationException) failureRoutingContext.failure());
 
+              } else if (failureRoutingContext.failure() instanceof ServiceException) {
+
+                ServiceException serviceException =
+                    (ServiceException) failureRoutingContext.failure();
+
+                this.businessExceptionMapper.handle(serviceException, response);
+
               } else {
 
                 response.end(
@@ -120,7 +137,7 @@ public class AbstractAPIVerticle extends AbstractVerticle {
   protected String writeValueAsString(Object value) {
     String result;
     try {
-      result = objectMapper.writeValueAsString(value);
+      result = wrapUnwrapRootValueObjectMapper.writeValueAsString(value);
     } catch (JsonProcessingException ex) {
       throw new RuntimeException(ex);
     }

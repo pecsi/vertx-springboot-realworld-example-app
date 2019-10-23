@@ -9,6 +9,8 @@ import com.example.realworld.infrastructure.context.ApplicationContext;
 import com.example.realworld.infrastructure.verticles.UsersAPIVerticle;
 import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
 import com.example.realworld.infrastructure.web.config.ObjectMapperConfig;
+import com.example.realworld.infrastructure.web.exception.mapper.BusinessExceptionMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
@@ -29,6 +31,11 @@ public class ApplicationContextImpl implements ApplicationContext {
   @Override
   public void instantiateServices(Vertx vertx, JsonObject config) {
 
+    ObjectMapper wrapUnwrapRootValueObjectMapper =
+        ObjectMapperConfig.wrapUnwrapRootValueObjectMapper();
+
+    addToContext(ObjectMapper.class, wrapUnwrapRootValueObjectMapper);
+
     JDBCClient jdbcClient =
         JDBCClient.createShared(vertx, config.getJsonObject(Constants.DATA_BASE_CONFIG_KEY));
 
@@ -42,12 +49,14 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     addToContext(UserStatements.class, userStatements);
 
+    ObjectMapper defaultObjectMapper = ObjectMapperConfig.defaultObjectMapper();
+
     UsersService usersService =
         registerProxy(
             vertx,
             UsersService.class,
             UsersService.SERVICE_ADDRESS,
-            new UsersServiceImpl(userStatements, jwtProvider, jdbcClient));
+            new UsersServiceImpl(userStatements, jwtProvider, jdbcClient, defaultObjectMapper));
 
     addToContext(UsersService.class, usersService);
 
@@ -55,9 +64,18 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     addToContext(Validator.class, validator);
 
+    BusinessExceptionMapper businessExceptionMapper =
+        new BusinessExceptionMapper(wrapUnwrapRootValueObjectMapper, defaultObjectMapper);
+
+    addToContext(BusinessExceptionMapper.class, businessExceptionMapper);
+
     UsersAPIVerticle usersAPIVerticle =
         new UsersAPIVerticle(
-            usersService, ObjectMapperConfig.wrapUnwrapRootValueObjectMapper(), validator);
+            usersService,
+            wrapUnwrapRootValueObjectMapper,
+            defaultObjectMapper,
+            validator,
+            businessExceptionMapper);
 
     addToContext(UsersAPIVerticle.class, usersAPIVerticle);
   }

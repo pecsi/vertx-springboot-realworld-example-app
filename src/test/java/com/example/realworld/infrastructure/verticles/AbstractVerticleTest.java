@@ -1,21 +1,28 @@
 package com.example.realworld.infrastructure.verticles;
 
+import com.example.realworld.domain.entity.persistent.User;
+import com.example.realworld.domain.statement.Statement;
+import com.example.realworld.domain.statement.UserStatements;
+import com.example.realworld.domain.statement.impl.UserStatementsImpl;
 import com.example.realworld.infrastructure.Constants;
 import com.example.realworld.infrastructure.web.config.ObjectMapperConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.vertx.config.ConfigRetriever;
+import io.reactivex.Single;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.jdbc.JDBCClient;
-import io.vertx.ext.sql.SQLClient;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxTestContext;
+import io.vertx.reactivex.config.ConfigRetriever;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.ext.jdbc.JDBCClient;
+import io.vertx.reactivex.ext.sql.SQLClientHelper;
+import io.vertx.reactivex.ext.web.client.WebClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -25,9 +32,10 @@ public class AbstractVerticleTest {
 
   protected WebClient webClient;
   protected static JsonObject config;
-  protected static SQLClient sqlClient;
+  protected static JDBCClient jdbcClient;
   protected static ObjectMapper objectMapper = ObjectMapperConfig.wrapUnwrapRootValueObjectMapper();
   protected static int port;
+  protected UserStatements userStatements = new UserStatementsImpl();
 
   @BeforeAll
   public static void beforeAll(Vertx vertx, VertxTestContext testContext) {
@@ -38,8 +46,9 @@ public class AbstractVerticleTest {
               if (getConfigAsyncResult.succeeded()) {
                 config = getConfigAsyncResult.result();
                 port = config.getInteger(Constants.SERVER_PORT_KEY);
-                sqlClient =
-                    JDBCClient.createNonShared(vertx, config.getJsonObject("database_config"));
+                jdbcClient =
+                    JDBCClient.createNonShared(
+                        vertx, config.getJsonObject(Constants.DATA_BASE_CONFIG_KEY));
                 deployMainVerticle(vertx, testContext);
               } else {
                 testContext.failNow(getConfigAsyncResult.cause());
@@ -50,6 +59,13 @@ public class AbstractVerticleTest {
   @BeforeEach
   public void beforeEach(Vertx vertx) {
     configWebClient(vertx);
+  }
+
+  @AfterEach
+  public void afterEach(VertxTestContext testContext) {
+    SQLClientHelper.inTransactionCompletable(
+            jdbcClient, sqlConnection -> sqlConnection.rxExecute("DELETE FROM USERS;"))
+        .subscribe(testContext::completeNow);
   }
 
   private static void deployMainVerticle(Vertx vertx, VertxTestContext testContext) {
@@ -106,5 +122,19 @@ public class AbstractVerticleTest {
       throw new RuntimeException(ex);
     }
     return result;
+  }
+
+  protected Single<User> createUser(User user) {
+    Statement<JsonArray> createUserStatement = userStatements.create(user);
+    return SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection ->
+                sqlConnection.rxUpdateWithParams(
+                    createUserStatement.sql(), createUserStatement.params()))
+        .map(
+            updateResult -> {
+              user.setId(updateResult.getKeys().getLong(0));
+              return user;
+            });
   }
 }

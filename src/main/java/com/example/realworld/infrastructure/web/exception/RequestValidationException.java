@@ -1,4 +1,4 @@
-package com.example.realworld.infrastructure.web.exceptions;
+package com.example.realworld.infrastructure.web.exception;
 
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 

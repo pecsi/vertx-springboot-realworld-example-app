@@ -3,6 +3,7 @@ package com.example.realworld.infrastructure.verticles;
 import com.example.realworld.domain.entity.persistent.User;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.infrastructure.Constants;
+import com.example.realworld.infrastructure.web.exception.mapper.BusinessExceptionMapper;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
 import com.example.realworld.infrastructure.web.model.response.UserResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,8 +26,12 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
   private UsersService usersService;
 
   public UsersAPIVerticle(
-      UsersService usersService, ObjectMapper objectMapper, Validator validator) {
-    super(objectMapper, validator);
+      UsersService usersService,
+      ObjectMapper wrapUnwrapRootValueObjectMapper,
+      ObjectMapper defaultObjectMapper,
+      Validator validator,
+      BusinessExceptionMapper businessExceptionMapper) {
+    super(wrapUnwrapRootValueObjectMapper, defaultObjectMapper, validator, businessExceptionMapper);
     this.usersService = usersService;
   }
 
