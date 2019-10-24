@@ -25,6 +25,7 @@ import io.vertx.reactivex.ext.web.client.WebClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
 
@@ -64,7 +65,10 @@ public class AbstractVerticleTest {
   @AfterEach
   public void afterEach(VertxTestContext testContext) {
     SQLClientHelper.inTransactionCompletable(
-            jdbcClient, sqlConnection -> sqlConnection.rxExecute("DELETE FROM USERS;"))
+            jdbcClient,
+            sqlConnection ->
+                sqlConnection.rxExecute(
+                    "SET FOREIGN_KEY_CHECKS = 0; DELETE FROM USERS; SET FOREIGN_KEY_CHECKS = 1;"))
         .subscribe(testContext::completeNow);
   }
 
@@ -125,6 +129,7 @@ public class AbstractVerticleTest {
   }
 
   protected Single<User> createUser(User user) {
+    user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
     Statement<JsonArray> createUserStatement = userStatements.create(user);
     return SQLClientHelper.inTransactionSingle(
             jdbcClient,

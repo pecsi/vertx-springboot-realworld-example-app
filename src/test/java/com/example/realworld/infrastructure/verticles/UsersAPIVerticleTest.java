@@ -40,11 +40,9 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
                     testContext.verify(
                         () -> {
                           UserResponse result = readValue(response.body(), UserResponse.class);
-
                           assertThat(result.getUsername(), notNullValue());
                           assertThat(result.getEmail(), notNullValue());
                           assertThat(result.getToken(), notNullValue());
-
                           testContext.completeNow();
                         })));
   }
@@ -53,15 +51,17 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
   void shouldReturnConflictCodeWhenUsernameAlreadyExists(VertxTestContext testContext) {
 
     User user = new User();
-    user.setUsername("user");
+    user.setUsername("user1");
+    user.setEmail("user1@mail.com");
+    user.setPassword("user1_123");
 
     createUser(user)
         .subscribe(
             persistedUser -> {
               NewUserRequest newUser = new NewUserRequest();
               newUser.setUsername(user.getUsername());
-              newUser.setEmail("user@mail.com");
-              newUser.setPassword("user123");
+              newUser.setEmail("user2@mail.com");
+              newUser.setPassword("user2_123");
 
               webClient
                   .post(port, TestsConstants.HOST, USERS_RESOURCE_PATH)
@@ -79,7 +79,42 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
                                         is(HttpResponseStatus.CONFLICT.code()));
                                     assertThat(
                                         result.getBody(), contains("username already exists"));
+                                    testContext.completeNow();
+                                  })));
+            });
+  }
 
+  @Test
+  void shouldReturnConflictCodeWhenEmailAlreadyExists(VertxTestContext testContext) {
+
+    User user = new User();
+    user.setUsername("user1");
+    user.setEmail("user1@mail.com");
+    user.setPassword("user1_123");
+
+    createUser(user)
+        .subscribe(
+            persistedUser -> {
+              NewUserRequest newUser = new NewUserRequest();
+              newUser.setUsername("user2");
+              newUser.setEmail(user.getEmail());
+              newUser.setPassword("user2_123");
+
+              webClient
+                  .post(port, TestsConstants.HOST, USERS_RESOURCE_PATH)
+                  .as(BodyCodec.string())
+                  .sendBuffer(
+                      toBuffer(newUser),
+                      testContext.succeeding(
+                          response ->
+                              testContext.verify(
+                                  () -> {
+                                    ErrorResponse result =
+                                        readValue(response.body(), ErrorResponse.class);
+                                    assertThat(
+                                        response.statusCode(),
+                                        is(HttpResponseStatus.CONFLICT.code()));
+                                    assertThat(result.getBody(), contains("email already exists"));
                                     testContext.completeNow();
                                   })));
             });

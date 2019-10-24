@@ -1,5 +1,6 @@
 package com.example.realworld.infrastructure.web.exception.mapper;
 
+import com.example.realworld.domain.exception.EmailAlreadyExistsException;
 import com.example.realworld.domain.exception.UsernameAlreadyExistsException;
 import com.example.realworld.domain.service.error.Error;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
@@ -31,7 +32,7 @@ public class BusinessExceptionMapper {
     Map<String, BusinessExceptionHandler> handlerMap = new HashMap<>();
 
     handlerMap.put(UsernameAlreadyExistsException.class.getName(), conflict());
-    //    handlerMap.put(EmailAlreadyExistsException.class, conflict());
+    handlerMap.put(EmailAlreadyExistsException.class.getName(), conflict());
     //    handlerMap.put(UserNotFoundException.class, notFound());
     //    handlerMap.put(InvalidPasswordException.class, unauthorized());
     //    handlerMap.put(ResourceNotFoundException.class, notFound());
@@ -80,8 +81,7 @@ public class BusinessExceptionMapper {
 
   public void handle(ServiceException serviceException, HttpServerResponse httpServerResponse) {
     try {
-      Error error =
-          defaultObjectMapper.readValue(serviceException.getLocalizedMessage(), Error.class);
+      Error error = defaultObjectMapper.readValue(serviceException.getMessage(), Error.class);
       this.exceptionMapper
           .get(error.getClassName())
           .handler(httpServerResponse, error.getException());
