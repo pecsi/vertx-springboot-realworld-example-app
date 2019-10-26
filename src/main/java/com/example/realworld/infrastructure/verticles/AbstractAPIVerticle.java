@@ -1,11 +1,14 @@
 package com.example.realworld.infrastructure.verticles;
 
 import com.example.realworld.infrastructure.Constants;
+import com.example.realworld.infrastructure.context.annotation.DefaultObjectMapper;
+import com.example.realworld.infrastructure.context.annotation.WrapUnwrapRootValueObjectMapper;
 import com.example.realworld.infrastructure.web.exception.RequestValidationException;
 import com.example.realworld.infrastructure.web.exception.mapper.BusinessExceptionMapper;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -24,21 +27,10 @@ import java.util.Set;
 
 public class AbstractAPIVerticle extends AbstractVerticle {
 
-  private ObjectMapper wrapUnwrapRootValueObjectMapper;
-  private ObjectMapper defaultObjectMapper;
-  private Validator validator;
-  private BusinessExceptionMapper businessExceptionMapper;
-
-  public AbstractAPIVerticle(
-      ObjectMapper wrapUnwrapRootValueObjectMapper,
-      ObjectMapper defaultObjectMapper,
-      Validator validator,
-      BusinessExceptionMapper businessExceptionMapper) {
-    this.validator = validator;
-    this.wrapUnwrapRootValueObjectMapper = wrapUnwrapRootValueObjectMapper;
-    this.defaultObjectMapper = defaultObjectMapper;
-    this.businessExceptionMapper = businessExceptionMapper;
-  }
+  @Inject private @WrapUnwrapRootValueObjectMapper ObjectMapper wrapUnwrapRootValueObjectMapper;
+  @Inject private @DefaultObjectMapper ObjectMapper defaultObjectMapper;
+  @Inject private Validator validator;
+  @Inject private BusinessExceptionMapper businessExceptionMapper;
 
   protected void createHttpServer(
       Handler<HttpServerRequest> httpServerRequestHandler,

@@ -3,10 +3,9 @@ package com.example.realworld.infrastructure.verticles;
 import com.example.realworld.domain.entity.persistent.User;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.infrastructure.Constants;
-import com.example.realworld.infrastructure.web.exception.mapper.BusinessExceptionMapper;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
 import com.example.realworld.infrastructure.web.model.response.UserResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
@@ -14,8 +13,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-
-import javax.validation.Validator;
 
 public class UsersAPIVerticle extends AbstractAPIVerticle {
 
@@ -25,13 +22,8 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
 
   private UsersService usersService;
 
-  public UsersAPIVerticle(
-      UsersService usersService,
-      ObjectMapper wrapUnwrapRootValueObjectMapper,
-      ObjectMapper defaultObjectMapper,
-      Validator validator,
-      BusinessExceptionMapper businessExceptionMapper) {
-    super(wrapUnwrapRootValueObjectMapper, defaultObjectMapper, validator, businessExceptionMapper);
+  @Inject
+  public UsersAPIVerticle(UsersService usersService) {
     this.usersService = usersService;
   }
 

@@ -1,7 +1,8 @@
 package com.example.realworld.infrastructure.verticles;
 
-import com.example.realworld.infrastructure.context.ApplicationContext;
-import com.example.realworld.infrastructure.context.impl.ApplicationContextImpl;
+import com.example.realworld.infrastructure.context.ApplicationModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -24,12 +25,7 @@ import java.util.Objects;
 
 public class MainVerticle extends AbstractVerticle {
 
-  private ApplicationContext applicationContext;
-
-  public MainVerticle() {
-    super();
-    this.applicationContext = new ApplicationContextImpl();
-  }
+  private Injector injector;
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
@@ -41,9 +37,9 @@ public class MainVerticle extends AbstractVerticle {
 
                 JsonObject config = configAR.result();
 
-                applicationContext.instantiateServices(vertx, config);
+                injector = Guice.createInjector(new ApplicationModule(vertx, config));
 
-                JDBCClient jdbcClient = applicationContext.getInstance(JDBCClient.class);
+                JDBCClient jdbcClient = injector.getInstance(JDBCClient.class);
 
                 createApplicationSchema(jdbcClient, config)
                     .setHandler(
@@ -51,7 +47,7 @@ public class MainVerticle extends AbstractVerticle {
                           if (createApplicationSchemaAR.succeeded()) {
 
                             UsersAPIVerticle usersAPIVerticle =
-                                applicationContext.getInstance(UsersAPIVerticle.class);
+                                injector.getInstance(UsersAPIVerticle.class);
 
                             DeploymentOptions deploymentOptions =
                                 new DeploymentOptions().setConfig(config);

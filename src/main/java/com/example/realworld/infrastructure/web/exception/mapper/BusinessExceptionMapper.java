@@ -3,9 +3,13 @@ package com.example.realworld.infrastructure.web.exception.mapper;
 import com.example.realworld.domain.exception.EmailAlreadyExistsException;
 import com.example.realworld.domain.exception.UsernameAlreadyExistsException;
 import com.example.realworld.domain.service.error.Error;
+import com.example.realworld.infrastructure.context.annotation.DefaultObjectMapper;
+import com.example.realworld.infrastructure.context.annotation.WrapUnwrapRootValueObjectMapper;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.serviceproxy.ServiceException;
@@ -14,14 +18,17 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+@Singleton
 public class BusinessExceptionMapper {
 
   private Map<String, BusinessExceptionHandler> exceptionMapper;
   private ObjectMapper wrapUnwrapRootValueObjectMapper;
   private ObjectMapper defaultObjectMapper;
 
+  @Inject
   public BusinessExceptionMapper(
-      ObjectMapper wrapUnwrapRootValueObjectMapper, ObjectMapper defaultObjectMapper) {
+      @WrapUnwrapRootValueObjectMapper ObjectMapper wrapUnwrapRootValueObjectMapper,
+      @DefaultObjectMapper ObjectMapper defaultObjectMapper) {
     this.wrapUnwrapRootValueObjectMapper = wrapUnwrapRootValueObjectMapper;
     this.exceptionMapper = configureExceptionMapper();
     this.defaultObjectMapper = defaultObjectMapper;
