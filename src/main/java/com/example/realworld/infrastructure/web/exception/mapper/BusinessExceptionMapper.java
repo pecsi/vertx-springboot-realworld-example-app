@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.web.exception.mapper;
 
 import com.example.realworld.domain.exception.EmailAlreadyExistsException;
+import com.example.realworld.domain.exception.InvalidLoginException;
 import com.example.realworld.domain.exception.UsernameAlreadyExistsException;
 import com.example.realworld.domain.service.error.Error;
 import com.example.realworld.infrastructure.context.annotation.DefaultObjectMapper;
@@ -14,7 +15,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.serviceproxy.ServiceException;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +40,7 @@ public class BusinessExceptionMapper {
 
     handlerMap.put(UsernameAlreadyExistsException.class.getName(), conflict());
     handlerMap.put(EmailAlreadyExistsException.class.getName(), conflict());
+    handlerMap.put(InvalidLoginException.class.getName(), unauthorized());
     //    handlerMap.put(UserNotFoundException.class, notFound());
     //    handlerMap.put(InvalidPasswordException.class, unauthorized());
     //    handlerMap.put(ResourceNotFoundException.class, notFound());
@@ -60,10 +61,10 @@ public class BusinessExceptionMapper {
         HttpResponseStatus.CONFLICT.reasonPhrase(), HttpResponseStatus.CONFLICT.code());
   }
 
-  //  private BusinessExceptionHandler unauthorized() {
-  //    return exceptionHandler(
-  //        Response.Status.UNAUTHORIZED.name(), Response.Status.UNAUTHORIZED.getStatusCode());
-  //  }
+  private BusinessExceptionHandler unauthorized() {
+    return exceptionHandler(
+        HttpResponseStatus.UNAUTHORIZED.reasonPhrase(), HttpResponseStatus.UNAUTHORIZED.code());
+  }
 
   private BusinessExceptionHandler exceptionHandler(String message, int httpStatusCode) {
     return (httpServerResponse, throwable) -> {
@@ -92,8 +93,8 @@ public class BusinessExceptionMapper {
       this.exceptionMapper
           .get(error.getClassName())
           .handler(httpServerResponse, error.getException());
-    } catch (IOException e) {
-      e.printStackTrace();
+    } catch (Exception e) {
+      httpServerResponse.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
     }
   }
 

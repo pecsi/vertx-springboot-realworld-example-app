@@ -2,6 +2,7 @@ package com.example.realworld.infrastructure.verticles;
 
 import com.example.realworld.constants.TestsConstants;
 import com.example.realworld.domain.entity.persistent.User;
+import com.example.realworld.infrastructure.web.model.request.LoginRequest;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.example.realworld.infrastructure.web.model.response.UserResponse;
@@ -118,5 +119,29 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
                                     testContext.completeNow();
                                   })));
             });
+  }
+
+  @Test
+  void shouldReturnUnauthorizedCodeWhenUserNotFound(VertxTestContext testContext) {
+
+    LoginRequest loginRequest = new LoginRequest();
+    loginRequest.setEmail("user@email.com");
+    loginRequest.setPassword("user123");
+
+    webClient
+        .post(port, TestsConstants.HOST, LOGIN_PATH)
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(loginRequest),
+            testContext.succeeding(
+                response ->
+                    testContext.verify(
+                        () -> {
+                          ErrorResponse result = readValue(response.body(), ErrorResponse.class);
+                          assertThat(
+                              response.statusCode(), is(HttpResponseStatus.UNAUTHORIZED.code()));
+                          assertThat(result.getBody(), contains("Unauthorized"));
+                          testContext.completeNow();
+                        })));
   }
 }

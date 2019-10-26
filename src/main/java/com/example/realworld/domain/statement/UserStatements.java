@@ -12,4 +12,6 @@ public interface UserStatements {
   Statement<JsonArray> findById(Long id);
 
   Statement<JsonArray> existBy(String field, String value);
+
+  Statement<JsonArray> findByEmail(String email);
 }

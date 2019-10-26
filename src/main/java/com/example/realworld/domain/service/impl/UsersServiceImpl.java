@@ -2,6 +2,7 @@ package com.example.realworld.domain.service.impl;
 
 import com.example.realworld.domain.entity.persistent.User;
 import com.example.realworld.domain.exception.EmailAlreadyExistsException;
+import com.example.realworld.domain.exception.InvalidLoginException;
 import com.example.realworld.domain.exception.UsernameAlreadyExistsException;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.domain.statement.Statement;
@@ -20,6 +21,8 @@ import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLClientHelper;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 import org.mindrot.jbcrypt.BCrypt;
+
+import java.util.Optional;
 
 public class UsersServiceImpl extends AbstractService implements UsersService {
 
@@ -75,8 +78,41 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
                                   });
                         }))
         .subscribe(
-            resultUser -> handler.handle(Future.succeededFuture(resultUser)),
+            resultUserOptional -> handler.handle(Future.succeededFuture(resultUserOptional.get())),
             throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void login(String email, String password, Handler<AsyncResult<User>> handler) {
+
+    SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection ->
+                findUserByEmail(sqlConnection, email)
+                    .flatMap(
+                        existingUserOptional -> {
+                          if (!existingUserOptional.isPresent()
+                              || isPasswordInvalid(password, existingUserOptional.get())) {
+                            throw new InvalidLoginException();
+                          }
+                          User existingUser = existingUserOptional.get();
+                          return setUserToken(sqlConnection, existingUser)
+                              .map(updateResult -> existingUser);
+                        }))
+        .subscribe(
+            user -> handler.handle(Future.succeededFuture(user)),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  private boolean isPasswordInvalid(String password, User user) {
+    return !BCrypt.checkpw(password, user.getPassword());
+  }
+
+  private Single<Optional<User>> findUserByEmail(SQLConnection sqlConnection, String email) {
+    Statement<JsonArray> findByEmailStatement = userStatements.findByEmail(email);
+    return sqlConnection
+        .rxQueryWithParams(findByEmailStatement.sql(), findByEmailStatement.params())
+        .map(this::toUser);
   }
 
   private Single<Boolean> isUsernameExists(SQLConnection sqlConnection, String username) {
@@ -117,17 +153,22 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
     return sqlConnection.rxQueryWithParams(findByIdStatement.sql(), findByIdStatement.params());
   }
 
-  private User toUser(ResultSet resultSet) {
-    JsonObject row = resultSet.getRows().get(0);
-    User user = new User();
-    user.setId(row.getLong("ID"));
-    user.setUsername(row.getString("USERNAME"));
-    user.setBio(row.getString("BIO"));
-    user.setImage(row.getString("IMAGE"));
-    user.setPassword(row.getString("PASSWORD"));
-    user.setEmail(row.getString("EMAIL"));
-    user.setToken(row.getString("TOKEN"));
-    return user;
+  private Optional<User> toUser(ResultSet resultSet) {
+    User user = null;
+
+    if (resultSet.getRows().size() > 0) {
+      JsonObject row = resultSet.getRows().get(0);
+      user = new User();
+      user.setId(row.getLong("ID"));
+      user.setUsername(row.getString("USERNAME"));
+      user.setBio(row.getString("BIO"));
+      user.setImage(row.getString("IMAGE"));
+      user.setPassword(row.getString("PASSWORD"));
+      user.setEmail(row.getString("EMAIL"));
+      user.setToken(row.getString("TOKEN"));
+    }
+
+    return user != null ? Optional.of(user) : Optional.empty();
   }
 
   private boolean isCountResultGreaterThanZero(ResultSet resultSet) {

@@ -92,6 +92,16 @@ public class UserStatementsImpl implements UserStatements {
     return new JsonArrayStatement(sql, params);
   }
 
+  @Override
+  public Statement<JsonArray> findByEmail(String email) {
+
+    String sql = "SELECT * FROM USERS WHERE UPPER(EMAIL) = ?";
+
+    JsonArray params = new JsonArray().add(email);
+
+    return new JsonArrayStatement(sql, params);
+  }
+
   private boolean isPresent(String value) {
     return value != null && !value.isEmpty();
   }

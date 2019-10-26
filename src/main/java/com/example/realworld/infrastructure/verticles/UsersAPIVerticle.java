@@ -3,6 +3,7 @@ package com.example.realworld.infrastructure.verticles;
 import com.example.realworld.domain.entity.persistent.User;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.infrastructure.Constants;
+import com.example.realworld.infrastructure.web.model.request.LoginRequest;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
 import com.example.realworld.infrastructure.web.model.response.UserResponse;
 import com.google.inject.Inject;
@@ -34,7 +35,8 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
 
     usersRouter.route().handler(BodyHandler.create());
 
-    usersRouter.post().handler(this::create);
+    usersRouter.post(API_PATH).handler(this::create);
+    usersRouter.post(API_PATH + "/login").handler(this::login);
 
     createHttpServer(
         subRouter(usersRouter),
@@ -45,6 +47,22 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
             startPromise.complete();
           } else {
             startPromise.fail(httpServerAsyncResult.cause());
+          }
+        });
+  }
+
+  private void login(RoutingContext routingContext) {
+    LoginRequest loginRequest = getBodyAndValid(routingContext, LoginRequest.class);
+    usersService.login(
+        loginRequest.getEmail(),
+        loginRequest.getPassword(),
+        loginAsyncResult -> {
+          if (loginAsyncResult.succeeded()) {
+            User existingUser = loginAsyncResult.result();
+            response(routingContext, HttpResponseStatus.OK.code(), new UserResponse(existingUser));
+          } else {
+
+            routingContext.fail(loginAsyncResult.cause());
           }
         });
   }
