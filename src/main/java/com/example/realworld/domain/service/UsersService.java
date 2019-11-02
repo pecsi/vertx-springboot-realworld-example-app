@@ -15,9 +15,9 @@ public interface UsersService {
   void create(String username, String email, String password, Handler<AsyncResult<User>> handler);
 
   void login(String email, String password, Handler<AsyncResult<User>> handler);
-  //
-  //  User findById(Long id);
-  //
+
+  void findById(Long userId, Handler<AsyncResult<User>> handler);
+
   //  User update(User user);
   //
   //  User findByUsername(String username);

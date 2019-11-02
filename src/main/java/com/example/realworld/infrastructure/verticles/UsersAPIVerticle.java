@@ -19,8 +19,6 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private final String API_PATH = "/users";
-
   private UsersService usersService;
 
   @Inject
@@ -31,12 +29,18 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
 
+    final String usersApiPath = "/users";
+    final String userApiPath = "/user";
+
     final Router usersRouter = Router.router(vertx);
 
     usersRouter.route().handler(BodyHandler.create());
 
-    usersRouter.post(API_PATH).handler(this::create);
-    usersRouter.post(API_PATH + "/login").handler(this::login);
+    usersRouter.post(usersApiPath).handler(this::create);
+    usersRouter.post(usersApiPath + "/login").handler(this::login);
+
+    usersRouter.route(userApiPath).handler(this::jwtHandler);
+    usersRouter.get(userApiPath).handler(this::getUser);
 
     createHttpServer(
         subRouter(usersRouter),
@@ -51,6 +55,20 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
         });
   }
 
+  private void getUser(RoutingContext routingContext) {
+    Long userId = routingContext.get(USER_ID_CONTEXT_KEY);
+    usersService.findById(
+        userId,
+        findByIdAsyncResult -> {
+          if (findByIdAsyncResult.succeeded()) {
+            User existingUser = findByIdAsyncResult.result();
+            response(routingContext, HttpResponseStatus.OK.code(), new UserResponse(existingUser));
+          } else {
+            routingContext.fail(findByIdAsyncResult.cause());
+          }
+        });
+  }
+
   private void login(RoutingContext routingContext) {
     LoginRequest loginRequest = getBodyAndValid(routingContext, LoginRequest.class);
     usersService.login(
@@ -61,7 +79,6 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
             User existingUser = loginAsyncResult.result();
             response(routingContext, HttpResponseStatus.OK.code(), new UserResponse(existingUser));
           } else {
-
             routingContext.fail(loginAsyncResult.cause());
           }
         });

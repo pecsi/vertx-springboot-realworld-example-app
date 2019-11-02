@@ -21,10 +21,11 @@ import static org.hamcrest.Matchers.*;
 public class UsersAPIVerticleTest extends AbstractVerticleTest {
 
   private final String USERS_RESOURCE_PATH = API_PREFIX + "/users";
+  private final String USER_RESOURCE_PATH = API_PREFIX + "/user";
   private final String LOGIN_PATH = USERS_RESOURCE_PATH + "/login";
 
   @Test
-  void shouldCreateAUser(VertxTestContext testContext) {
+  void shouldCreateAUser(VertxTestContext vertxTestContext) {
 
     NewUserRequest newUser = new NewUserRequest();
     newUser.setUsername("user");
@@ -36,20 +37,20 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
         .as(BodyCodec.string())
         .sendBuffer(
             toBuffer(newUser),
-            testContext.succeeding(
+            vertxTestContext.succeeding(
                 response ->
-                    testContext.verify(
+                    vertxTestContext.verify(
                         () -> {
                           UserResponse result = readValue(response.body(), UserResponse.class);
                           assertThat(result.getUsername(), notNullValue());
                           assertThat(result.getEmail(), notNullValue());
                           assertThat(result.getToken(), notNullValue());
-                          testContext.completeNow();
+                          vertxTestContext.completeNow();
                         })));
   }
 
   @Test
-  void shouldReturnConflictCodeWhenUsernameAlreadyExists(VertxTestContext testContext) {
+  void shouldReturnConflictCodeWhenUsernameAlreadyExists(VertxTestContext vertxTestContext) {
 
     User user = new User();
     user.setUsername("user1");
@@ -69,9 +70,9 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
                   .as(BodyCodec.string())
                   .sendBuffer(
                       toBuffer(newUser),
-                      testContext.succeeding(
+                      vertxTestContext.succeeding(
                           response ->
-                              testContext.verify(
+                              vertxTestContext.verify(
                                   () -> {
                                     ErrorResponse result =
                                         readValue(response.body(), ErrorResponse.class);
@@ -80,13 +81,13 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
                                         is(HttpResponseStatus.CONFLICT.code()));
                                     assertThat(
                                         result.getBody(), contains("username already exists"));
-                                    testContext.completeNow();
+                                    vertxTestContext.completeNow();
                                   })));
             });
   }
 
   @Test
-  void shouldReturnConflictCodeWhenEmailAlreadyExists(VertxTestContext testContext) {
+  void shouldReturnConflictCodeWhenEmailAlreadyExists(VertxTestContext vertxTestContext) {
 
     User user = new User();
     user.setUsername("user1");
@@ -106,9 +107,9 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
                   .as(BodyCodec.string())
                   .sendBuffer(
                       toBuffer(newUser),
-                      testContext.succeeding(
+                      vertxTestContext.succeeding(
                           response ->
-                              testContext.verify(
+                              vertxTestContext.verify(
                                   () -> {
                                     ErrorResponse result =
                                         readValue(response.body(), ErrorResponse.class);
@@ -116,13 +117,53 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
                                         response.statusCode(),
                                         is(HttpResponseStatus.CONFLICT.code()));
                                     assertThat(result.getBody(), contains("email already exists"));
-                                    testContext.completeNow();
+                                    vertxTestContext.completeNow();
                                   })));
             });
   }
 
   @Test
-  void shouldReturnUnauthorizedCodeWhenUserNotFound(VertxTestContext testContext) {
+  void shouldReturnUserOnValidLoginRequest(VertxTestContext vertxTestContext) {
+
+    User user = new User();
+    user.setUsername("user1");
+    user.setEmail("user1@mail.com");
+    user.setImage("image");
+    user.setBio("bio");
+    String userPassword = "user1_123";
+    user.setPassword(userPassword);
+
+    createUser(user)
+        .subscribe(
+            persistedUser -> {
+              LoginRequest loginRequest = new LoginRequest();
+              loginRequest.setEmail(persistedUser.getEmail());
+              loginRequest.setPassword(userPassword);
+
+              webClient
+                  .post(port, TestsConstants.HOST, LOGIN_PATH)
+                  .as(BodyCodec.string())
+                  .sendBuffer(
+                      toBuffer(loginRequest),
+                      vertxTestContext.succeeding(
+                          response ->
+                              vertxTestContext.verify(
+                                  () -> {
+                                    UserResponse userResponse =
+                                        readValue(response.body(), UserResponse.class);
+                                    assertThat(userResponse.getUsername(), is(user.getUsername()));
+                                    assertThat(userResponse.getEmail(), is(user.getEmail()));
+                                    assertThat(userResponse.getBio(), is(user.getBio()));
+                                    assertThat(userResponse.getImage(), is(user.getImage()));
+                                    assertThat(
+                                        userResponse.getToken(), is(not(persistedUser.getToken())));
+                                    vertxTestContext.completeNow();
+                                  })));
+            });
+  }
+
+  @Test
+  void shouldReturnUnauthorizedCodeWhenUserNotFound(VertxTestContext vertxTestContext) {
 
     LoginRequest loginRequest = new LoginRequest();
     loginRequest.setEmail("user@email.com");
@@ -133,15 +174,112 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
         .as(BodyCodec.string())
         .sendBuffer(
             toBuffer(loginRequest),
-            testContext.succeeding(
+            vertxTestContext.succeeding(
                 response ->
-                    testContext.verify(
+                    vertxTestContext.verify(
                         () -> {
                           ErrorResponse result = readValue(response.body(), ErrorResponse.class);
                           assertThat(
                               response.statusCode(), is(HttpResponseStatus.UNAUTHORIZED.code()));
                           assertThat(result.getBody(), contains("Unauthorized"));
-                          testContext.completeNow();
+                          vertxTestContext.completeNow();
                         })));
+  }
+
+  @Test
+  void shouldReturnUnauthorizedCodeWhenPasswordDoesNotMatch(VertxTestContext vertxTestContext) {
+
+    User user = new User();
+    user.setUsername("user1");
+    user.setEmail("user1@mail.com");
+    user.setPassword("user1_123");
+
+    createUser(user)
+        .subscribe(
+            persistedUser -> {
+              LoginRequest loginRequest = new LoginRequest();
+              loginRequest.setEmail(persistedUser.getEmail());
+              loginRequest.setPassword("user123");
+
+              webClient
+                  .post(port, TestsConstants.HOST, LOGIN_PATH)
+                  .as(BodyCodec.string())
+                  .sendBuffer(
+                      toBuffer(loginRequest),
+                      vertxTestContext.succeeding(
+                          response ->
+                              vertxTestContext.verify(
+                                  () -> {
+                                    ErrorResponse result =
+                                        readValue(response.body(), ErrorResponse.class);
+                                    assertThat(
+                                        response.statusCode(),
+                                        is(HttpResponseStatus.UNAUTHORIZED.code()));
+                                    assertThat(result.getBody(), contains("Unauthorized"));
+                                    vertxTestContext.completeNow();
+                                  })));
+            });
+  }
+
+  @Test
+  public void shouldReturnUnauthorizedOnTryAccessUserGetResourceWithoutAnToken(
+      VertxTestContext vertxTestContext) {
+
+    webClient
+        .get(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+        .as(BodyCodec.string())
+        .send(
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ErrorResponse errorResponse =
+                              readValue(response.body(), ErrorResponse.class);
+                          assertThat(
+                              response.statusCode(), is(HttpResponseStatus.UNAUTHORIZED.code()));
+                          assertThat(errorResponse.getBody(), contains("Unauthorized"));
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void shouldReturnUserWithStatusCode200(VertxTestContext vertxTestContext) {
+
+    User user = new User();
+    user.setUsername("user1");
+    user.setEmail("user1@mail.com");
+    user.setImage("image");
+    user.setBio("bio");
+    String userPassword = "user1_123";
+    user.setPassword(userPassword);
+
+    createUser(user)
+        .subscribe(
+            persistedUser ->
+                webClient
+                    .get(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+                    .putHeader(
+                        TestsConstants.AUTHORIZATION_HEADER,
+                        TestsConstants.AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser.getToken())
+                    .as(BodyCodec.string())
+                    .send(
+                        vertxTestContext.succeeding(
+                            response ->
+                                vertxTestContext.verify(
+                                    () -> {
+                                      UserResponse userResponse =
+                                          readValue(response.body(), UserResponse.class);
+                                      assertThat(
+                                          userResponse.getUsername(),
+                                          is(persistedUser.getUsername()));
+                                      assertThat(
+                                          userResponse.getEmail(), is(persistedUser.getEmail()));
+                                      assertThat(userResponse.getBio(), is(persistedUser.getBio()));
+                                      assertThat(
+                                          userResponse.getImage(), is(persistedUser.getImage()));
+                                      assertThat(
+                                          userResponse.getToken(), is(persistedUser.getToken()));
+                                      vertxTestContext.completeNow();
+                                    }))));
   }
 }

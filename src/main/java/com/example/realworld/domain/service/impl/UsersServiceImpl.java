@@ -3,10 +3,12 @@ package com.example.realworld.domain.service.impl;
 import com.example.realworld.domain.entity.persistent.User;
 import com.example.realworld.domain.exception.EmailAlreadyExistsException;
 import com.example.realworld.domain.exception.InvalidLoginException;
+import com.example.realworld.domain.exception.UserNotFoundException;
 import com.example.realworld.domain.exception.UsernameAlreadyExistsException;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.domain.statement.Statement;
 import com.example.realworld.domain.statement.UserStatements;
+import com.example.realworld.domain.utils.ParserUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
@@ -23,6 +25,7 @@ import io.vertx.reactivex.ext.sql.SQLConnection;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public class UsersServiceImpl extends AbstractService implements UsersService {
 
@@ -74,7 +77,7 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
                                                             findUserById(
                                                                 sqlConnection,
                                                                 userCreated.getId())))
-                                        .map(this::toUser);
+                                        .map(ParserUtils::toUser);
                                   });
                         }))
         .subscribe(
@@ -104,6 +107,19 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
             throwable -> handler.handle(error(throwable)));
   }
 
+  @Override
+  public void findById(Long userId, Handler<AsyncResult<User>> handler) {
+    SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection ->
+                this.findUserById(sqlConnection, userId)
+                    .map(ParserUtils::toUser)
+                    .map(userOptional -> userOptional.orElseThrow(UserNotFoundException::new)))
+        .subscribe(
+            user -> handler.handle(Future.succeededFuture(user)),
+            throwable -> handler.handle(error(throwable)));
+  }
+
   private boolean isPasswordInvalid(String password, User user) {
     return !BCrypt.checkpw(password, user.getPassword());
   }
@@ -112,7 +128,7 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
     Statement<JsonArray> findByEmailStatement = userStatements.findByEmail(email);
     return sqlConnection
         .rxQueryWithParams(findByEmailStatement.sql(), findByEmailStatement.params())
-        .map(this::toUser);
+        .map(ParserUtils::toUser);
   }
 
   private Single<Boolean> isUsernameExists(SQLConnection sqlConnection, String username) {
@@ -142,7 +158,11 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
   }
 
   private Single<UpdateResult> setUserToken(SQLConnection sqlConnection, User user) {
-    user.setToken(jwtProvider.generateToken(new JsonObject().put("sub", user.getId())));
+    user.setToken(
+        jwtProvider.generateToken(
+            new JsonObject()
+                .put("sub", user.getId())
+                .put("complementary-subscription", UUID.randomUUID().toString())));
     Statement<JsonArray> updateUserStatement = userStatements.update(user);
     return sqlConnection.rxUpdateWithParams(
         updateUserStatement.sql(), updateUserStatement.params());
@@ -151,24 +171,6 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
   private Single<ResultSet> findUserById(SQLConnection sqlConnection, Long id) {
     Statement<JsonArray> findByIdStatement = userStatements.findById(id);
     return sqlConnection.rxQueryWithParams(findByIdStatement.sql(), findByIdStatement.params());
-  }
-
-  private Optional<User> toUser(ResultSet resultSet) {
-    User user = null;
-
-    if (resultSet.getRows().size() > 0) {
-      JsonObject row = resultSet.getRows().get(0);
-      user = new User();
-      user.setId(row.getLong("ID"));
-      user.setUsername(row.getString("USERNAME"));
-      user.setBio(row.getString("BIO"));
-      user.setImage(row.getString("IMAGE"));
-      user.setPassword(row.getString("PASSWORD"));
-      user.setEmail(row.getString("EMAIL"));
-      user.setToken(row.getString("TOKEN"));
-    }
-
-    return user != null ? Optional.of(user) : Optional.empty();
   }
 
   private boolean isCountResultGreaterThanZero(ResultSet resultSet) {

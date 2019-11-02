@@ -97,7 +97,7 @@ public class UserStatementsImpl implements UserStatements {
 
     String sql = "SELECT * FROM USERS WHERE UPPER(EMAIL) = ?";
 
-    JsonArray params = new JsonArray().add(email);
+    JsonArray params = new JsonArray().add(email.toUpperCase().trim());
 
     return new JsonArrayStatement(sql, params);
   }

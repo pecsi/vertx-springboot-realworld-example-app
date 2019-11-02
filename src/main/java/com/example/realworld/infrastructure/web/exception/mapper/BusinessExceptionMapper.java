@@ -2,6 +2,7 @@ package com.example.realworld.infrastructure.web.exception.mapper;
 
 import com.example.realworld.domain.exception.EmailAlreadyExistsException;
 import com.example.realworld.domain.exception.InvalidLoginException;
+import com.example.realworld.domain.exception.UserNotFoundException;
 import com.example.realworld.domain.exception.UsernameAlreadyExistsException;
 import com.example.realworld.domain.service.error.Error;
 import com.example.realworld.infrastructure.context.annotation.DefaultObjectMapper;
@@ -41,20 +42,18 @@ public class BusinessExceptionMapper {
     handlerMap.put(UsernameAlreadyExistsException.class.getName(), conflict());
     handlerMap.put(EmailAlreadyExistsException.class.getName(), conflict());
     handlerMap.put(InvalidLoginException.class.getName(), unauthorized());
-    //    handlerMap.put(UserNotFoundException.class, notFound());
-    //    handlerMap.put(InvalidPasswordException.class, unauthorized());
+    handlerMap.put(UserNotFoundException.class.getName(), notFound());
     //    handlerMap.put(ResourceNotFoundException.class, notFound());
-    //    handlerMap.put(UnauthorizedException.class, unauthorized());
     //    handlerMap.put(TagNotFoundException.class, notFound());
     //    handlerMap.put(ArticleNotFoundException.class, notFound());
 
     return handlerMap;
   }
 
-  //  private BusinessExceptionHandler notFound() {
-  //    return exceptionHandler(
-  //        Response.Status.NOT_FOUND.name(), Response.Status.NOT_FOUND.getStatusCode());
-  //  }
+  private BusinessExceptionHandler notFound() {
+    return exceptionHandler(
+        HttpResponseStatus.NOT_FOUND.reasonPhrase(), HttpResponseStatus.NOT_FOUND.code());
+  }
 
   private BusinessExceptionHandler conflict() {
     return exceptionHandler(

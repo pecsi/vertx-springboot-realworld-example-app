@@ -4,7 +4,9 @@ import com.example.realworld.domain.entity.persistent.User;
 import com.example.realworld.domain.statement.Statement;
 import com.example.realworld.domain.statement.UserStatements;
 import com.example.realworld.domain.statement.impl.UserStatementsImpl;
+import com.example.realworld.domain.utils.ParserUtils;
 import com.example.realworld.infrastructure.Constants;
+import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
 import com.example.realworld.infrastructure.web.config.ObjectMapperConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,11 +16,11 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.reactivex.config.ConfigRetriever;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLClientHelper;
 import io.vertx.reactivex.ext.web.client.WebClient;
@@ -28,10 +30,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
+import java.util.Optional;
+import java.util.UUID;
 
 public class AbstractVerticleTest {
 
   protected WebClient webClient;
+  protected static JWTAuth jwtAuth;
   protected static JsonObject config;
   protected static JDBCClient jdbcClient;
   protected static ObjectMapper objectMapper = ObjectMapperConfig.wrapUnwrapRootValueObjectMapper();
@@ -47,6 +52,7 @@ public class AbstractVerticleTest {
               if (getConfigAsyncResult.succeeded()) {
                 config = getConfigAsyncResult.result();
                 port = config.getInteger(Constants.SERVER_PORT_KEY);
+                jwtAuth = jwtAuth(vertx, config);
                 jdbcClient =
                     JDBCClient.createNonShared(
                         vertx, config.getJsonObject(Constants.DATA_BASE_CONFIG_KEY));
@@ -78,9 +84,15 @@ public class AbstractVerticleTest {
   }
 
   private void configWebClient(Vertx vertx) {
-    WebClientOptions webClientOptions = new WebClientOptions();
-
     webClient = WebClient.create(vertx);
+  }
+
+  public static JWTAuth jwtAuth(Vertx vertx, JsonObject config) {
+    JsonObject jwtConfig = config.getJsonObject(Constants.JWT_CONFIG_KEY);
+    return AuthProviderConfig.jwtProvider(
+        vertx,
+        jwtConfig.getString(Constants.JWT_CONFIG_ALGORITHM_KEY),
+        jwtConfig.getString(Constants.JWT_CONFIG_SECRET_KEY));
   }
 
   private static Future<JsonObject> getConfig(Vertx vertx) {
@@ -139,7 +151,36 @@ public class AbstractVerticleTest {
         .map(
             updateResult -> {
               user.setId(updateResult.getKeys().getLong(0));
+              user.setToken(
+                  jwtAuth.generateToken(
+                      new JsonObject()
+                          .put("sub", user.getId())
+                          .put("complementary-subscription", UUID.randomUUID().toString())));
               return user;
-            });
+            })
+        .flatMap(this::updateUser)
+        .map(User::getId)
+        .flatMap(this::findUserById);
+  }
+
+  protected Single<User> updateUser(User user) {
+    Statement<JsonArray> updateUserStatement = userStatements.update(user);
+    return SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection ->
+                sqlConnection.rxUpdateWithParams(
+                    updateUserStatement.sql(), updateUserStatement.params()))
+        .map(updateResult -> user);
+  }
+
+  protected Single<User> findUserById(Long id) {
+    Statement<JsonArray> findUserByIdStatement = userStatements.findById(id);
+    return SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection ->
+                sqlConnection.rxQueryWithParams(
+                    findUserByIdStatement.sql(), findUserByIdStatement.params()))
+        .map(ParserUtils::toUser)
+        .map(Optional::get);
   }
 }

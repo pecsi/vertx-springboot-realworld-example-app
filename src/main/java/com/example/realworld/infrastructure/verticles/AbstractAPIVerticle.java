@@ -16,8 +16,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
 import io.vertx.serviceproxy.ServiceException;
 
 import javax.validation.ConstraintViolation;
@@ -27,10 +29,15 @@ import java.util.Set;
 
 public class AbstractAPIVerticle extends AbstractVerticle {
 
+  public static final String AUTHORIZATION_HEADER = "Authorization";
+  public static final String AUTHORIZATION_HEADER_PREFIX = "Token ";
+  public static final String USER_ID_CONTEXT_KEY = "userId";
+
   @Inject private @WrapUnwrapRootValueObjectMapper ObjectMapper wrapUnwrapRootValueObjectMapper;
   @Inject private @DefaultObjectMapper ObjectMapper defaultObjectMapper;
   @Inject private Validator validator;
   @Inject private BusinessExceptionMapper businessExceptionMapper;
+  @Inject protected JWTAuth jwtAuth;
 
   protected void createHttpServer(
       Handler<HttpServerRequest> httpServerRequestHandler,
@@ -134,5 +141,31 @@ public class AbstractAPIVerticle extends AbstractVerticle {
       throw new RuntimeException(ex);
     }
     return result;
+  }
+
+  protected void jwtHandler(RoutingContext routingContext) {
+
+    String authorization = routingContext.request().headers().get(AUTHORIZATION_HEADER);
+
+    if (authorization != null && authorization.contains(AUTHORIZATION_HEADER_PREFIX)) {
+
+      String token = authorization.replace(AUTHORIZATION_HEADER_PREFIX, "");
+
+      jwtAuth
+          .rxAuthenticate(new JsonObject().put("jwt", token))
+          .subscribe(
+              user -> {
+                routingContext.put(USER_ID_CONTEXT_KEY, user.principal().getLong("sub"));
+                routingContext.next();
+              },
+              throwable -> unauthorizedResponse(routingContext));
+    } else {
+      unauthorizedResponse(routingContext);
+    }
+  }
+
+  protected void unauthorizedResponse(RoutingContext routingContext) {
+    response(
+        routingContext, HttpResponseStatus.UNAUTHORIZED.code(), new ErrorResponse("Unauthorized"));
   }
 }
