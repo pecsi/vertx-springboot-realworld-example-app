@@ -34,41 +34,31 @@ public class UserStatementsImpl implements UserStatements {
     List<String> fields = new LinkedList<>();
     JsonArray params = new JsonArray();
 
-    if (isPresent(user.getUsername())) {
-      fields.add("USERNAME = ?");
-      params.add(user.getUsername());
-    }
+    addFieldIfPresent(fields, params, user.getUsername(), "USERNAME = ?");
 
-    if (isPresent(user.getBio())) {
-      fields.add("BIO = ?");
-      params.add(user.getBio());
-    }
+    addFieldIfPresent(fields, params, user.getBio(), "BIO = ?");
 
-    if (isPresent(user.getEmail())) {
-      fields.add("EMAIL = ?");
-      params.add(user.getEmail());
-    }
+    addFieldIfPresent(fields, params, user.getEmail(), "EMAIL = ?");
 
-    if (isPresent(user.getImage())) {
-      fields.add("IMAGE = ?");
-      params.add(user.getImage());
-    }
+    addFieldIfPresent(fields, params, user.getImage(), "IMAGE = ?");
 
-    if (isPresent(user.getPassword())) {
-      fields.add("PASSWORD = ?");
-      params.add(user.getPassword());
-    }
+    addFieldIfPresent(fields, params, user.getPassword(), "PASSWORD = ?");
 
-    if (isPresent(user.getToken())) {
-      fields.add("TOKEN = ?");
-      params.add(user.getToken());
-    }
+    addFieldIfPresent(fields, params, user.getToken(), "TOKEN = ?");
 
     params.add(user.getId());
 
     String sql = "UPDATE USERS SET " + String.join(", ", fields) + " WHERE ID = ?";
 
     return new JsonArrayStatement(sql, params);
+  }
+
+  private void addFieldIfPresent(
+      List<String> fields, JsonArray params, String fieldValue, String fieldExpression) {
+    if (isPresent(fieldValue)) {
+      fields.add(fieldExpression);
+      params.add(fieldValue);
+    }
   }
 
   @Override
@@ -88,6 +78,18 @@ public class UserStatementsImpl implements UserStatements {
         String.format("SELECT COUNT(*) FROM USERS WHERE UPPER(%s) = ?", field.toUpperCase());
 
     JsonArray params = new JsonArray().add(value.toUpperCase().trim());
+
+    return new JsonArrayStatement(sql, params);
+  }
+
+  @Override
+  public Statement<JsonArray> existBy(String field, String value, Long excludeId) {
+
+    String sql =
+        String.format(
+            "SELECT COUNT(*) FROM USERS WHERE UPPER(%s) = ? AND ID <> ?", field.toUpperCase());
+
+    JsonArray params = new JsonArray().add(value.toUpperCase().trim()).add(excludeId);
 
     return new JsonArrayStatement(sql, params);
   }

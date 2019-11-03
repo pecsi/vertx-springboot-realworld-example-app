@@ -1,23 +1,18 @@
 package com.example.realworld.infrastructure.verticles;
 
-import com.example.realworld.domain.entity.persistent.User;
 import com.example.realworld.domain.service.UsersService;
-import com.example.realworld.infrastructure.Constants;
 import com.example.realworld.infrastructure.web.model.request.LoginRequest;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
+import com.example.realworld.infrastructure.web.model.request.UpdateUserRequest;
 import com.example.realworld.infrastructure.web.model.response.UserResponse;
 import com.google.inject.Inject;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Promise;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
 public class UsersAPIVerticle extends AbstractAPIVerticle {
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private UsersService usersService;
 
@@ -41,32 +36,23 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
 
     usersRouter.route(userApiPath).handler(this::jwtHandler);
     usersRouter.get(userApiPath).handler(this::getUser);
+    usersRouter.put(userApiPath).handler(this::updateUser);
 
-    createHttpServer(
-        subRouter(usersRouter),
-        httpServerAsyncResult -> {
-          if (httpServerAsyncResult.succeeded()) {
-            logger.info(
-                "UsersAPI started on port " + config().getInteger(Constants.SERVER_PORT_KEY));
-            startPromise.complete();
-          } else {
-            startPromise.fail(httpServerAsyncResult.cause());
-          }
-        });
+    createHttpServer(subRouter(usersRouter), createHttpServerHandler("UsersAPI", startPromise));
+  }
+
+  private void updateUser(RoutingContext routingContext) {
+    Long userId = routingContext.get(USER_ID_CONTEXT_KEY);
+    UpdateUserRequest updateUserRequest = getBodyAndValid(routingContext, UpdateUserRequest.class);
+    usersService.update(
+        updateUserRequest.toUser(userId),
+        responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
   }
 
   private void getUser(RoutingContext routingContext) {
     Long userId = routingContext.get(USER_ID_CONTEXT_KEY);
     usersService.findById(
-        userId,
-        findByIdAsyncResult -> {
-          if (findByIdAsyncResult.succeeded()) {
-            User existingUser = findByIdAsyncResult.result();
-            response(routingContext, HttpResponseStatus.OK.code(), new UserResponse(existingUser));
-          } else {
-            routingContext.fail(findByIdAsyncResult.cause());
-          }
-        });
+        userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
   }
 
   private void login(RoutingContext routingContext) {
@@ -74,14 +60,7 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
     usersService.login(
         loginRequest.getEmail(),
         loginRequest.getPassword(),
-        loginAsyncResult -> {
-          if (loginAsyncResult.succeeded()) {
-            User existingUser = loginAsyncResult.result();
-            response(routingContext, HttpResponseStatus.OK.code(), new UserResponse(existingUser));
-          } else {
-            routingContext.fail(loginAsyncResult.cause());
-          }
-        });
+        responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
   }
 
   private void create(RoutingContext routingContext) {
@@ -90,13 +69,6 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
         newUserRequest.getUsername(),
         newUserRequest.getEmail(),
         newUserRequest.getPassword(),
-        createUserAsyncHandler -> {
-          if (createUserAsyncHandler.succeeded()) {
-            User createdUser = createUserAsyncHandler.result();
-            response(routingContext, HttpResponseStatus.OK.code(), new UserResponse(createdUser));
-          } else {
-            routingContext.fail(createUserAsyncHandler.cause());
-          }
-        });
+        responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
   }
 }

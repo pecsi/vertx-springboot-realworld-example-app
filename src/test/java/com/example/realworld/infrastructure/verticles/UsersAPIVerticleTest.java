@@ -4,6 +4,7 @@ import com.example.realworld.constants.TestsConstants;
 import com.example.realworld.domain.entity.persistent.User;
 import com.example.realworld.infrastructure.web.model.request.LoginRequest;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
+import com.example.realworld.infrastructure.web.model.request.UpdateUserRequest;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.example.realworld.infrastructure.web.model.response.UserResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -281,5 +282,139 @@ public class UsersAPIVerticleTest extends AbstractVerticleTest {
                                           userResponse.getToken(), is(persistedUser.getToken()));
                                       vertxTestContext.completeNow();
                                     }))));
+  }
+
+  @Test
+  public void shouldUpdateUser(VertxTestContext vertxTestContext) {
+
+    User user = new User();
+    user.setUsername("user1");
+    user.setEmail("user1@mail.com");
+    user.setImage("image");
+    user.setPassword("user1_123");
+
+    createUser(user)
+        .subscribe(
+            persistedUser -> {
+              UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+              updateUserRequest.setBio("bio");
+              updateUserRequest.setImage("image2");
+
+              webClient
+                  .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+                  .putHeader(
+                      TestsConstants.AUTHORIZATION_HEADER,
+                      TestsConstants.AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser.getToken())
+                  .as(BodyCodec.string())
+                  .sendBuffer(
+                      toBuffer(updateUserRequest),
+                      vertxTestContext.succeeding(
+                          response ->
+                              vertxTestContext.verify(
+                                  () -> {
+                                    UserResponse userResponse =
+                                        readValue(response.body(), UserResponse.class);
+                                    assertThat(
+                                        userResponse.getBio(), is(updateUserRequest.getBio()));
+                                    assertThat(
+                                        userResponse.getImage(), is(updateUserRequest.getImage()));
+                                    vertxTestContext.completeNow();
+                                  })));
+            });
+  }
+
+  @Test
+  public void shouldReturnConflictCodeWhenTryingUpdateUserWithExistentUsername(
+      VertxTestContext vertxTestContext) {
+
+    User user1 = new User();
+    user1.setUsername("user1");
+    user1.setEmail("user1@mail.com");
+    user1.setImage("image");
+    user1.setPassword("user1_123");
+
+    User user2 = new User();
+    user2.setUsername("user2");
+    user2.setEmail("user2@mail.com");
+    user2.setImage("image");
+    user2.setPassword("user1_123");
+
+    createUser(user1)
+        .flatMap(persistedUser1 -> createUser(user2).map(persistedUser2 -> persistedUser1))
+        .subscribe(
+            persistedUser1 -> {
+              UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+              updateUserRequest.setUsername(user2.getUsername());
+
+              webClient
+                  .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+                  .putHeader(
+                      TestsConstants.AUTHORIZATION_HEADER,
+                      TestsConstants.AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser1.getToken())
+                  .as(BodyCodec.string())
+                  .sendBuffer(
+                      toBuffer(updateUserRequest),
+                      vertxTestContext.succeeding(
+                          response ->
+                              vertxTestContext.verify(
+                                  () -> {
+                                    ErrorResponse errorResponse =
+                                        readValue(response.body(), ErrorResponse.class);
+                                    assertThat(
+                                        response.statusCode(),
+                                        is(HttpResponseStatus.CONFLICT.code()));
+                                    assertThat(
+                                        errorResponse.getBody(),
+                                        contains("username already exists"));
+                                    vertxTestContext.completeNow();
+                                  })));
+            });
+  }
+
+  @Test
+  public void shouldReturnConflictCodeWhenTryingUpdateUserWithExistentEmail(
+      VertxTestContext vertxTestContext) {
+
+    User user1 = new User();
+    user1.setUsername("user1");
+    user1.setEmail("user1@mail.com");
+    user1.setImage("image");
+    user1.setPassword("user1_123");
+
+    User user2 = new User();
+    user2.setUsername("user2");
+    user2.setEmail("user2@mail.com");
+    user2.setImage("image");
+    user2.setPassword("user1_123");
+
+    createUser(user1)
+        .flatMap(persistedUser1 -> createUser(user2).map(persistedUser2 -> persistedUser1))
+        .subscribe(
+            persistedUser1 -> {
+              UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+              updateUserRequest.setEmail(user2.getEmail());
+
+              webClient
+                  .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+                  .putHeader(
+                      TestsConstants.AUTHORIZATION_HEADER,
+                      TestsConstants.AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser1.getToken())
+                  .as(BodyCodec.string())
+                  .sendBuffer(
+                      toBuffer(updateUserRequest),
+                      vertxTestContext.succeeding(
+                          response ->
+                              vertxTestContext.verify(
+                                  () -> {
+                                    ErrorResponse errorResponse =
+                                        readValue(response.body(), ErrorResponse.class);
+                                    assertThat(
+                                        response.statusCode(),
+                                        is(HttpResponseStatus.CONFLICT.code()));
+                                    assertThat(
+                                        errorResponse.getBody(), contains("email already exists"));
+                                    vertxTestContext.completeNow();
+                                  })));
+            });
   }
 }

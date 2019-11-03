@@ -10,6 +10,7 @@ import com.example.realworld.domain.statement.Statement;
 import com.example.realworld.domain.statement.UserStatements;
 import com.example.realworld.domain.utils.ParserUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -120,6 +121,59 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
             throwable -> handler.handle(error(throwable)));
   }
 
+  @Override
+  public void update(User user, Handler<AsyncResult<User>> handler) {
+    SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection ->
+                checkValidations(sqlConnection, user)
+                    .andThen(updateUser(sqlConnection, user))
+                    .flatMap(userId -> findUserById(sqlConnection, user.getId()))
+                    .map(ParserUtils::toUser)
+                    .map(
+                        updateUserOptional ->
+                            updateUserOptional.orElseThrow(UserNotFoundException::new)))
+        .subscribe(
+            updatedUser -> handler.handle(Future.succeededFuture(updatedUser)),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  private Completable checkValidations(SQLConnection sqlConnection, User user) {
+    return Single.just(isPresent(user.getUsername()))
+        .flatMap(
+            usernameIsPresent -> {
+              if (usernameIsPresent) {
+                return isUsernameExists(sqlConnection, user.getUsername(), user.getId());
+              }
+              return Single.just(false);
+            })
+        .flatMap(
+            isUsernameExists -> {
+              if (isUsernameExists) {
+                throw new UsernameAlreadyExistsException();
+              }
+              return Single.just(isPresent(user.getEmail()));
+            })
+        .flatMap(
+            emailIsPresent -> {
+              if (emailIsPresent) {
+                return isEmailAlreadyExists(sqlConnection, user.getEmail(), user.getId());
+              }
+              return Single.just(false);
+            })
+        .flatMapCompletable(
+            isEmailAlreadyExists -> {
+              if (isEmailAlreadyExists) {
+                throw new EmailAlreadyExistsException();
+              }
+              return Completable.complete();
+            });
+  }
+
+  private boolean isPresent(String property) {
+    return property != null && !property.isEmpty();
+  }
+
   private boolean isPasswordInvalid(String password, User user) {
     return !BCrypt.checkpw(password, user.getPassword());
   }
@@ -138,8 +192,25 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
         .map(this::isCountResultGreaterThanZero);
   }
 
+  private Single<Boolean> isUsernameExists(
+      SQLConnection sqlConnection, String username, Long excludeId) {
+    Statement<JsonArray> existByUsernameStatement =
+        userStatements.existBy("username", username, excludeId);
+    return sqlConnection
+        .rxQueryWithParams(existByUsernameStatement.sql(), existByUsernameStatement.params())
+        .map(this::isCountResultGreaterThanZero);
+  }
+
   private Single<Boolean> isEmailAlreadyExists(SQLConnection sqlConnection, String email) {
     Statement<JsonArray> existByEmailStatement = userStatements.existBy("email", email);
+    return sqlConnection
+        .rxQueryWithParams(existByEmailStatement.sql(), existByEmailStatement.params())
+        .map(this::isCountResultGreaterThanZero);
+  }
+
+  private Single<Boolean> isEmailAlreadyExists(
+      SQLConnection sqlConnection, String email, Long excludeId) {
+    Statement<JsonArray> existByEmailStatement = userStatements.existBy("email", email, excludeId);
     return sqlConnection
         .rxQueryWithParams(existByEmailStatement.sql(), existByEmailStatement.params())
         .map(this::isCountResultGreaterThanZero);
@@ -151,7 +222,7 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
         .rxUpdateWithParams(createUserStatement.sql(), createUserStatement.params())
         .map(
             updateResult -> {
-              Long id = updateResult.getKeys().getLong(0);
+              Long id = getUpdateResultId(updateResult);
               user.setId(id);
               return user;
             });
@@ -163,6 +234,10 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
             new JsonObject()
                 .put("sub", user.getId())
                 .put("complementary-subscription", UUID.randomUUID().toString())));
+    return updateUser(sqlConnection, user);
+  }
+
+  private Single<UpdateResult> updateUser(SQLConnection sqlConnection, User user) {
     Statement<JsonArray> updateUserStatement = userStatements.update(user);
     return sqlConnection.rxUpdateWithParams(
         updateUserStatement.sql(), updateUserStatement.params());
@@ -175,5 +250,9 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
 
   private boolean isCountResultGreaterThanZero(ResultSet resultSet) {
     return resultSet.getRows().get(0).getLong("COUNT(*)") > 0;
+  }
+
+  private Long getUpdateResultId(UpdateResult updateResult) {
+    return updateResult.getKeys().getLong(0);
   }
 }

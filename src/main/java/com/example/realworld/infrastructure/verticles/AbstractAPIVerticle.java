@@ -13,10 +13,13 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
@@ -26,15 +29,18 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.io.IOException;
 import java.util.Set;
+import java.util.function.Function;
 
 public class AbstractAPIVerticle extends AbstractVerticle {
+
+  final Logger logger = LoggerFactory.getLogger(getClass());
 
   public static final String AUTHORIZATION_HEADER = "Authorization";
   public static final String AUTHORIZATION_HEADER_PREFIX = "Token ";
   public static final String USER_ID_CONTEXT_KEY = "userId";
 
-  @Inject private @WrapUnwrapRootValueObjectMapper ObjectMapper wrapUnwrapRootValueObjectMapper;
-  @Inject private @DefaultObjectMapper ObjectMapper defaultObjectMapper;
+  @Inject @WrapUnwrapRootValueObjectMapper private ObjectMapper wrapUnwrapRootValueObjectMapper;
+  @Inject @DefaultObjectMapper private ObjectMapper defaultObjectMapper;
   @Inject private Validator validator;
   @Inject private BusinessExceptionMapper businessExceptionMapper;
   @Inject protected JWTAuth jwtAuth;
@@ -47,6 +53,18 @@ public class AbstractAPIVerticle extends AbstractVerticle {
         .createHttpServer()
         .requestHandler(httpServerRequestHandler)
         .listen(config().getInteger(Constants.SERVER_PORT_KEY, 8080), handler);
+  }
+
+  protected Handler<AsyncResult<HttpServer>> createHttpServerHandler(
+      String apiName, Promise<Void> startPromise) {
+    return httpServerAsyncResult -> {
+      if (httpServerAsyncResult.succeeded()) {
+        logger.info(apiName + " started on port " + config().getInteger(Constants.SERVER_PORT_KEY));
+        startPromise.complete();
+      } else {
+        startPromise.fail(httpServerAsyncResult.cause());
+      }
+    };
   }
 
   protected <T> T getBody(RoutingContext routingContext, Class<T> clazz) {
@@ -96,6 +114,18 @@ public class AbstractAPIVerticle extends AbstractVerticle {
     } catch (JsonProcessingException e) {
       routingContext.fail(e);
     }
+  }
+
+  protected <T> Handler<AsyncResult<T>> responseOrFail(
+      RoutingContext routingContext, int statusCode, Function<T, Object> responseFunction) {
+    return asyncResult -> {
+      if (asyncResult.succeeded()) {
+        T result = asyncResult.result();
+        response(routingContext, statusCode, responseFunction.apply(result));
+      } else {
+        routingContext.fail(asyncResult.cause());
+      }
+    };
   }
 
   protected Router subRouter(Router router) {

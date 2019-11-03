@@ -13,5 +13,7 @@ public interface UserStatements {
 
   Statement<JsonArray> existBy(String field, String value);
 
+  Statement<JsonArray> existBy(String field, String value, Long excludeId);
+
   Statement<JsonArray> findByEmail(String email);
 }
