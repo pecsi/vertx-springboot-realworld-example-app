@@ -1,60 +1,35 @@
-package com.example.realworld.infrastructure.verticles;
+package com.example.realworld.infrastructure.web.route;
 
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.infrastructure.web.model.request.LoginRequest;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
-import com.example.realworld.infrastructure.web.model.request.UpdateUserRequest;
 import com.example.realworld.infrastructure.web.model.response.UserResponse;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Promise;
+import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 
-public class UsersAPIVerticle extends AbstractAPIVerticle {
+@Singleton
+public class UsersRoute extends AbstractHttpRoute {
 
   private UsersService usersService;
 
   @Inject
-  public UsersAPIVerticle(UsersService usersService) {
+  public UsersRoute(UsersService usersService) {
     this.usersService = usersService;
   }
 
   @Override
-  public void start(Promise<Void> startPromise) throws Exception {
-
+  public Router configure(Vertx vertx) {
     final String usersApiPath = "/users";
-    final String userApiPath = "/user";
-
     final Router usersRouter = Router.router(vertx);
-
     usersRouter.route().handler(BodyHandler.create());
-
     usersRouter.post(usersApiPath).handler(this::create);
     usersRouter.post(usersApiPath + "/login").handler(this::login);
-
-    usersRouter
-        .route(userApiPath)
-        .handler(routingContext -> this.jwtHandler(routingContext, false));
-    usersRouter.get(userApiPath).handler(this::getUser);
-    usersRouter.put(userApiPath).handler(this::updateUser);
-
-    createHttpServer(subRouter(usersRouter), createHttpServerHandler("Users API", startPromise));
-  }
-
-  private void updateUser(RoutingContext routingContext) {
-    Long userId = routingContext.get(USER_ID_CONTEXT_KEY);
-    UpdateUserRequest updateUserRequest = getBodyAndValid(routingContext, UpdateUserRequest.class);
-    usersService.update(
-        updateUserRequest.toUser(userId),
-        responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
-  }
-
-  private void getUser(RoutingContext routingContext) {
-    Long userId = routingContext.get(USER_ID_CONTEXT_KEY);
-    usersService.findById(
-        userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
+    return usersRouter;
   }
 
   private void login(RoutingContext routingContext) {

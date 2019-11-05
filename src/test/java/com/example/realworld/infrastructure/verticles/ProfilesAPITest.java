@@ -14,7 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 @ExtendWith(VertxExtension.class)
-public class ProfilesAPIVerticleTest extends AbstractVerticleTest {
+public class ProfilesAPITest extends AbstractVerticleTest {
 
   private final String PROFILES_RESOURCE_PATH = API_PREFIX + "/profiles";
 

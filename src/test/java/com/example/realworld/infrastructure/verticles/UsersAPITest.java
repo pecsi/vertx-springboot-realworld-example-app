@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @ExtendWith(VertxExtension.class)
-public class UsersAPIVerticleTest extends AbstractVerticleTest {
+public class UsersAPITest extends AbstractVerticleTest {
 
   private final String USERS_RESOURCE_PATH = API_PREFIX + "/users";
   private final String USER_RESOURCE_PATH = API_PREFIX + "/user";

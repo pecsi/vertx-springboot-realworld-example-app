@@ -7,10 +7,12 @@ import com.example.realworld.domain.statement.impl.UserStatementsImpl;
 import com.example.realworld.infrastructure.Constants;
 import com.example.realworld.infrastructure.context.annotation.DefaultObjectMapper;
 import com.example.realworld.infrastructure.context.annotation.WrapUnwrapRootValueObjectMapper;
-import com.example.realworld.infrastructure.verticles.AbstractAPIVerticle;
-import com.example.realworld.infrastructure.verticles.ProfilesAPIVerticle;
-import com.example.realworld.infrastructure.verticles.UsersAPIVerticle;
+import com.example.realworld.infrastructure.verticles.HttpVerticle;
 import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
+import com.example.realworld.infrastructure.web.route.HttpRoute;
+import com.example.realworld.infrastructure.web.route.ProfilesRoute;
+import com.example.realworld.infrastructure.web.route.UserRoute;
+import com.example.realworld.infrastructure.web.route.UsersRoute;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -47,8 +49,10 @@ public class ApplicationModule extends AbstractModule {
   protected void configure() {
     bind(JsonObject.class).annotatedWith(Names.named("Config")).toInstance(config);
     bind(UserStatements.class).to(UserStatementsImpl.class).asEagerSingleton();
-    bind(UsersAPIVerticle.class);
-    bind(ProfilesAPIVerticle.class);
+    bind(HttpVerticle.class);
+    bind(UsersRoute.class);
+    bind(UserRoute.class);
+    bind(ProfilesRoute.class);
   }
 
   @Provides
@@ -116,9 +120,9 @@ public class ApplicationModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public List<AbstractAPIVerticle> apiVerticles(
-      UsersAPIVerticle usersAPIVerticle, ProfilesAPIVerticle profilesAPIVerticle) {
-    return Arrays.asList(usersAPIVerticle, profilesAPIVerticle);
+  public List<HttpRoute> httpRoutes(
+      UsersRoute usersRoute, UserRoute userRoute, ProfilesRoute profilesRoute) {
+    return Arrays.asList(usersRoute, userRoute, profilesRoute);
   }
 
   private <T> T registerServiceAndCreateProxy(

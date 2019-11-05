@@ -1,15 +1,18 @@
-package com.example.realworld.infrastructure.verticles;
+package com.example.realworld.infrastructure.web.route;
 
-import io.vertx.core.Promise;
+import com.google.inject.Singleton;
+import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 
-public class ProfilesAPIVerticle extends AbstractAPIVerticle {
+import java.util.Optional;
+
+@Singleton
+public class ProfilesRoute extends AbstractHttpRoute {
 
   @Override
-  public void start(Promise<Void> startPromise) throws Exception {
-
+  public Router configure(Vertx vertx) {
     final String profilesPath = "/profiles";
 
     final Router profilesRouter = Router.router(vertx);
@@ -21,12 +24,10 @@ public class ProfilesAPIVerticle extends AbstractAPIVerticle {
         .handler(routingContext -> this.jwtHandler(routingContext, true));
 
     profilesRouter.get(profilesPath + "/:username").handler(this::getProfile);
-
-    createHttpServer(
-        subRouter(profilesRouter), createHttpServerHandler("Profiles API", startPromise));
+    return profilesRouter;
   }
 
   private void getProfile(RoutingContext routingContext) {
-    Long userId = routingContext.get(USER_ID_CONTEXT_KEY);
+    Optional<Long> userId = userId(routingContext);
   }
 }
