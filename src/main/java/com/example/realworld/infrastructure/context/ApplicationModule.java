@@ -7,6 +7,8 @@ import com.example.realworld.domain.statement.impl.UserStatementsImpl;
 import com.example.realworld.infrastructure.Constants;
 import com.example.realworld.infrastructure.context.annotation.DefaultObjectMapper;
 import com.example.realworld.infrastructure.context.annotation.WrapUnwrapRootValueObjectMapper;
+import com.example.realworld.infrastructure.verticles.AbstractAPIVerticle;
+import com.example.realworld.infrastructure.verticles.ProfilesAPIVerticle;
 import com.example.realworld.infrastructure.verticles.UsersAPIVerticle;
 import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -28,6 +30,8 @@ import io.vertx.serviceproxy.ServiceProxyBuilder;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import java.util.Arrays;
+import java.util.List;
 
 public class ApplicationModule extends AbstractModule {
 
@@ -44,6 +48,7 @@ public class ApplicationModule extends AbstractModule {
     bind(JsonObject.class).annotatedWith(Names.named("Config")).toInstance(config);
     bind(UserStatements.class).to(UserStatementsImpl.class).asEagerSingleton();
     bind(UsersAPIVerticle.class);
+    bind(ProfilesAPIVerticle.class);
   }
 
   @Provides
@@ -107,6 +112,13 @@ public class ApplicationModule extends AbstractModule {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new JavaTimeModule());
     return objectMapper;
+  }
+
+  @Provides
+  @Singleton
+  public List<AbstractAPIVerticle> apiVerticles(
+      UsersAPIVerticle usersAPIVerticle, ProfilesAPIVerticle profilesAPIVerticle) {
+    return Arrays.asList(usersAPIVerticle, profilesAPIVerticle);
   }
 
   private <T> T registerServiceAndCreateProxy(

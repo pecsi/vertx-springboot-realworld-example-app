@@ -8,9 +8,9 @@ import com.example.realworld.infrastructure.web.model.response.UserResponse;
 import com.google.inject.Inject;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Promise;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.handler.BodyHandler;
 
 public class UsersAPIVerticle extends AbstractAPIVerticle {
 
@@ -34,11 +34,13 @@ public class UsersAPIVerticle extends AbstractAPIVerticle {
     usersRouter.post(usersApiPath).handler(this::create);
     usersRouter.post(usersApiPath + "/login").handler(this::login);
 
-    usersRouter.route(userApiPath).handler(this::jwtHandler);
+    usersRouter
+        .route(userApiPath)
+        .handler(routingContext -> this.jwtHandler(routingContext, false));
     usersRouter.get(userApiPath).handler(this::getUser);
     usersRouter.put(userApiPath).handler(this::updateUser);
 
-    createHttpServer(subRouter(usersRouter), createHttpServerHandler("UsersAPI", startPromise));
+    createHttpServer(subRouter(usersRouter), createHttpServerHandler("Users API", startPromise));
   }
 
   private void updateUser(RoutingContext routingContext) {

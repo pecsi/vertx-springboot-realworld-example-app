@@ -10,19 +10,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
+import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.core.http.HttpServer;
+import io.vertx.reactivex.core.http.HttpServerRequest;
+import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceException;
 
 import javax.validation.ConstraintViolation;
@@ -173,7 +173,7 @@ public class AbstractAPIVerticle extends AbstractVerticle {
     return result;
   }
 
-  protected void jwtHandler(RoutingContext routingContext) {
+  protected void jwtHandler(RoutingContext routingContext, boolean optional) {
 
     String authorization = routingContext.request().headers().get(AUTHORIZATION_HEADER);
 
@@ -188,7 +188,15 @@ public class AbstractAPIVerticle extends AbstractVerticle {
                 routingContext.put(USER_ID_CONTEXT_KEY, user.principal().getLong("sub"));
                 routingContext.next();
               },
-              throwable -> unauthorizedResponse(routingContext));
+              throwable -> optionalAuthorization(routingContext, optional));
+    } else {
+      optionalAuthorization(routingContext, optional);
+    }
+  }
+
+  private void optionalAuthorization(RoutingContext routingContext, boolean optional) {
+    if (optional) {
+      routingContext.next();
     } else {
       unauthorizedResponse(routingContext);
     }

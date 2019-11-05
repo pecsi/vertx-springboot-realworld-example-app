@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.http.HttpServerResponse;
+import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.serviceproxy.ServiceException;
 
 import java.util.HashMap;

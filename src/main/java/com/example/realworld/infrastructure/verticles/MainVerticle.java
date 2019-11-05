@@ -3,15 +3,18 @@ package com.example.realworld.infrastructure.verticles;
 import com.example.realworld.infrastructure.context.ApplicationModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.core.CompositeFuture;
+import io.vertx.reactivex.core.Future;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
@@ -21,6 +24,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 public class MainVerticle extends AbstractVerticle {
@@ -46,20 +51,26 @@ public class MainVerticle extends AbstractVerticle {
                         createApplicationSchemaAR -> {
                           if (createApplicationSchemaAR.succeeded()) {
 
-                            UsersAPIVerticle usersAPIVerticle =
-                                injector.getInstance(UsersAPIVerticle.class);
+                            List<AbstractAPIVerticle> apiVerticles =
+                                injector.getInstance(
+                                    Key.get(new TypeLiteral<List<AbstractAPIVerticle>>() {}));
 
                             DeploymentOptions deploymentOptions =
                                 new DeploymentOptions().setConfig(config);
-                            deployVerticle(usersAPIVerticle, deploymentOptions)
+
+                            CompositeFuture.all(deployVerticles(apiVerticles, deploymentOptions))
                                 .setHandler(
-                                    deployVerticleAsyncResult -> {
-                                      if (deployVerticleAsyncResult.succeeded()) {
+                                    compositeFutureAsyncResult -> {
+                                      if (compositeFutureAsyncResult.succeeded()) {
                                         startPromise.complete();
                                       } else {
-                                        startPromise.fail(deployVerticleAsyncResult.cause());
+                                        startPromise.fail(compositeFutureAsyncResult.cause());
                                       }
                                     });
+                            //                                .subscribe(
+                            //                                    compositeFuture ->,
+                            // startPromise::fail);
+
                           } else {
                             startPromise.fail(createApplicationSchemaAR.cause());
                           }
@@ -70,6 +81,14 @@ public class MainVerticle extends AbstractVerticle {
                 startPromise.fail(configAR.cause());
               }
             });
+  }
+
+  private List<Future> deployVerticles(
+      List<AbstractAPIVerticle> abstractAPIVerticles, DeploymentOptions deploymentOptions) {
+    List<Future> deployVerticles = new LinkedList<>();
+    abstractAPIVerticles.forEach(
+        apiVerticle -> deployVerticles.add(deployVerticle(apiVerticle, deploymentOptions)));
+    return deployVerticles;
   }
 
   private Future<Void> createApplicationSchema(JDBCClient jdbcClient, JsonObject config) {

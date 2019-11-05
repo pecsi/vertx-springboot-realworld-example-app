@@ -80,7 +80,11 @@ public class AbstractVerticleTest {
 
   private static void deployMainVerticle(Vertx vertx, VertxTestContext testContext) {
     vertx.deployVerticle(
-        new MainVerticle(), testContext.succeeding(id -> testContext.completeNow()));
+        new MainVerticle(),
+        testContext.succeeding(
+            id -> {
+              testContext.completeNow();
+            }));
   }
 
   private void configWebClient(Vertx vertx) {
