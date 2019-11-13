@@ -20,5 +20,5 @@ public interface UsersService {
 
   void update(User user, Handler<AsyncResult<User>> handler);
 
-  //  User findByUsername(String username);
+  void findByUsername(String username, Handler<AsyncResult<User>> handler);
 }

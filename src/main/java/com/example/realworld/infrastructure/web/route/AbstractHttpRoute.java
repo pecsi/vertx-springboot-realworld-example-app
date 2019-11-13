@@ -19,6 +19,7 @@ import javax.validation.Validator;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class AbstractHttpRoute implements HttpRoute {
@@ -66,8 +67,22 @@ public abstract class AbstractHttpRoute implements HttpRoute {
         routingContext, HttpResponseStatus.UNAUTHORIZED.code(), new ErrorResponse("Unauthorized"));
   }
 
-  protected <T> Optional<T> userId(RoutingContext routingContext) {
+  protected <T> Optional<T> userIdOptional(RoutingContext routingContext) {
     return Optional.ofNullable(routingContext.get(USER_ID_CONTEXT_KEY));
+  }
+
+  protected <T> void userId(RoutingContext routingContext, boolean optional, Consumer<T> consumer) {
+    Optional<T> userIdOptional = userIdOptional(routingContext);
+
+    if (userIdOptional.isPresent()) {
+      consumer.accept(userIdOptional.get());
+    } else {
+      if (optional) {
+        consumer.accept(null);
+      } else {
+        unauthorizedResponse(routingContext);
+      }
+    }
   }
 
   protected <T> T getBodyAndValid(RoutingContext routingContext, Class<T> clazz) {

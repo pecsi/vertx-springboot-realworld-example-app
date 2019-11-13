@@ -138,6 +138,23 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
             throwable -> handler.handle(error(throwable)));
   }
 
+  @Override
+  public void findByUsername(String username, Handler<AsyncResult<User>> handler) {
+    SQLClientHelper.inTransactionSingle(
+            jdbcClient, sqlConnection -> findByUsername(sqlConnection, username))
+        .map(userOptional -> userOptional.orElseThrow(UserNotFoundException::new))
+        .subscribe(
+            user -> handler.handle(Future.succeededFuture(user)),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  private Single<Optional<User>> findByUsername(SQLConnection sqlConnection, String username) {
+    Statement<JsonArray> findByUsernameStatement = userStatements.findByUsername(username);
+    return sqlConnection
+        .rxQueryWithParams(findByUsernameStatement.sql(), findByUsernameStatement.params())
+        .map(ParserUtils::toUser);
+  }
+
   private Completable checkValidations(SQLConnection sqlConnection, User user) {
     return Single.just(isPresent(user.getUsername()))
         .flatMap(

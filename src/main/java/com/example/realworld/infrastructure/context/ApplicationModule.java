@@ -1,6 +1,8 @@
 package com.example.realworld.infrastructure.context;
 
+import com.example.realworld.domain.service.ProfilesService;
 import com.example.realworld.domain.service.UsersService;
+import com.example.realworld.domain.service.impl.ProfilesServiceImpl;
 import com.example.realworld.domain.service.impl.UsersServiceImpl;
 import com.example.realworld.domain.statement.UserStatements;
 import com.example.realworld.domain.statement.impl.UserStatementsImpl;
@@ -89,6 +91,19 @@ public class ApplicationModule extends AbstractModule {
         UsersService.class,
         UsersService.SERVICE_ADDRESS,
         new UsersServiceImpl(userStatements, jwtAuth, jdbcClient, objectMapper));
+  }
+
+  @Provides
+  @Singleton
+  public ProfilesService profilesService(
+      JDBCClient jdbcClient,
+      UsersService usersService,
+      @DefaultObjectMapper ObjectMapper objectMapper) {
+    return registerServiceAndCreateProxy(
+        vertx,
+        ProfilesService.class,
+        ProfilesService.SERVICE_ADDRESS,
+        new ProfilesServiceImpl(jdbcClient, usersService, objectMapper));
   }
 
   @Provides

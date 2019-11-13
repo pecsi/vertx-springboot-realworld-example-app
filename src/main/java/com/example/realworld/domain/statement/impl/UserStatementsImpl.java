@@ -104,6 +104,16 @@ public class UserStatementsImpl implements UserStatements {
     return new JsonArrayStatement(sql, params);
   }
 
+  @Override
+  public Statement<JsonArray> findByUsername(String username) {
+
+    String sql = "SELECT * FROM USERS WHERE UPPER(USERNAME) = ?";
+
+    JsonArray params = new JsonArray().add(username.toUpperCase());
+
+    return new JsonArrayStatement(sql, params);
+  }
+
   private boolean isPresent(String value) {
     return value != null && !value.isEmpty();
   }

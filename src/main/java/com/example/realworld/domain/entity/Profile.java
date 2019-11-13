@@ -1,11 +1,27 @@
 package com.example.realworld.domain.entity;
 
+import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
+
+@DataObject(generateConverter = true)
 public class Profile {
 
   private String username;
   private String bio;
   private String image;
   private boolean following;
+
+  public Profile() {}
+
+  public Profile(JsonObject jsonObject) {
+    ProfileConverter.fromJson(jsonObject, this);
+  }
+
+  public JsonObject toJson() {
+    JsonObject jsonObject = new JsonObject();
+    ProfileConverter.toJson(this, jsonObject);
+    return jsonObject;
+  }
 
   public String getUsername() {
     return username;
