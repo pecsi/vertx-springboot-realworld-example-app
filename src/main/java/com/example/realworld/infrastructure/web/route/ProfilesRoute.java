@@ -30,7 +30,7 @@ public class ProfilesRoute extends AbstractHttpRoute {
     profilesRouter.route().handler(BodyHandler.create());
 
     profilesRouter
-        .route(profilesPath)
+        .route(profilesPath + "/*")
         .handler(routingContext -> this.jwtHandler(routingContext, true));
 
     profilesRouter.get(profilesPath + "/:" + USERNAME).handler(this::getProfile);

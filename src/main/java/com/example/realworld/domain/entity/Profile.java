@@ -1,5 +1,6 @@
 package com.example.realworld.domain.entity;
 
+import com.example.realworld.domain.entity.persistent.User;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
@@ -15,6 +16,13 @@ public class Profile {
 
   public Profile(JsonObject jsonObject) {
     ProfileConverter.fromJson(jsonObject, this);
+  }
+
+  public Profile(User user, boolean isFollowing) {
+    this.username = user.getUsername();
+    this.bio = user.getBio();
+    this.image = user.getImage();
+    this.following = isFollowing;
   }
 
   public JsonObject toJson() {

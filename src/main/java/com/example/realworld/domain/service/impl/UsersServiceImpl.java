@@ -265,10 +265,6 @@ public class UsersServiceImpl extends AbstractService implements UsersService {
     return sqlConnection.rxQueryWithParams(findByIdStatement.sql(), findByIdStatement.params());
   }
 
-  private boolean isCountResultGreaterThanZero(ResultSet resultSet) {
-    return resultSet.getRows().get(0).getLong("COUNT(*)") > 0;
-  }
-
   private Long getUpdateResultId(UpdateResult updateResult) {
     return updateResult.getKeys().getLong(0);
   }

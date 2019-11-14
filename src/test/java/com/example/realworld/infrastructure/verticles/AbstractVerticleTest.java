@@ -1,8 +1,10 @@
 package com.example.realworld.infrastructure.verticles;
 
 import com.example.realworld.domain.entity.persistent.User;
+import com.example.realworld.domain.statement.FollowedUsersStatements;
 import com.example.realworld.domain.statement.Statement;
 import com.example.realworld.domain.statement.UserStatements;
+import com.example.realworld.domain.statement.impl.FollowedUsersStatementsImpl;
 import com.example.realworld.domain.statement.impl.UserStatementsImpl;
 import com.example.realworld.domain.utils.ParserUtils;
 import com.example.realworld.infrastructure.Constants;
@@ -24,6 +26,7 @@ import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLClientHelper;
 import io.vertx.reactivex.ext.web.client.WebClient;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +44,9 @@ public class AbstractVerticleTest {
   protected static JDBCClient jdbcClient;
   protected static ObjectMapper objectMapper = ObjectMapperConfig.wrapUnwrapRootValueObjectMapper();
   protected static int port;
+  protected static String mainVerticleDeploymentId;
   protected UserStatements userStatements = new UserStatementsImpl();
+  protected FollowedUsersStatements followedUsersStatements = new FollowedUsersStatementsImpl();
 
   @BeforeAll
   public static void beforeAll(Vertx vertx, VertxTestContext testContext) {
@@ -63,6 +68,11 @@ public class AbstractVerticleTest {
             });
   }
 
+  @AfterAll
+  public static void afterAll(VertxTestContext vertxTestContext) {
+    dropDatabase(vertxTestContext);
+  }
+
   @BeforeEach
   public void beforeEach(Vertx vertx) {
     configWebClient(vertx);
@@ -70,11 +80,23 @@ public class AbstractVerticleTest {
 
   @AfterEach
   public void afterEach(VertxTestContext testContext) {
+    clearDatabase(testContext);
+  }
+
+  private static void dropDatabase(VertxTestContext vertxTestContext) {
+    String dropDatabaseStatement = "DROP TABLE USERS; DROP TABLE FOLLOWED_USERS;";
+    executeStatement(vertxTestContext, dropDatabaseStatement);
+  }
+
+  private void clearDatabase(VertxTestContext vertxTestContext) {
+    String clearDatabaseStatement =
+        "SET FOREIGN_KEY_CHECKS = 0; DELETE FROM USERS; DELETE FROM FOLLOWED_USERS; SET FOREIGN_KEY_CHECKS = 1;";
+    executeStatement(vertxTestContext, clearDatabaseStatement);
+  }
+
+  private static void executeStatement(VertxTestContext testContext, String sql) {
     SQLClientHelper.inTransactionCompletable(
-            jdbcClient,
-            sqlConnection ->
-                sqlConnection.rxExecute(
-                    "SET FOREIGN_KEY_CHECKS = 0; DELETE FROM USERS; SET FOREIGN_KEY_CHECKS = 1;"))
+            jdbcClient, sqlConnection -> sqlConnection.rxExecute(sql))
         .subscribe(testContext::completeNow);
   }
 
@@ -165,6 +187,16 @@ public class AbstractVerticleTest {
         .flatMap(this::updateUser)
         .map(User::getId)
         .flatMap(this::findUserById);
+  }
+
+  protected Single<User> follow(User currentUser, User followedUser) {
+    Statement<JsonArray> followStatement =
+        followedUsersStatements.follow(currentUser.getId(), followedUser.getId());
+    return SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection ->
+                sqlConnection.rxUpdateWithParams(followStatement.sql(), followStatement.params()))
+        .flatMap(updateResult -> Single.just(currentUser));
   }
 
   protected Single<User> updateUser(User user) {

@@ -4,7 +4,9 @@ import com.example.realworld.domain.service.ProfilesService;
 import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.domain.service.impl.ProfilesServiceImpl;
 import com.example.realworld.domain.service.impl.UsersServiceImpl;
+import com.example.realworld.domain.statement.FollowedUsersStatements;
 import com.example.realworld.domain.statement.UserStatements;
+import com.example.realworld.domain.statement.impl.FollowedUsersStatementsImpl;
 import com.example.realworld.domain.statement.impl.UserStatementsImpl;
 import com.example.realworld.infrastructure.Constants;
 import com.example.realworld.infrastructure.context.annotation.DefaultObjectMapper;
@@ -51,6 +53,7 @@ public class ApplicationModule extends AbstractModule {
   protected void configure() {
     bind(JsonObject.class).annotatedWith(Names.named("Config")).toInstance(config);
     bind(UserStatements.class).to(UserStatementsImpl.class).asEagerSingleton();
+    bind(FollowedUsersStatements.class).to(FollowedUsersStatementsImpl.class).asEagerSingleton();
     bind(HttpVerticle.class);
     bind(UsersRoute.class);
     bind(UserRoute.class);
@@ -98,12 +101,13 @@ public class ApplicationModule extends AbstractModule {
   public ProfilesService profilesService(
       JDBCClient jdbcClient,
       UsersService usersService,
+      FollowedUsersStatements followedUsersStatements,
       @DefaultObjectMapper ObjectMapper objectMapper) {
     return registerServiceAndCreateProxy(
         vertx,
         ProfilesService.class,
         ProfilesService.SERVICE_ADDRESS,
-        new ProfilesServiceImpl(jdbcClient, usersService, objectMapper));
+        new ProfilesServiceImpl(jdbcClient, usersService, followedUsersStatements, objectMapper));
   }
 
   @Provides

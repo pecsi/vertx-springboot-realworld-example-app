@@ -4,7 +4,9 @@ import com.example.realworld.domain.service.error.Error;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.ext.sql.ResultSet;
 import io.vertx.serviceproxy.ServiceException;
 
 import java.util.function.Consumer;
@@ -17,12 +19,13 @@ class AbstractService {
     this.objectMapper = objectMapper;
   }
 
-  protected <T> Handler<AsyncResult<T>> result(Consumer<T> consumer) {
+  protected <T> Handler<AsyncResult<T>> result(
+      Consumer<T> consumer, Handler<AsyncResult<?>> handler) {
     return (AsyncResult<T> asyncResult) -> {
       if (asyncResult.succeeded()) {
         consumer.accept(asyncResult.result());
       } else {
-        throw new RuntimeException(asyncResult.cause());
+        handler.handle(Future.failedFuture(asyncResult.cause()));
       }
     };
   }
@@ -36,5 +39,9 @@ class AbstractService {
       error = ex.getMessage();
     }
     return ServiceException.fail(1, error);
+  }
+
+  protected boolean isCountResultGreaterThanZero(ResultSet resultSet) {
+    return resultSet.getRows().get(0).getLong("COUNT(*)") > 0;
   }
 }

@@ -14,7 +14,7 @@ import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static com.example.realworld.constants.TestsConstants.API_PREFIX;
+import static com.example.realworld.constants.TestsConstants.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -260,8 +260,8 @@ public class UsersAPITest extends AbstractVerticleTest {
                 webClient
                     .get(port, TestsConstants.HOST, USER_RESOURCE_PATH)
                     .putHeader(
-                        TestsConstants.AUTHORIZATION_HEADER,
-                        TestsConstants.AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser.getToken())
+                        AUTHORIZATION_HEADER,
+                        AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser.getToken())
                     .as(BodyCodec.string())
                     .send(
                         vertxTestContext.succeeding(
@@ -303,8 +303,8 @@ public class UsersAPITest extends AbstractVerticleTest {
               webClient
                   .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
                   .putHeader(
-                      TestsConstants.AUTHORIZATION_HEADER,
-                      TestsConstants.AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser.getToken())
+                      AUTHORIZATION_HEADER,
+                      AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser.getToken())
                   .as(BodyCodec.string())
                   .sendBuffer(
                       toBuffer(updateUserRequest),
@@ -349,8 +349,8 @@ public class UsersAPITest extends AbstractVerticleTest {
               webClient
                   .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
                   .putHeader(
-                      TestsConstants.AUTHORIZATION_HEADER,
-                      TestsConstants.AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser1.getToken())
+                      AUTHORIZATION_HEADER,
+                      AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser1.getToken())
                   .as(BodyCodec.string())
                   .sendBuffer(
                       toBuffer(updateUserRequest),
@@ -397,8 +397,8 @@ public class UsersAPITest extends AbstractVerticleTest {
               webClient
                   .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
                   .putHeader(
-                      TestsConstants.AUTHORIZATION_HEADER,
-                      TestsConstants.AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser1.getToken())
+                      AUTHORIZATION_HEADER,
+                      AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser1.getToken())
                   .as(BodyCodec.string())
                   .sendBuffer(
                       toBuffer(updateUserRequest),

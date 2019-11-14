@@ -11,6 +11,8 @@ public class ProfileResponse {
   private String image;
   private boolean following;
 
+  public ProfileResponse() {}
+
   public ProfileResponse(Profile profile) {
     this.username = profile.getUsername();
     this.bio = profile.getBio();
