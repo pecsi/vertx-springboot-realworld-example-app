@@ -67,10 +67,6 @@ public abstract class AbstractHttpRoute implements HttpRoute {
         routingContext, HttpResponseStatus.UNAUTHORIZED.code(), new ErrorResponse("Unauthorized"));
   }
 
-  protected <T> Optional<T> userIdOptional(RoutingContext routingContext) {
-    return Optional.ofNullable(routingContext.get(USER_ID_CONTEXT_KEY));
-  }
-
   protected <T> void userId(RoutingContext routingContext, boolean optional, Consumer<T> consumer) {
     Optional<T> userIdOptional = userIdOptional(routingContext);
 
@@ -99,6 +95,10 @@ public abstract class AbstractHttpRoute implements HttpRoute {
       throw new RuntimeException(ex);
     }
     return result;
+  }
+
+  private <T> Optional<T> userIdOptional(RoutingContext routingContext) {
+    return Optional.ofNullable(routingContext.get(USER_ID_CONTEXT_KEY));
   }
 
   private <T> void validateRequestBody(T body) {

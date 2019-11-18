@@ -7,6 +7,7 @@ import com.example.realworld.domain.service.UsersService;
 import com.example.realworld.domain.statement.FollowedUsersStatements;
 import com.example.realworld.domain.statement.Statement;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -60,6 +61,27 @@ public class ProfilesServiceImpl extends AbstractService implements ProfilesServ
         });
   }
 
+  @Override
+  public void follow(Long loggedUserId, String username, Handler<AsyncResult<Profile>> handler) {
+
+    usersService.findByUsername(
+        username,
+        userAsyncResult -> {
+          if (userAsyncResult.succeeded()) {
+            User user = userAsyncResult.result();
+            follow(loggedUserId, user.getId())
+                .subscribe(
+                    () -> getProfile(username, loggedUserId, handler),
+                    throwable -> handler.handle(error(throwable)));
+          } else {
+            handler.handle(Future.failedFuture(userAsyncResult.cause()));
+          }
+        });
+  }
+
+  @Override
+  public void unfollow(Long loggedUserId, String username, Handler<AsyncResult<Profile>> handler) {}
+
   private Single<Boolean> isFollowing(Long currentUserId, Long followedUserId) {
     Statement<JsonArray> isFollowingStatement =
         followedUsersStatements.isFollowing(currentUserId, followedUserId);
@@ -71,9 +93,14 @@ public class ProfilesServiceImpl extends AbstractService implements ProfilesServ
                 .map(this::isCountResultGreaterThanZero));
   }
 
-  @Override
-  public void follow(Long loggedUserId, String username, Handler<AsyncResult<Profile>> handler) {}
-
-  @Override
-  public void unfollow(Long loggedUserId, String username, Handler<AsyncResult<Profile>> handler) {}
+  private Completable follow(Long currentUserId, Long followedId) {
+    Statement<JsonArray> followStatement =
+        followedUsersStatements.follow(currentUserId, followedId);
+    return SQLClientHelper.inTransactionCompletable(
+        jdbcClient,
+        sqlConnection ->
+            sqlConnection
+                .rxQueryWithParams(followStatement.sql(), followStatement.params())
+                .flatMapCompletable(resultSet -> Completable.complete()));
+  }
 }

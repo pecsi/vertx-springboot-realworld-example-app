@@ -106,4 +106,56 @@ public class ProfilesAPITest extends AbstractVerticleTest {
                                       vertxTestContext.completeNow();
                                     }))));
   }
+
+  @Test
+  public void
+      givenPersistedUserWhenExecuteFollowOperationShouldReturnProfileDataWithFollowingPropertyValueSettingToTrue(
+          VertxTestContext vertxTestContext) {
+
+    User user1 = new User();
+    user1.setUsername("user1");
+    user1.setEmail("user1@mail.com");
+    user1.setImage("image");
+    user1.setBio("bio");
+    user1.setPassword("user1_123");
+
+    User user2 = new User();
+    user2.setUsername("user2");
+    user2.setEmail("user2@mail.com");
+    user2.setImage("image");
+    user2.setBio("bio");
+    user2.setPassword("user2_123");
+
+    createUser(user1)
+        .flatMap(persistedUser1 -> createUser(user2))
+        .subscribe(
+            persistedUser2 ->
+                webClient
+                    .post(
+                        port,
+                        HOST,
+                        PROFILES_RESOURCE_PATH + "/" + persistedUser2.getUsername() + "/follow")
+                    .putHeader(
+                        AUTHORIZATION_HEADER,
+                        AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser2.getToken())
+                    .as(BodyCodec.string())
+                    .send(
+                        vertxTestContext.succeeding(
+                            response ->
+                                vertxTestContext.verify(
+                                    () -> {
+                                      ProfileResponse profileResponse =
+                                          readValue(response.body(), ProfileResponse.class);
+                                      assertThat(
+                                          profileResponse.getUsername(),
+                                          is(persistedUser2.getUsername()));
+                                      assertThat(
+                                          profileResponse.getBio(), is(persistedUser2.getBio()));
+                                      assertThat(
+                                          profileResponse.getImage(),
+                                          is(persistedUser2.getImage()));
+                                      assertThat(profileResponse.isFollowing(), is(true));
+                                      vertxTestContext.completeNow();
+                                    }))));
+  }
 }

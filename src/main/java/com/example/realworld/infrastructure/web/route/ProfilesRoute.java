@@ -13,7 +13,9 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 @Singleton
 public class ProfilesRoute extends AbstractHttpRoute {
 
-  public static final String USERNAME = "username";
+  private final String USERNAME = "username";
+  private final String GET_PROFILE_PATH = "/:" + USERNAME;
+  private final String FOLLOW = GET_PROFILE_PATH + "/follow";
   private ProfilesService profilesService;
 
   @Inject
@@ -33,7 +35,10 @@ public class ProfilesRoute extends AbstractHttpRoute {
         .route(profilesPath + "/*")
         .handler(routingContext -> this.jwtHandler(routingContext, true));
 
-    profilesRouter.get(profilesPath + "/:" + USERNAME).handler(this::getProfile);
+    profilesRouter.get(profilesPath + GET_PROFILE_PATH).handler(this::getProfile);
+
+    profilesRouter.post(profilesPath + FOLLOW).handler(this::follow);
+
     return profilesRouter;
   }
 
@@ -46,6 +51,19 @@ public class ProfilesRoute extends AbstractHttpRoute {
           profilesService.getProfile(
               username,
               userId,
+              responseOrFail(routingContext, HttpResponseStatus.OK.code(), ProfileResponse::new));
+        });
+  }
+
+  private void follow(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (Long userId) -> {
+          String username = routingContext.pathParam(USERNAME);
+          profilesService.follow(
+              userId,
+              username,
               responseOrFail(routingContext, HttpResponseStatus.OK.code(), ProfileResponse::new));
         });
   }
