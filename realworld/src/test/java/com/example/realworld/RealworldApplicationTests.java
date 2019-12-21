@@ -1,11 +1,12 @@
 package com.example.realworld;
 
+import io.vertx.junit5.VertxExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-class RealworldApplicationTests extends AbstractIntegrationTest {
+@ExtendWith(VertxExtension.class)
+class RealworldApplicationTests extends RealworldDataIntegrationTest {
 
   @Test
-  void contextLoads() {
-    configurableApplicationContext.getBean("defaultObjectMapper");
-  }
+  void contextLoads() {}
 }

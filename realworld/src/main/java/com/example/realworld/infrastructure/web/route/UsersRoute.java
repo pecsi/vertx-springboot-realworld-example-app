@@ -1,8 +1,7 @@
 package com.example.realworld.infrastructure.web.route;
 
-import com.example.realworld.domain.user.service.UserService;
+import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
-import com.example.realworld.infrastructure.web.model.response.UserResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
@@ -13,10 +12,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class UsersRoute extends AbstractHttpRoute {
 
-  private UserService userService;
+  private UserOperations userOperations;
 
-  public UsersRoute(UserService userService) {
-    this.userService = userService;
+  public UsersRoute(UserOperations userOperations) {
+    this.userOperations = userOperations;
   }
 
   @Override
@@ -39,8 +38,7 @@ public class UsersRoute extends AbstractHttpRoute {
 
   private void create(RoutingContext routingContext) {
     NewUserRequest newUserRequest = getBodyAndValid(routingContext, NewUserRequest.class);
-    userService
-        .create(newUserRequest.toNewUser())
-        .subscribe(responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
+    userOperations.create(
+        newUserRequest, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
   }
 }

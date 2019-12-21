@@ -49,7 +49,10 @@ public class UserServiceImpl implements UserService {
                         if (isEmailAlreadyExists) {
                           throw new EmailAlreadyExistsException();
                         }
-                        return userRepository.store(user);
+                        return userRepository
+                            .store(user)
+                            .flatMap(
+                                persistedUser -> userRepository.findById(persistedUser.getId()));
                       });
             });
   }
@@ -62,7 +65,7 @@ public class UserServiceImpl implements UserService {
     return userRepository.countByEmail(email).flatMap(this::isCountResultGreaterThanZero);
   }
 
-  private Single<Boolean> isCountResultGreaterThanZero(int countResult) {
+  private Single<Boolean> isCountResultGreaterThanZero(Long countResult) {
     if (countResult > 0) {
       return Single.just(true);
     } else {

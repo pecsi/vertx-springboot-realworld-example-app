@@ -1,38 +1,37 @@
-package com.example.realworld.infrastructure.web.model.response;
+package com.example.realworld.infrastructure.vertx.proxy.model;
 
-import com.example.realworld.domain.user.model.User;
-import com.fasterxml.jackson.annotation.JsonRootName;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
-@JsonRootName("user")
 @DataObject(generateConverter = true)
-public class UserResponse {
+public class ProxyUser {
 
+  private Long id;
   private String username;
   private String bio;
   private String image;
+  private String password;
   private String email;
   private String token;
 
-  public UserResponse() {}
+  public ProxyUser() {}
 
-  public UserResponse(JsonObject jsonObject) {
-    UserResponseConverter.fromJson(jsonObject, this);
+  public ProxyUser(JsonObject jsonObject) {
+    //    UserConverter.fromJson(jsonObject, this);
   }
 
   public JsonObject toJson() {
     JsonObject jsonObject = new JsonObject();
-    UserResponseConverter.toJson(this, jsonObject);
+    //    UserConverter.toJson(this, jsonObject);
     return jsonObject;
   }
 
-  public UserResponse(User user) {
-    this.username = user.getUsername();
-    this.bio = user.getBio();
-    this.image = user.getImage();
-    this.email = user.getEmail();
-    this.token = user.getToken();
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
   }
 
   public String getUsername() {
@@ -57,6 +56,14 @@ public class UserResponse {
 
   public void setImage(String image) {
     this.image = image;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public String getEmail() {

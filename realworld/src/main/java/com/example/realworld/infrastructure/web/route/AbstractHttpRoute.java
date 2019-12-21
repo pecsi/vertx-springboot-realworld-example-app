@@ -5,8 +5,8 @@ import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.functions.BiConsumer;
-import io.reactivex.functions.Function;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
 import io.vertx.reactivex.ext.web.RoutingContext;
@@ -131,14 +131,26 @@ public abstract class AbstractHttpRoute implements HttpRoute {
     }
   }
 
-  protected <T> BiConsumer<? super T, ? super Throwable> responseOrFail(
-      RoutingContext routingContext, int statusCode, Function<T, Object> responseFunction) {
-    return (result, throwable) -> {
-      if (throwable != null) {
-        routingContext.fail(throwable);
+  protected <T> Handler<AsyncResult<T>> responseOrFail(
+      RoutingContext routingContext, int statusCode) {
+    return asyncResult -> {
+      if (asyncResult.succeeded()) {
+        T result = asyncResult.result();
+        response(routingContext, statusCode, result);
       } else {
-        response(routingContext, statusCode, responseFunction.apply(result));
+        routingContext.fail(asyncResult.cause());
       }
     };
   }
+
+  //  protected <T> BiConsumer<? super T, ? super Throwable> responseOrFail(
+  //      RoutingContext routingContext, int statusCode, Function<T, Object> responseFunction) {
+  //    return (result, throwable) -> {
+  //      if (throwable != null) {
+  //        routingContext.fail(throwable);
+  //      } else {
+  //        response(routingContext, statusCode, responseFunction.apply(result));
+  //      }
+  //    };
+  //  }
 }

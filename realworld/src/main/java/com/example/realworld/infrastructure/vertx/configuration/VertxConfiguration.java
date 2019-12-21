@@ -17,7 +17,7 @@ public class VertxConfiguration {
 
   @Getter
   @Setter
-  static class Server {
+  public static class Server {
     private int port;
     private String contextPath;
   }

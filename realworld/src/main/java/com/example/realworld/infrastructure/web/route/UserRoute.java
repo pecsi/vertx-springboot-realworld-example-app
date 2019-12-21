@@ -1,18 +1,17 @@
 package com.example.realworld.infrastructure.web.route;
 
-import com.example.realworld.domain.user.service.UserService;
+import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
-import org.springframework.stereotype.Component;
 
-@Component
+// @Component
 public class UserRoute extends AbstractHttpRoute {
 
-  private UserService usersService;
+  private UserOperations userOperations;
 
-  public UserRoute(UserService usersService) {
-    this.usersService = usersService;
+  public UserRoute(UserOperations userOperations) {
+    this.userOperations = userOperations;
   }
 
   @Override

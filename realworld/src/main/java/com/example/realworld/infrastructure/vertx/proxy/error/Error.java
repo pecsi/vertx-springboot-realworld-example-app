@@ -1,4 +1,4 @@
-package com.example.realworld.application.error;
+package com.example.realworld.infrastructure.vertx.proxy.error;
 
 public class Error<E extends Throwable> {
 

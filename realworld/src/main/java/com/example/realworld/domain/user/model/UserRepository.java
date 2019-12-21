@@ -5,7 +5,9 @@ import io.reactivex.Single;
 public interface UserRepository {
   Single<User> store(User user);
 
-  Single<Integer> countByUsername(String username);
+  Single<Long> countByUsername(String username);
 
-  Single<Integer> countByEmail(String email);
+  Single<Long> countByEmail(String email);
+
+  Single<User> findById(String id);
 }
