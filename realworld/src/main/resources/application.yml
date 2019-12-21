@@ -3,6 +3,11 @@ spring:
     url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1
     username: sa
     password:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration
+
+
 vertx:
   server:
     port: 8080

@@ -1,3 +1,3 @@
 package com.example.realworld.domain.user.exception;
 
-public class UsernameAlreadyExistsException extends RuntimeException {}
+public class UsernameAlreadyExistsException extends BusinessException {}

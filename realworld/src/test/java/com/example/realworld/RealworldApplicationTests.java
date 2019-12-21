@@ -1,13 +1,11 @@
 package com.example.realworld;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class RealworldApplicationTests {
+class RealworldApplicationTests extends AbstractIntegrationTest {
 
-	@Test
-	void contextLoads() {
-	}
-
+  @Test
+  void contextLoads() {
+    configurableApplicationContext.getBean("defaultObjectMapper");
+  }
 }

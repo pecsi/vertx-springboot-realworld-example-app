@@ -1,8 +1,7 @@
-package com.example.realworld.infrastructure.vertx.verticle;
+package com.example.realworld.infrastructure.vertx.configuration;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,7 +24,7 @@ public class VertxConfiguration {
 
   @Getter
   @Setter
-  static class Jwt {
+  public static class Jwt {
     private String algorithm;
     private String secret;
   }
@@ -33,9 +32,7 @@ public class VertxConfiguration {
   @Getter
   @Setter
   public static class Database {
-    @Value("${spring.datasource.url}")
     private String url;
-
     private String driverClass;
     private int maxPoolSize;
     private String user;
