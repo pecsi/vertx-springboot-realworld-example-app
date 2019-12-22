@@ -1,6 +1,7 @@
 package com.example.realworld.domain.user.model;
 
 public class NewUser {
+
   private String username;
   private String email;
   private String password;

@@ -1,9 +1,6 @@
 package com.example.realworld.infrastructure.vertx.exception.mapper;
 
-import com.example.realworld.domain.user.exception.EmailAlreadyExistsException;
-import com.example.realworld.domain.user.exception.InvalidLoginException;
-import com.example.realworld.domain.user.exception.UserNotFoundException;
-import com.example.realworld.domain.user.exception.UsernameAlreadyExistsException;
+import com.example.realworld.domain.user.exception.*;
 import com.example.realworld.infrastructure.vertx.proxy.error.Error;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -63,21 +60,21 @@ public class BusinessExceptionMapper {
   }
 
   private BusinessExceptionHandler exceptionHandler(String message, int httpStatusCode) {
-    return (httpServerResponse, throwable) -> {
-      String resultMessage = message;
-      if (throwable.getMessage() != null && !throwable.getMessage().isEmpty()) {
-        resultMessage = throwable.getMessage();
+    return (httpServerResponse, businessException) -> {
+      ErrorResponse errorResponse = new ErrorResponse(message);
+      if (businessException.haveMessages()) {
+        errorResponse = new ErrorResponse(businessException.getMessages());
       }
-      errorResponse(httpServerResponse, resultMessage, httpStatusCode);
+      errorResponse(httpServerResponse, errorResponse, httpStatusCode);
     };
   }
 
   private void errorResponse(
-      HttpServerResponse httpServerResponse, String errorMessage, int httpStatusCode) {
+      HttpServerResponse httpServerResponse, ErrorResponse errorResponse, int httpStatusCode) {
     try {
       httpServerResponse
           .setStatusCode(httpStatusCode)
-          .end(wrapUnwrapRootValueObjectMapper.writeValueAsString(new ErrorResponse(errorMessage)));
+          .end(wrapUnwrapRootValueObjectMapper.writeValueAsString(errorResponse));
     } catch (JsonProcessingException e) {
       httpServerResponse.end(e.getMessage());
     }
@@ -95,6 +92,6 @@ public class BusinessExceptionMapper {
   }
 
   private interface BusinessExceptionHandler {
-    void handler(HttpServerResponse httpServerResponse, Throwable throwable);
+    void handler(HttpServerResponse httpServerResponse, BusinessException businessException);
   }
 }

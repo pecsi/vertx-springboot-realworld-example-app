@@ -4,6 +4,7 @@ import com.example.realworld.application.UserServiceImpl;
 import com.example.realworld.domain.user.CryptographyService;
 import com.example.realworld.domain.user.model.TokenProvider;
 import com.example.realworld.domain.user.model.UserRepository;
+import com.example.realworld.domain.user.model.UserValidator;
 import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
 import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
@@ -30,8 +31,9 @@ public class RealworldApplicationConfiguration {
   public UserService userService(
       UserRepository userRepository,
       CryptographyService cryptographyService,
-      TokenProvider tokenProvider) {
-    return new UserServiceImpl(userRepository, cryptographyService, tokenProvider);
+      TokenProvider tokenProvider,
+      UserValidator userValidator) {
+    return new UserServiceImpl(userRepository, cryptographyService, tokenProvider, userValidator);
   }
 
   @Bean

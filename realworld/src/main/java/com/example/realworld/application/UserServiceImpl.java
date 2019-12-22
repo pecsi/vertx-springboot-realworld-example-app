@@ -18,19 +18,22 @@ public class UserServiceImpl extends ApplicationService implements UserService {
   private UserRepository userRepository;
   private CryptographyService cryptographyService;
   private TokenProvider tokenProvider;
+  private UserValidator userValidator;
 
   public UserServiceImpl(
       UserRepository userRepository,
       CryptographyService cryptographyService,
-      TokenProvider tokenProvider) {
+      TokenProvider tokenProvider,
+      UserValidator userValidator) {
     this.userRepository = userRepository;
     this.cryptographyService = cryptographyService;
     this.tokenProvider = tokenProvider;
+    this.userValidator = userValidator;
   }
 
   @Override
   public Single<User> create(NewUser newUser) {
-
+    userValidator.validate(newUser);
     User user = new User();
     user.setId(UUID.randomUUID().toString());
     user.setUsername(newUser.getUsername());

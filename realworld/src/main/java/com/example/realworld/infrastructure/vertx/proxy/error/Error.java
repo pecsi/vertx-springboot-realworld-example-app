@@ -1,6 +1,8 @@
 package com.example.realworld.infrastructure.vertx.proxy.error;
 
-public class Error<E extends Throwable> {
+import com.example.realworld.domain.user.exception.BusinessException;
+
+public class Error<E extends BusinessException> {
 
   private String className;
   private E exception;
