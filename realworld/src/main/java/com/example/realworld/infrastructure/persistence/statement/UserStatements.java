@@ -11,9 +11,9 @@ public interface UserStatements {
 
   Statement<JsonArray> findById(String id);
 
-  Statement<JsonArray> counterBy(String field, String value);
+  Statement<JsonArray> countBy(String field, String value);
 
-  Statement<JsonArray> counterBy(String field, String value, Long excludeId);
+  Statement<JsonArray> countBy(String field, String value, String excludeId);
 
   Statement<JsonArray> findByEmail(String email);
 

@@ -2,17 +2,18 @@ package com.example.realworld.application;
 
 import com.example.realworld.domain.user.CryptographyService;
 import com.example.realworld.domain.user.exception.EmailAlreadyExistsException;
+import com.example.realworld.domain.user.exception.InvalidLoginException;
+import com.example.realworld.domain.user.exception.UserNotFoundException;
 import com.example.realworld.domain.user.exception.UsernameAlreadyExistsException;
-import com.example.realworld.domain.user.model.NewUser;
-import com.example.realworld.domain.user.model.TokenProvider;
-import com.example.realworld.domain.user.model.User;
-import com.example.realworld.domain.user.model.UserRepository;
+import com.example.realworld.domain.user.model.*;
 import com.example.realworld.domain.user.service.UserService;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 
+import java.util.Optional;
 import java.util.UUID;
 
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl extends ApplicationService implements UserService {
 
   private UserRepository userRepository;
   private CryptographyService cryptographyService;
@@ -52,24 +53,110 @@ public class UserServiceImpl implements UserService {
                         return userRepository
                             .store(user)
                             .flatMap(
-                                persistedUser -> userRepository.findById(persistedUser.getId()));
+                                persistedUser ->
+                                    userRepository
+                                        .findById(persistedUser.getId())
+                                        .map(this::extractUser));
                       });
             });
   }
 
+  private User extractUser(Optional<User> userOptional) {
+    return userOptional.orElseThrow(UserNotFoundException::new);
+  }
+
+  @Override
+  public Single<User> login(String email, String password) {
+    return userRepository
+        .findUserByEmail(email)
+        .flatMap(
+            userOptional -> {
+              if (!userOptional.isPresent() || isPasswordInvalid(password, userOptional.get())) {
+                throw new InvalidLoginException();
+              }
+              User user = userOptional.get();
+              user.setToken(tokenProvider.generateToken(user.getId()));
+              return userRepository.update(user);
+            });
+  }
+
+  @Override
+  public Single<User> findById(String userId) {
+    return userRepository
+        .findById(userId)
+        .map(userOptional -> userOptional.orElseThrow(UserNotFoundException::new));
+  }
+
+  @Override
+  public Single<User> update(UpdateUser updateUser, String excludeUserId) {
+    return checkValidations(updateUser, excludeUserId)
+        .andThen(
+            userRepository
+                .update(updateUser.toUser(excludeUserId))
+                .flatMap(user -> userRepository.findById(user.getId()).map(this::extractUser)));
+  }
+
+  private Completable checkValidations(UpdateUser updateUser, String excludeUserId) {
+    return Single.just(isPresent(updateUser.getUsername()))
+        .flatMap(
+            usernameIsPresent -> {
+              if (usernameIsPresent) {
+                return isUsernameExists(updateUser.getUsername(), excludeUserId);
+              }
+              return Single.just(false);
+            })
+        .flatMap(
+            isUsernameExists -> {
+              if (isUsernameExists) {
+                throw new UsernameAlreadyExistsException();
+              }
+              return Single.just(isPresent(updateUser.getEmail()));
+            })
+        .flatMap(
+            emailIsPresent -> {
+              if (emailIsPresent) {
+                return isEmailAlreadyExists(updateUser.getEmail(), excludeUserId);
+              }
+              return Single.just(false);
+            })
+        .flatMapCompletable(
+            isEmailAlreadyExists -> {
+              if (isEmailAlreadyExists) {
+                throw new EmailAlreadyExistsException();
+              }
+              return Completable.complete();
+            });
+  }
+
+  private boolean isPasswordInvalid(String password, User user) {
+    return !cryptographyService.isPasswordValid(password, user.getPassword());
+  }
+
   private Single<Boolean> isUsernameExists(String username) {
-    return userRepository.countByUsername(username).flatMap(this::isCountResultGreaterThanZero);
+    return userRepository.countByUsername(username).map(this::isCountResultGreaterThanZero);
+  }
+
+  private Single<Boolean> isUsernameExists(String username, String excludeUserId) {
+    return userRepository
+        .countByUsername(username, excludeUserId)
+        .map(this::isCountResultGreaterThanZero);
   }
 
   private Single<Boolean> isEmailAlreadyExists(String email) {
-    return userRepository.countByEmail(email).flatMap(this::isCountResultGreaterThanZero);
+    return userRepository.countByEmail(email).map(this::isCountResultGreaterThanZero);
   }
 
-  private Single<Boolean> isCountResultGreaterThanZero(Long countResult) {
-    if (countResult > 0) {
-      return Single.just(true);
-    } else {
-      return Single.just(false);
-    }
+  private Single<Boolean> isEmailAlreadyExists(String email, String excludeUserId) {
+    return userRepository
+        .countByEmail(email, excludeUserId)
+        .map(this::isCountResultGreaterThanZero);
+  }
+
+  private boolean isCountResultGreaterThanZero(Long countResult) {
+    return countResult > 0;
+  }
+
+  private boolean isPresent(String property) {
+    return property != null && !property.isEmpty();
   }
 }

@@ -2,7 +2,9 @@ package com.example.realworld.infrastructure.vertx.proxy.impl;
 
 import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
+import com.example.realworld.infrastructure.web.model.request.LoginRequest;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
+import com.example.realworld.infrastructure.web.model.request.UpdateUserRequest;
 import com.example.realworld.infrastructure.web.model.response.UserResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
@@ -24,6 +26,36 @@ public class UserOperationsImpl extends AbstractOperations implements UserOperat
         .create(newUserRequest.toNewUser())
         .subscribe(
             user -> handler.handle(Future.succeededFuture(new UserResponse(user))),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void login(LoginRequest loginRequest, Handler<AsyncResult<UserResponse>> handler) {
+    userService
+        .login(loginRequest.getEmail(), loginRequest.getPassword())
+        .subscribe(
+            user -> handler.handle(Future.succeededFuture(new UserResponse(user))),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void findById(String userId, Handler<AsyncResult<UserResponse>> handler) {
+    userService
+        .findById(userId)
+        .subscribe(
+            user -> handler.handle(Future.succeededFuture(new UserResponse(user))),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void update(
+      String currentUserId,
+      UpdateUserRequest updateUserRequest,
+      Handler<AsyncResult<UserResponse>> handler) {
+    userService
+        .update(updateUserRequest.toUpdateUser(), currentUserId)
+        .subscribe(
+            user -> handler.handle(Future.succeededFuture((new UserResponse(user)))),
             throwable -> handler.handle(error(throwable)));
   }
 }

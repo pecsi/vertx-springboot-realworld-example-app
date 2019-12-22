@@ -1,21 +1,20 @@
 package com.example.realworld.domain.user.model;
 
-public class User {
+public class UpdateUser {
 
-  private String id;
   private String username;
   private String bio;
   private String image;
-  private String password;
   private String email;
-  private String token;
 
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
+  public User toUser(String userId) {
+    User user = new User();
+    user.setId(userId);
+    user.setUsername(this.username);
+    user.setBio(this.bio);
+    user.setImage(this.image);
+    user.setEmail(this.email);
+    return user;
   }
 
   public String getUsername() {
@@ -42,27 +41,11 @@ public class User {
     this.image = image;
   }
 
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
   public String getEmail() {
     return email;
   }
 
   public void setEmail(String email) {
     this.email = email;
-  }
-
-  public String getToken() {
-    return token;
-  }
-
-  public void setToken(String token) {
-    this.token = token;
   }
 }

@@ -10,4 +10,9 @@ public class BCryptService implements CryptographyService {
   public String hashPassword(String plainPassword) {
     return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
   }
+
+  @Override
+  public boolean isPasswordValid(String plainText, String hashed) {
+    return BCrypt.checkpw(plainText, hashed);
+  }
 }

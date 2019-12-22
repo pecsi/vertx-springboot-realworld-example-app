@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.web.route;
 
 import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
+import com.example.realworld.infrastructure.web.model.request.LoginRequest;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.reactivex.core.Vertx;
@@ -24,17 +25,15 @@ public class UsersRoute extends AbstractHttpRoute {
     final Router usersRouter = Router.router(vertx);
     usersRouter.route().handler(BodyHandler.create());
     usersRouter.post(usersApiPath).handler(this::create);
-    //    usersRouter.post(usersApiPath + "/login").handler(this::login);
+    usersRouter.post(usersApiPath + "/login").handler(this::login);
     return usersRouter;
   }
 
-  //  private void login(RoutingContext routingContext) {
-  //    LoginRequest loginRequest = getBodyAndValid(routingContext, LoginRequest.class);
-  //    usersService.login(
-  //        loginRequest.getEmail(),
-  //        loginRequest.getPassword(),
-  //        responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
-  //  }
+  private void login(RoutingContext routingContext) {
+    LoginRequest loginRequest = getBodyAndValid(routingContext, LoginRequest.class);
+    userOperations.login(
+        loginRequest, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
+  }
 
   private void create(RoutingContext routingContext) {
     NewUserRequest newUserRequest = getBodyAndValid(routingContext, NewUserRequest.class);

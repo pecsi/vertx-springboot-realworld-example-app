@@ -126,18 +126,23 @@
 
   <build>
     <plugins>
-      <!--            <plugin>-->
-      <!--                <artifactId>maven-compiler-plugin</artifactId>-->
-      <!--                <version>${maven-compiler-plugin.version}</version>-->
-      <!--                <configuration>-->
-      <!--                    <annotationProcessors>-->
-      <!--                        <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>-->
-      <!--                    </annotationProcessors>-->
-      <!--                    <compilerArgs>-->
-      <!--                        <arg>-AoutputDirectory=${project.basedir}/src/main</arg>-->
-      <!--                    </compilerArgs>-->
-      <!--                </configuration>-->
-      <!--            </plugin>-->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
+        <configuration>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <useIncrementalCompilation>false</useIncrementalCompilation>
+          <annotationProcessors>
+            <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
+          </annotationProcessors>
+          <generatedSourcesDirectory>${project.basedir}/src/main/generated</generatedSourcesDirectory>
+          <compilerArgs>
+            <arg>-AoutputDirectory=${project.basedir}/src/main</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

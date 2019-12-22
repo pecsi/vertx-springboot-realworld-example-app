@@ -11,6 +11,8 @@ import io.vertx.ext.sql.ResultSet;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class UserRepositoryJDBC implements UserRepository {
 
@@ -32,30 +34,63 @@ public class UserRepositoryJDBC implements UserRepository {
 
   @Override
   public Single<Long> countByUsername(String username) {
-    Statement<JsonArray> counterByUsernameStatement =
-        userStatements.counterBy("username", username);
+    Statement<JsonArray> countByUsernameStatement = userStatements.countBy("username", username);
     return jdbcClient
-        .rxQueryWithParams(counterByUsernameStatement.sql(), counterByUsernameStatement.params())
-        .map(this::getCounterFromResultSet);
+        .rxQueryWithParams(countByUsernameStatement.sql(), countByUsernameStatement.params())
+        .map(this::getCountFromResultSet);
+  }
+
+  @Override
+  public Single<Long> countByUsername(String username, String excludeUserId) {
+    Statement<JsonArray> countByUsernameStatement =
+        userStatements.countBy("username", username, excludeUserId);
+    return jdbcClient
+        .rxQueryWithParams(countByUsernameStatement.sql(), countByUsernameStatement.params())
+        .map(this::getCountFromResultSet);
   }
 
   @Override
   public Single<Long> countByEmail(String email) {
-    Statement<JsonArray> counterByEmailStatement = userStatements.counterBy("email", email);
+    Statement<JsonArray> countByEmailStatement = userStatements.countBy("email", email);
     return jdbcClient
-        .rxQueryWithParams(counterByEmailStatement.sql(), counterByEmailStatement.params())
-        .map(this::getCounterFromResultSet);
+        .rxQueryWithParams(countByEmailStatement.sql(), countByEmailStatement.params())
+        .map(this::getCountFromResultSet);
   }
 
   @Override
-  public Single<User> findById(String id) {
+  public Single<Long> countByEmail(String email, String excludeUserId) {
+    Statement<JsonArray> countByEmailStatement =
+        userStatements.countBy("email", email, excludeUserId);
+    return jdbcClient
+        .rxQueryWithParams(countByEmailStatement.sql(), countByEmailStatement.params())
+        .map(this::getCountFromResultSet);
+  }
+
+  @Override
+  public Single<Optional<User>> findById(String id) {
     Statement<JsonArray> findByIdStatement = userStatements.findById(id);
     return jdbcClient
         .rxQueryWithParams(findByIdStatement.sql(), findByIdStatement.params())
-        .map(ParserUtils::toUser);
+        .map(ParserUtils::toUserOptional);
   }
 
-  protected Long getCounterFromResultSet(ResultSet resultSet) {
+  @Override
+  public Single<Optional<User>> findUserByEmail(String email) {
+    Statement<JsonArray> findByEmailStatement = userStatements.findByEmail(email);
+    return jdbcClient
+        .rxQueryWithParams(findByEmailStatement.sql(), findByEmailStatement.params())
+        .map(ParserUtils::toUserOptional);
+  }
+
+  @Override
+  public Single<User> update(User user) {
+    Statement<JsonArray> updateUserStatement = userStatements.update(user);
+    return jdbcClient
+        .rxUpdateWithParams(updateUserStatement.sql(), updateUserStatement.params())
+        .map(updateResult -> user);
+  }
+
+  Long getCountFromResultSet(ResultSet resultSet) {
     return resultSet.getRows().get(0).getLong("COUNT(*)");
   }
 }

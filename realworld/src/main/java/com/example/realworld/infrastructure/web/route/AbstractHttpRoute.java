@@ -51,7 +51,7 @@ public abstract class AbstractHttpRoute implements HttpRoute {
           .rxAuthenticate(new JsonObject().put("jwt", token))
           .subscribe(
               user -> {
-                routingContext.put(USER_ID_CONTEXT_KEY, user.principal().getLong("sub"));
+                routingContext.put(USER_ID_CONTEXT_KEY, user.principal().getString("sub"));
                 routingContext.next();
               },
               throwable -> optionalAuthorization(routingContext, optional));
