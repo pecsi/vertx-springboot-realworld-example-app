@@ -4,7 +4,8 @@ import io.vertx.core.json.JsonArray;
 
 public interface FollowedUsersStatements {
 
-  Statement<JsonArray> isFollowing(Long currentUserId, Long followedUserId);
+  Statement<JsonArray> countByCurrentUserIdAndFollowedUserId(
+      String currentUserId, String followedUserId);
 
   Statement<JsonArray> follow(Long currentUserId, Long followedUserId);
 }

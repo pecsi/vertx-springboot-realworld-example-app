@@ -32,7 +32,7 @@ public class UserOperationsImpl extends AbstractOperations implements UserOperat
   @Override
   public void login(LoginRequest loginRequest, Handler<AsyncResult<UserResponse>> handler) {
     userService
-        .login(loginRequest.getEmail(), loginRequest.getPassword())
+        .login(loginRequest.toLogin())
         .subscribe(
             user -> handler.handle(Future.succeededFuture(new UserResponse(user))),
             throwable -> handler.handle(error(throwable)));

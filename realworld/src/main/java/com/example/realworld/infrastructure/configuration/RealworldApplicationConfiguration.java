@@ -1,13 +1,14 @@
 package com.example.realworld.infrastructure.configuration;
 
+import com.example.realworld.application.ProfileServiceImpl;
 import com.example.realworld.application.UserServiceImpl;
-import com.example.realworld.domain.user.CryptographyService;
-import com.example.realworld.domain.user.model.TokenProvider;
-import com.example.realworld.domain.user.model.UserRepository;
-import com.example.realworld.domain.user.model.UserValidator;
+import com.example.realworld.domain.profile.service.ProfileService;
+import com.example.realworld.domain.user.model.*;
 import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
+import com.example.realworld.infrastructure.vertx.proxy.ProfileOperations;
 import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
+import com.example.realworld.infrastructure.vertx.proxy.impl.ProfileOperationsImpl;
 import com.example.realworld.infrastructure.vertx.proxy.impl.UserOperationsImpl;
 import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -30,10 +31,21 @@ public class RealworldApplicationConfiguration {
   @Bean
   public UserService userService(
       UserRepository userRepository,
-      CryptographyService cryptographyService,
+      FollowedUsersRepository followedUsersRepository,
+      CryptographyProvider cryptographyService,
       TokenProvider tokenProvider,
-      UserValidator userValidator) {
-    return new UserServiceImpl(userRepository, cryptographyService, tokenProvider, userValidator);
+      ModelValidator modelValidator) {
+    return new UserServiceImpl(
+        userRepository,
+        followedUsersRepository,
+        cryptographyService,
+        tokenProvider,
+        modelValidator);
+  }
+
+  @Bean
+  public ProfileService profileService(UserService userService) {
+    return new ProfileServiceImpl(userService);
   }
 
   @Bean
@@ -85,6 +97,18 @@ public class RealworldApplicationConfiguration {
         UserOperations.class,
         UserOperations.SERVICE_ADDRESS,
         new UserOperationsImpl(userService, objectMapper));
+  }
+
+  @Bean
+  public ProfileOperations profileOperations(
+      Vertx vertx,
+      ProfileService profileService,
+      @Qualifier("defaultObjectMapper") ObjectMapper objectMapper) {
+    return registerServiceAndCreateProxy(
+        vertx,
+        ProfileOperations.class,
+        ProfileOperations.SERVICE_ADDRESS,
+        new ProfileOperationsImpl(profileService, objectMapper));
   }
 
   private <T> T registerServiceAndCreateProxy(

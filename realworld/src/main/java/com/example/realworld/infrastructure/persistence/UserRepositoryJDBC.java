@@ -7,14 +7,13 @@ import com.example.realworld.infrastructure.persistence.statement.UserStatements
 import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
-import io.vertx.ext.sql.ResultSet;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public class UserRepositoryJDBC implements UserRepository {
+public class UserRepositoryJDBC extends JDBCRepository implements UserRepository {
 
   private JDBCClient jdbcClient;
   private UserStatements userStatements;
@@ -90,7 +89,11 @@ public class UserRepositoryJDBC implements UserRepository {
         .map(updateResult -> user);
   }
 
-  Long getCountFromResultSet(ResultSet resultSet) {
-    return resultSet.getRows().get(0).getLong("COUNT(*)");
+  @Override
+  public Single<Optional<User>> findUserByUsername(String username) {
+    Statement<JsonArray> findByUsernameStatement = userStatements.findByUsername(username);
+    return jdbcClient
+        .rxQueryWithParams(findByUsernameStatement.sql(), findByUsernameStatement.params())
+        .map(ParserUtils::toUserOptional);
   }
 }

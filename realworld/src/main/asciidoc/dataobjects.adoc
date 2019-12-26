@@ -25,6 +25,20 @@
 |[[username]]`@username`|`String`|-
 |===
 
+[[ProfileResponse]]
+== ProfileResponse
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[bio]]`@bio`|`String`|-
+|[[following]]`@following`|`Boolean`|-
+|[[image]]`@image`|`String`|-
+|[[username]]`@username`|`String`|-
+|===
+
 [[ProxyUser]]
 == ProxyUser
 

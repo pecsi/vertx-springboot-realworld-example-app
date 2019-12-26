@@ -1,8 +1,7 @@
 package com.example.realworld.infrastructure.validator;
 
 import com.example.realworld.domain.user.exception.BusinessException;
-import com.example.realworld.domain.user.model.NewUser;
-import com.example.realworld.domain.user.model.UserValidator;
+import com.example.realworld.domain.user.model.ModelValidator;
 import org.springframework.stereotype.Component;
 
 import javax.validation.ConstraintViolation;
@@ -12,17 +11,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-public class UserValidatorImpl implements UserValidator {
+public class ModelValidatorImpl implements ModelValidator {
 
   private Validator validator;
 
-  public UserValidatorImpl(Validator validator) {
+  public ModelValidatorImpl(Validator validator) {
     this.validator = validator;
   }
 
   @Override
-  public void validate(NewUser newUser) {
-    Set<ConstraintViolation<NewUser>> constraintViolationSet = validator.validate(newUser);
+  public <T> void validate(T model) {
+    Set<ConstraintViolation<T>> constraintViolationSet = validator.validate(model);
 
     List<String> errorMessages =
         constraintViolationSet.stream()

@@ -1,6 +1,5 @@
 package com.example.realworld.application;
 
-import com.example.realworld.domain.user.CryptographyService;
 import com.example.realworld.domain.user.exception.EmailAlreadyExistsException;
 import com.example.realworld.domain.user.exception.InvalidLoginException;
 import com.example.realworld.domain.user.exception.UserNotFoundException;
@@ -8,6 +7,7 @@ import com.example.realworld.domain.user.exception.UsernameAlreadyExistsExceptio
 import com.example.realworld.domain.user.model.*;
 import com.example.realworld.domain.user.service.UserService;
 import io.reactivex.Completable;
+import io.reactivex.CompletableObserver;
 import io.reactivex.Single;
 
 import java.util.Optional;
@@ -16,51 +16,63 @@ import java.util.UUID;
 public class UserServiceImpl extends ApplicationService implements UserService {
 
   private UserRepository userRepository;
-  private CryptographyService cryptographyService;
+  private FollowedUsersRepository followedUsersRepository;
+  private CryptographyProvider cryptographyProvider;
   private TokenProvider tokenProvider;
-  private UserValidator userValidator;
+  private ModelValidator modelValidator;
 
   public UserServiceImpl(
       UserRepository userRepository,
-      CryptographyService cryptographyService,
+      FollowedUsersRepository followedUsersRepository,
+      CryptographyProvider cryptographyProvider,
       TokenProvider tokenProvider,
-      UserValidator userValidator) {
+      ModelValidator modelValidator) {
     this.userRepository = userRepository;
-    this.cryptographyService = cryptographyService;
+    this.followedUsersRepository = followedUsersRepository;
+    this.cryptographyProvider = cryptographyProvider;
     this.tokenProvider = tokenProvider;
-    this.userValidator = userValidator;
+    this.modelValidator = modelValidator;
   }
 
   @Override
   public Single<User> create(NewUser newUser) {
-    userValidator.validate(newUser);
+    modelValidator.validate(newUser);
     User user = new User();
     user.setId(UUID.randomUUID().toString());
     user.setUsername(newUser.getUsername());
     user.setEmail(newUser.getEmail());
-    user.setPassword(cryptographyService.hashPassword(newUser.getPassword()));
+    user.setPassword(cryptographyProvider.hashPassword(newUser.getPassword()));
     user.setToken(tokenProvider.generateToken(user.getId()));
 
-    return isUsernameExists(user.getUsername())
-        .flatMap(
+    return validUsername(user.getUsername())
+        .andThen(validEmail(user.getEmail()))
+        .andThen(
+            userRepository
+                .store(user)
+                .flatMap(
+                    persistedUser ->
+                        userRepository.findById(persistedUser.getId()).map(this::extractUser)));
+  }
+
+  private Completable validUsername(String username) {
+    return isUsernameExists(username)
+        .flatMapCompletable(
             isUsernameExists -> {
               if (isUsernameExists) {
                 throw new UsernameAlreadyExistsException();
               }
-              return isEmailAlreadyExists(user.getEmail())
-                  .flatMap(
-                      isEmailAlreadyExists -> {
-                        if (isEmailAlreadyExists) {
-                          throw new EmailAlreadyExistsException();
-                        }
-                        return userRepository
-                            .store(user)
-                            .flatMap(
-                                persistedUser ->
-                                    userRepository
-                                        .findById(persistedUser.getId())
-                                        .map(this::extractUser));
-                      });
+              return CompletableObserver::onComplete;
+            });
+  }
+
+  private Completable validEmail(String email) {
+    return isEmailAlreadyExists(email)
+        .flatMapCompletable(
+            isEmailAlreadyExists -> {
+              if (isEmailAlreadyExists) {
+                throw new EmailAlreadyExistsException();
+              }
+              return CompletableObserver::onComplete;
             });
   }
 
@@ -69,12 +81,14 @@ public class UserServiceImpl extends ApplicationService implements UserService {
   }
 
   @Override
-  public Single<User> login(String email, String password) {
+  public Single<User> login(Login login) {
+    modelValidator.validate(login);
     return userRepository
-        .findUserByEmail(email)
+        .findUserByEmail(login.getEmail())
         .flatMap(
             userOptional -> {
-              if (!userOptional.isPresent() || isPasswordInvalid(password, userOptional.get())) {
+              if (!userOptional.isPresent()
+                  || isPasswordInvalid(login.getPassword(), userOptional.get())) {
                 throw new InvalidLoginException();
               }
               User user = userOptional.get();
@@ -97,6 +111,20 @@ public class UserServiceImpl extends ApplicationService implements UserService {
             userRepository
                 .update(updateUser.toUser(excludeUserId))
                 .flatMap(user -> userRepository.findById(user.getId()).map(this::extractUser)));
+  }
+
+  @Override
+  public Single<User> findByUsername(String username) {
+    return userRepository
+        .findUserByUsername(username)
+        .map(userOptional -> userOptional.orElseThrow(UserNotFoundException::new));
+  }
+
+  @Override
+  public Single<Boolean> isFollowing(String currentUserId, String followedUserId) {
+    return followedUsersRepository
+        .countByCurrentUserIdAndFollowedUserId(currentUserId, followedUserId)
+        .map(this::isCountResultGreaterThanZero);
   }
 
   private Completable checkValidations(UpdateUser updateUser, String excludeUserId) {
@@ -132,7 +160,7 @@ public class UserServiceImpl extends ApplicationService implements UserService {
   }
 
   private boolean isPasswordInvalid(String password, User user) {
-    return !cryptographyService.isPasswordValid(password, user.getPassword());
+    return !cryptographyProvider.isPasswordValid(password, user.getPassword());
   }
 
   private Single<Boolean> isUsernameExists(String username) {

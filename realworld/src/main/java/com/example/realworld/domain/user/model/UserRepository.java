@@ -20,4 +20,6 @@ public interface UserRepository {
   Single<Optional<User>> findUserByEmail(String email);
 
   Single<User> update(User user);
+
+  Single<Optional<User>> findUserByUsername(String username);
 }
