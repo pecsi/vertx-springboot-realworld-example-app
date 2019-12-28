@@ -8,4 +8,6 @@ public interface FollowedUsersStatements {
       String currentUserId, String followedUserId);
 
   Statement<JsonArray> follow(String currentUserId, String followedUserId);
+
+  Statement<JsonArray> unfollow(String currentUserId, String followedUserId);
 }

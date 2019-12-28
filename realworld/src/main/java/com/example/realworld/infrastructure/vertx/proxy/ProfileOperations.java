@@ -16,4 +16,7 @@ public interface ProfileOperations {
       String username, String currentUserId, Handler<AsyncResult<ProfileResponse>> handler);
 
   void follow(String username, String currentUserId, Handler<AsyncResult<ProfileResponse>> handler);
+
+  void unfollow(
+      String username, String currentUserId, Handler<AsyncResult<ProfileResponse>> handler);
 }

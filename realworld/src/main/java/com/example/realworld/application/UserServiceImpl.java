@@ -132,6 +132,11 @@ public class UserServiceImpl extends ApplicationService implements UserService {
     return followedUsersRepository.follow(currentUserId, followedUserId);
   }
 
+  @Override
+  public Completable unfollow(String currentUserId, String followedUserId) {
+    return followedUsersRepository.unfollow(currentUserId, followedUserId);
+  }
+
   private Completable checkValidations(UpdateUser updateUser, String excludeUserId) {
     return Single.just(isPresent(updateUser.getUsername()))
         .flatMap(

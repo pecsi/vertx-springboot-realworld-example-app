@@ -49,7 +49,13 @@ public class ProfileServiceImpl extends ApplicationService implements ProfileSer
 
   @Override
   public Single<Profile> unfollow(String username, String loggedUserId) {
-    return null;
+    return userService
+        .findByUsername(username)
+        .flatMap(
+            user ->
+                userService
+                    .unfollow(loggedUserId, user.getId())
+                    .andThen(getProfile(username, loggedUserId)));
   }
 
   private Single<Boolean> isFollowing(String currentUserId, String followedUserId) {

@@ -146,6 +146,22 @@ public class ProfileOperationsVertxProxyHandler extends ProxyHandler {
                      });
           break;
         }
+        case "unfollow": {
+          service.unfollow((java.lang.String)json.getValue("username"),
+                        (java.lang.String)json.getValue("currentUserId"),
+                        res -> {
+                        if (res.failed()) {
+                          if (res.cause() instanceof ServiceException) {
+                            msg.reply(res.cause());
+                          } else {
+                            msg.reply(new ServiceException(-1, res.cause().getMessage()));
+                          }
+                        } else {
+                          msg.reply(res.result() == null ? null : res.result().toJson());
+                        }
+                     });
+          break;
+        }
         default: throw new IllegalStateException("Invalid action: " + action);
       }
     } catch (Throwable t) {

@@ -42,4 +42,16 @@ public class FollowedUsersRepositoryJDBC extends JDBCRepository implements Follo
         .rxUpdateWithParams(followStatement.sql(), followStatement.params())
         .flatMapCompletable(updateResult -> Completable.complete());
   }
+
+  @Override
+  public Completable unfollow(String currentUserId, String followedUserId) {
+    Statement<JsonArray> unfollowStatement =
+        followedUsersStatements.unfollow(currentUserId, followedUserId);
+    return jdbcClient
+        .rxUpdateWithParams(unfollowStatement.sql(), unfollowStatement.params())
+        .flatMapCompletable(
+            updateResult -> {
+              return Completable.complete();
+            });
+  }
 }

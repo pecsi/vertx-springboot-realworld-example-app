@@ -22,4 +22,6 @@ public interface UserService {
   Single<Boolean> isFollowing(String currentUserId, String followedUserId);
 
   Completable follow(String currentUserId, String followedUserId);
+
+  Completable unfollow(String currentUserId, String followedUserId);
 }

@@ -38,6 +38,8 @@ public class ProfilesRoute extends AbstractHttpRoute {
 
     profilesRouter.post(profilesPath + FOLLOW).handler(this::follow);
 
+    profilesRouter.delete(profilesPath + FOLLOW).handler(this::unfollow);
+
     return profilesRouter;
   }
 
@@ -59,6 +61,17 @@ public class ProfilesRoute extends AbstractHttpRoute {
         (String userId) -> {
           String username = routingContext.pathParam(USERNAME);
           profileOperations.follow(
+              username, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
+        });
+  }
+
+  private void unfollow(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (String userId) -> {
+          String username = routingContext.pathParam(USERNAME);
+          profileOperations.unfollow(
               username, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
         });
   }

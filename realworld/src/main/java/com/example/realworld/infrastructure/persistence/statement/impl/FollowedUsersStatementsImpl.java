@@ -28,4 +28,14 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
 
     return new JsonArrayStatement(sql, params);
   }
+
+  @Override
+  public Statement<JsonArray> unfollow(String currentUserId, String followedUserId) {
+
+    String sql = "DELETE FROM FOLLOWED_USERS WHERE USER_ID = ? AND FOLLOWED_ID = ?";
+
+    JsonArray params = new JsonArray().add(currentUserId).add(followedUserId);
+
+    return new JsonArrayStatement(sql, params);
+  }
 }
