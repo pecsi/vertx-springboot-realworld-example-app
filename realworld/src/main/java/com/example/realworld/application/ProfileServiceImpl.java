@@ -2,7 +2,9 @@ package com.example.realworld.application;
 
 import com.example.realworld.domain.profile.model.Profile;
 import com.example.realworld.domain.profile.service.ProfileService;
+import com.example.realworld.domain.user.exception.UserAlreadyFollowedException;
 import com.example.realworld.domain.user.service.UserService;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public class ProfileServiceImpl extends ApplicationService implements ProfileService {
@@ -25,7 +27,24 @@ public class ProfileServiceImpl extends ApplicationService implements ProfileSer
 
   @Override
   public Single<Profile> follow(String username, String loggedUserId) {
-    return null;
+    return userService
+        .findByUsername(username)
+        .flatMap(
+            user ->
+                validAlreadyFollowing(loggedUserId, user.getId())
+                    .andThen(userService.follow(loggedUserId, user.getId()))
+                    .andThen(getProfile(username, loggedUserId)));
+  }
+
+  private Completable validAlreadyFollowing(String currentUserId, String followedUserId) {
+    return isFollowing(currentUserId, followedUserId)
+        .flatMapCompletable(
+            isFollowing -> {
+              if (isFollowing) {
+                throw new UserAlreadyFollowedException();
+              }
+              return Completable.complete();
+            });
   }
 
   @Override

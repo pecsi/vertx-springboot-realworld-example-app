@@ -1,5 +1,6 @@
 package com.example.realworld;
 
+import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.UserStatements;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +25,7 @@ public class RealworldApplicationIntegrationTest {
       getWrapUnwrapRootValueObjectMapper();
   protected static VertxConfiguration vertxConfiguration = getVertxConfiguration();
   protected static UserStatements userStatements = getUserStatements();
+  protected static FollowedUsersStatements followedUsersStatements = getFollowedUserStatements();
 
   private static ConfigurableApplicationContext getApplicationContext() {
     return getObject(
@@ -59,6 +61,10 @@ public class RealworldApplicationIntegrationTest {
 
   private static UserStatements getUserStatements() {
     return configurableApplicationContext.getBean(UserStatements.class);
+  }
+
+  private static FollowedUsersStatements getFollowedUserStatements() {
+    return getObject(followedUsersStatements, () -> getBean(FollowedUsersStatements.class));
   }
 
   private static <T> T getBean(Class<T> clazz) {

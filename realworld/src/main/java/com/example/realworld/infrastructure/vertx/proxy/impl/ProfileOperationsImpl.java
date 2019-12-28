@@ -26,4 +26,14 @@ public class ProfileOperationsImpl extends AbstractOperations implements Profile
             profile -> handler.handle(Future.succeededFuture(new ProfileResponse(profile))),
             throwable -> handler.handle(error(throwable)));
   }
+
+  @Override
+  public void follow(
+      String username, String currentUserId, Handler<AsyncResult<ProfileResponse>> handler) {
+    profileService
+        .follow(username, currentUserId)
+        .subscribe(
+            profile -> handler.handle(Future.succeededFuture(new ProfileResponse(profile))),
+            throwable -> handler.handle(error(throwable)));
+  }
 }

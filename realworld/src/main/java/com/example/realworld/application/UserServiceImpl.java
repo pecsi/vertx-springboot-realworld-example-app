@@ -127,6 +127,11 @@ public class UserServiceImpl extends ApplicationService implements UserService {
         .map(this::isCountResultGreaterThanZero);
   }
 
+  @Override
+  public Completable follow(String currentUserId, String followedUserId) {
+    return followedUsersRepository.follow(currentUserId, followedUserId);
+  }
+
   private Completable checkValidations(UpdateUser updateUser, String excludeUserId) {
     return Single.just(isPresent(updateUser.getUsername()))
         .flatMap(

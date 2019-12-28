@@ -59,6 +59,16 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
         .map(ParserUtils::toUser);
   }
 
+  protected Single<User> follow(User currentUser, User followedUser) {
+    Statement<JsonArray> followStatement =
+        followedUsersStatements.follow(currentUser.getId(), followedUser.getId());
+    return SQLClientHelper.inTransactionSingle(
+            jdbcClient,
+            sqlConnection ->
+                sqlConnection.rxUpdateWithParams(followStatement.sql(), followStatement.params()))
+        .flatMap(updateResult -> Single.just(currentUser));
+  }
+
   private static void dropDatabase(VertxTestContext vertxTestContext) {
     String dropDatabaseStatement = "DROP TABLE USERS; DROP TABLE FOLLOWED_USERS;";
     executeStatement(vertxTestContext, dropDatabaseStatement);

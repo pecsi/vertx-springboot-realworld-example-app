@@ -81,4 +81,24 @@ public class ProfileOperationsVertxEBProxy implements ProfileOperations {
       }
     });
   }
+  @Override
+  public  void follow(String username, String currentUserId, Handler<AsyncResult<ProfileResponse>> handler){
+    if (closed) {
+      handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
+      return;
+    }
+    JsonObject _json = new JsonObject();
+    _json.put("username", username);
+    _json.put("currentUserId", currentUserId);
+
+    DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
+    _deliveryOptions.addHeader("action", "follow");
+    _vertx.eventBus().<JsonObject>send(_address, _json, _deliveryOptions, res -> {
+      if (res.failed()) {
+        handler.handle(Future.failedFuture(res.cause()));
+      } else {
+        handler.handle(Future.succeededFuture(res.result().body() == null ? null : new ProfileResponse(res.result().body())));
+      }
+    });
+  }
 }

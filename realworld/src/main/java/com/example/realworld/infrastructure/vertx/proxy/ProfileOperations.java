@@ -14,4 +14,6 @@ public interface ProfileOperations {
 
   void getProfile(
       String username, String currentUserId, Handler<AsyncResult<ProfileResponse>> handler);
+
+  void follow(String username, String currentUserId, Handler<AsyncResult<ProfileResponse>> handler);
 }

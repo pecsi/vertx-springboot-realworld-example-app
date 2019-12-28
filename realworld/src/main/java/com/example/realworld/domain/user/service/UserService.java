@@ -4,6 +4,7 @@ import com.example.realworld.domain.user.model.Login;
 import com.example.realworld.domain.user.model.NewUser;
 import com.example.realworld.domain.user.model.UpdateUser;
 import com.example.realworld.domain.user.model.User;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public interface UserService {
@@ -19,4 +20,6 @@ public interface UserService {
   Single<User> findByUsername(String username);
 
   Single<Boolean> isFollowing(String currentUserId, String followedUserId);
+
+  Completable follow(String currentUserId, String followedUserId);
 }

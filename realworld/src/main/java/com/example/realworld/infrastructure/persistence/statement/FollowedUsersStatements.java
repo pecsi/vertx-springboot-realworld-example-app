@@ -7,5 +7,5 @@ public interface FollowedUsersStatements {
   Statement<JsonArray> countByCurrentUserIdAndFollowedUserId(
       String currentUserId, String followedUserId);
 
-  Statement<JsonArray> follow(Long currentUserId, Long followedUserId);
+  Statement<JsonArray> follow(String currentUserId, String followedUserId);
 }

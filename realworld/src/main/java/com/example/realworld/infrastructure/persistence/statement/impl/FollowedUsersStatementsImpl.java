@@ -20,7 +20,7 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
   }
 
   @Override
-  public Statement<JsonArray> follow(Long currentUserId, Long followedUserId) {
+  public Statement<JsonArray> follow(String currentUserId, String followedUserId) {
 
     String sql = "INSERT INTO FOLLOWED_USERS (USER_ID, FOLLOWED_ID) VALUES (?, ?)";
 
