@@ -1,24 +1,21 @@
 package com.example.realworld.infrastructure.web.route;
 
-import com.example.realworld.domain.service.UsersService;
+import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
 import com.example.realworld.infrastructure.web.model.request.UpdateUserRequest;
-import com.example.realworld.infrastructure.web.model.response.UserResponse;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import org.springframework.stereotype.Component;
 
-@Singleton
+@Component
 public class UserRoute extends AbstractHttpRoute {
 
-  private UsersService usersService;
+  private UserOperations userOperations;
 
-  @Inject
-  public UserRoute(UsersService usersService) {
-    this.usersService = usersService;
+  public UserRoute(UserOperations userOperations) {
+    this.userOperations = userOperations;
   }
 
   @Override
@@ -38,16 +35,14 @@ public class UserRoute extends AbstractHttpRoute {
   }
 
   private void updateUser(RoutingContext routingContext) {
-    Long userId = routingContext.get(USER_ID_CONTEXT_KEY);
+    String userId = routingContext.get(USER_ID_CONTEXT_KEY);
     UpdateUserRequest updateUserRequest = getBodyAndValid(routingContext, UpdateUserRequest.class);
-    usersService.update(
-        updateUserRequest.toUser(userId),
-        responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
+    userOperations.update(
+        userId, updateUserRequest, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
   }
 
   private void getUser(RoutingContext routingContext) {
-    Long userId = routingContext.get(USER_ID_CONTEXT_KEY);
-    usersService.findById(
-        userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
+    String userId = routingContext.get(USER_ID_CONTEXT_KEY);
+    userOperations.findById(userId, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
   }
 }

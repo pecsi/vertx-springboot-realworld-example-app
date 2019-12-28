@@ -1,25 +1,22 @@
 package com.example.realworld.infrastructure.web.route;
 
-import com.example.realworld.domain.service.UsersService;
+import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
 import com.example.realworld.infrastructure.web.model.request.LoginRequest;
 import com.example.realworld.infrastructure.web.model.request.NewUserRequest;
-import com.example.realworld.infrastructure.web.model.response.UserResponse;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import org.springframework.stereotype.Component;
 
-@Singleton
+@Component
 public class UsersRoute extends AbstractHttpRoute {
 
-  private UsersService usersService;
+  private UserOperations userOperations;
 
-  @Inject
-  public UsersRoute(UsersService usersService) {
-    this.usersService = usersService;
+  public UsersRoute(UserOperations userOperations) {
+    this.userOperations = userOperations;
   }
 
   @Override
@@ -34,18 +31,13 @@ public class UsersRoute extends AbstractHttpRoute {
 
   private void login(RoutingContext routingContext) {
     LoginRequest loginRequest = getBodyAndValid(routingContext, LoginRequest.class);
-    usersService.login(
-        loginRequest.getEmail(),
-        loginRequest.getPassword(),
-        responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
+    userOperations.login(
+        loginRequest, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
   }
 
   private void create(RoutingContext routingContext) {
     NewUserRequest newUserRequest = getBodyAndValid(routingContext, NewUserRequest.class);
-    usersService.create(
-        newUserRequest.getUsername(),
-        newUserRequest.getEmail(),
-        newUserRequest.getPassword(),
-        responseOrFail(routingContext, HttpResponseStatus.OK.code(), UserResponse::new));
+    userOperations.create(
+        newUserRequest, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
   }
 }

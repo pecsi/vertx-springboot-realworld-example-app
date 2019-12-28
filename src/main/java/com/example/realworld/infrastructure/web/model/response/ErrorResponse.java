@@ -19,6 +19,10 @@ public class ErrorResponse {
     this.body.add(error);
   }
 
+  public ErrorResponse(List<String> body) {
+    this.body = body;
+  }
+
   public List<String> getBody() {
     return body;
   }

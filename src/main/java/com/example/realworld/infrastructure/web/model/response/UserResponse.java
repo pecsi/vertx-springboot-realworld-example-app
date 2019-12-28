@@ -1,9 +1,12 @@
 package com.example.realworld.infrastructure.web.model.response;
 
-import com.example.realworld.domain.entity.persistent.User;
+import com.example.realworld.domain.user.model.User;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
 
 @JsonRootName("user")
+@DataObject(generateConverter = true)
 public class UserResponse {
 
   private String username;
@@ -13,6 +16,16 @@ public class UserResponse {
   private String token;
 
   public UserResponse() {}
+
+  public UserResponse(JsonObject jsonObject) {
+    UserResponseConverter.fromJson(jsonObject, this);
+  }
+
+  public JsonObject toJson() {
+    JsonObject jsonObject = new JsonObject();
+    UserResponseConverter.toJson(this, jsonObject);
+    return jsonObject;
+  }
 
   public UserResponse(User user) {
     this.username = user.getUsername();

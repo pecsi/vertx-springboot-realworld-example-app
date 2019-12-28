@@ -1,11 +1,15 @@
 package com.example.realworld.infrastructure.web.model.request;
 
-import com.example.realworld.domain.constants.ValidationMessages;
+import com.example.realworld.application.constants.ValidationMessages;
+import com.example.realworld.domain.user.model.Login;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
 
 import javax.validation.constraints.NotBlank;
 
 @JsonRootName("user")
+@DataObject(generateConverter = true)
 public class LoginRequest {
 
   @NotBlank(message = ValidationMessages.EMAIL_MUST_BE_NOT_BLANK)
@@ -13,6 +17,25 @@ public class LoginRequest {
 
   @NotBlank(message = ValidationMessages.PASSWORD_MUST_BE_NOT_BLANK)
   private String password;
+
+  public LoginRequest() {}
+
+  public LoginRequest(JsonObject jsonObject) {
+    LoginRequestConverter.fromJson(jsonObject, this);
+  }
+
+  public JsonObject toJson() {
+    JsonObject jsonObject = new JsonObject();
+    LoginRequestConverter.toJson(this, jsonObject);
+    return jsonObject;
+  }
+
+  public Login toLogin() {
+    Login login = new Login();
+    login.setEmail(this.email);
+    login.setPassword(this.password);
+    return login;
+  }
 
   public String getEmail() {
     return email;

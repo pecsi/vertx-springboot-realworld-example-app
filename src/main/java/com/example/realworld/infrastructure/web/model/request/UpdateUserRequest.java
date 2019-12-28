@@ -1,15 +1,18 @@
 package com.example.realworld.infrastructure.web.model.request;
 
-import com.example.realworld.domain.constants.ValidationMessages;
-import com.example.realworld.domain.entity.persistent.User;
+import com.example.realworld.application.constants.ValidationMessages;
+import com.example.realworld.domain.user.model.UpdateUser;
 import com.example.realworld.infrastructure.web.validation.constraint.AtLeastOneFieldMustBeNotNull;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Pattern;
 
 @JsonRootName("user")
 @AtLeastOneFieldMustBeNotNull
+@DataObject(generateConverter = true)
 public class UpdateUserRequest {
 
   @Pattern(regexp = "\\A(?!\\s*\\Z).+", message = ValidationMessages.USERNAME_MUST_BE_NOT_BLANK)
@@ -19,14 +22,25 @@ public class UpdateUserRequest {
   private String image;
   @Email private String email;
 
-  public User toUser(Long id) {
-    User user = new User();
-    user.setId(id);
-    user.setUsername(this.username);
-    user.setBio(this.bio);
-    user.setImage(this.image);
-    user.setEmail(this.email);
-    return user;
+  public UpdateUserRequest() {}
+
+  public UpdateUserRequest(JsonObject jsonObject) {
+    UpdateUserRequestConverter.fromJson(jsonObject, this);
+  }
+
+  public JsonObject toJson() {
+    JsonObject jsonObject = new JsonObject();
+    UpdateUserRequestConverter.toJson(this, jsonObject);
+    return jsonObject;
+  }
+
+  public UpdateUser toUpdateUser() {
+    UpdateUser updateUser = new UpdateUser();
+    updateUser.setUsername(this.username);
+    updateUser.setBio(this.bio);
+    updateUser.setImage(this.image);
+    updateUser.setEmail(this.email);
+    return updateUser;
   }
 
   public String getUsername() {
