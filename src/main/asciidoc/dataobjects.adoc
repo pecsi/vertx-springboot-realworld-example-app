@@ -1,5 +1,35 @@
 = Cheatsheets
 
+[[ArticleResponse]]
+== ArticleResponse
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[author]]`@author`|`link:dataobjects.html#ProfileResponse[ProfileResponse]`|-
+|[[body]]`@body`|`String`|-
+|[[description]]`@description`|`String`|-
+|[[favorited]]`@favorited`|`Boolean`|-
+|[[favoritesCount]]`@favoritesCount`|`Number (int)`|-
+|[[slug]]`@slug`|`String`|-
+|[[tagList]]`@tagList`|`Array of String`|-
+|[[title]]`@title`|`String`|-
+|===
+
+[[ArticlesResponse]]
+== ArticlesResponse
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[articles]]`@articles`|`Array of link:dataobjects.html#ArticleResponse[ArticleResponse]`|-
+|[[articlesCount]]`@articlesCount`|`Number (int)`|-
+|===
+
 [[LoginRequest]]
 == LoginRequest
 

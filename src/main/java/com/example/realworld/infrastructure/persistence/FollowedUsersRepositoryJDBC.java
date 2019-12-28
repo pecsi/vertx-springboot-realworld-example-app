@@ -1,5 +1,6 @@
 package com.example.realworld.infrastructure.persistence;
 
+import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.user.model.FollowedUsersRepository;
 import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
@@ -8,6 +9,9 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class FollowedUsersRepositoryJDBC extends JDBCRepository implements FollowedUsersRepository {
@@ -52,6 +56,19 @@ public class FollowedUsersRepositoryJDBC extends JDBCRepository implements Follo
         .flatMapCompletable(
             updateResult -> {
               return Completable.complete();
+            });
+  }
+
+  @Override
+  public Single<Optional<List<Article>>> findRecentArticles(
+      String currentUserId, int offset, int limit) {
+    Statement<JsonArray> findRecentArticlesStatement =
+        followedUsersStatements.findRecentArticles(currentUserId, offset, limit);
+    return jdbcClient
+        .rxQueryWithParams(findRecentArticlesStatement.sql(), findRecentArticlesStatement.params())
+        .map(
+            resultSet -> {
+              return Optional.empty();
             });
   }
 }

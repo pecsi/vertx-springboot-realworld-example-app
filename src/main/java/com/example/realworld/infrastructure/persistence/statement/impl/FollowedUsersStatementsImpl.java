@@ -38,4 +38,15 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
 
     return new JsonArrayStatement(sql, params);
   }
+
+  @Override
+  public Statement<JsonArray> findRecentArticles(String currentUserId, int offset, int limit) {
+
+    String sql =
+        "SELECT articles.id, articles.title FROM FOLLOWED_USERS followed_users INNER JOIN USERS users1 ON followed_users.USER_ID = users1.ID AND (users1.ID = ?) INNER JOIN USERS users2 ON followed_users.FOLLOWED_ID = users2.ID INNER JOIN ARTICLES articles ON users2.ID = articles.AUTHOR_ID order by articles.CREATED_AT desc limit ? offset ?";
+
+    JsonArray params = new JsonArray().add(currentUserId).add(offset).add(limit);
+
+    return new JsonArrayStatement(sql, params);
+  }
 }

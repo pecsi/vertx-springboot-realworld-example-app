@@ -1,13 +1,17 @@
 package com.example.realworld.infrastructure.configuration;
 
+import com.example.realworld.application.ArticleServiceImpl;
 import com.example.realworld.application.ProfileServiceImpl;
 import com.example.realworld.application.UserServiceImpl;
+import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.user.model.*;
 import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
+import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
 import com.example.realworld.infrastructure.vertx.proxy.ProfileOperations;
 import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
+import com.example.realworld.infrastructure.vertx.proxy.impl.ArticleOperationsImpl;
 import com.example.realworld.infrastructure.vertx.proxy.impl.ProfileOperationsImpl;
 import com.example.realworld.infrastructure.vertx.proxy.impl.UserOperationsImpl;
 import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
@@ -24,6 +28,7 @@ import io.vertx.serviceproxy.ServiceProxyBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 @Configuration
 public class RealworldApplicationConfiguration {
@@ -46,6 +51,12 @@ public class RealworldApplicationConfiguration {
   @Bean
   public ProfileService profileService(UserService userService) {
     return new ProfileServiceImpl(userService);
+  }
+
+  @Bean
+  @DependsOn({"flyway", "flywayInitializer"})
+  public ArticleService articleService(FollowedUsersRepository followedUsersRepository) {
+    return new ArticleServiceImpl(followedUsersRepository);
   }
 
   @Bean
@@ -109,6 +120,18 @@ public class RealworldApplicationConfiguration {
         ProfileOperations.class,
         ProfileOperations.SERVICE_ADDRESS,
         new ProfileOperationsImpl(profileService, objectMapper));
+  }
+
+  @Bean
+  public ArticleOperations articleOperations(
+      Vertx vertx,
+      ArticleService articleService,
+      @Qualifier("defaultObjectMapper") ObjectMapper objectMapper) {
+    return registerServiceAndCreateProxy(
+        vertx,
+        ArticleOperations.class,
+        ArticleOperations.SERVICE_ADDRESS,
+        new ArticleOperationsImpl(articleService, objectMapper));
   }
 
   private <T> T registerServiceAndCreateProxy(
