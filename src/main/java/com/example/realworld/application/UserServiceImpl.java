@@ -105,11 +105,11 @@ public class UserServiceImpl extends ApplicationService implements UserService {
   }
 
   @Override
-  public Single<User> update(UpdateUser updateUser, String excludeUserId) {
-    return checkValidations(updateUser, excludeUserId)
+  public Single<User> update(UpdateUser updateUser, String exclusionId) {
+    return checkValidations(updateUser, exclusionId)
         .andThen(
             userRepository
-                .update(updateUser.toUser(excludeUserId))
+                .update(updateUser.toUser(exclusionId))
                 .flatMap(user -> userRepository.findById(user.getId()).map(this::extractUser)));
   }
 
@@ -137,12 +137,12 @@ public class UserServiceImpl extends ApplicationService implements UserService {
     return followedUsersRepository.unfollow(currentUserId, followedUserId);
   }
 
-  private Completable checkValidations(UpdateUser updateUser, String excludeUserId) {
+  private Completable checkValidations(UpdateUser updateUser, String exclusionId) {
     return Single.just(isPresent(updateUser.getUsername()))
         .flatMap(
             usernameIsPresent -> {
               if (usernameIsPresent) {
-                return isUsernameExists(updateUser.getUsername(), excludeUserId);
+                return isUsernameExists(updateUser.getUsername(), exclusionId);
               }
               return Single.just(false);
             })
@@ -156,7 +156,7 @@ public class UserServiceImpl extends ApplicationService implements UserService {
         .flatMap(
             emailIsPresent -> {
               if (emailIsPresent) {
-                return isEmailAlreadyExists(updateUser.getEmail(), excludeUserId);
+                return isEmailAlreadyExists(updateUser.getEmail(), exclusionId);
               }
               return Single.just(false);
             })
@@ -177,9 +177,9 @@ public class UserServiceImpl extends ApplicationService implements UserService {
     return userRepository.countByUsername(username).map(this::isCountResultGreaterThanZero);
   }
 
-  private Single<Boolean> isUsernameExists(String username, String excludeUserId) {
+  private Single<Boolean> isUsernameExists(String username, String exclusionId) {
     return userRepository
-        .countByUsername(username, excludeUserId)
+        .countByUsername(username, exclusionId)
         .map(this::isCountResultGreaterThanZero);
   }
 

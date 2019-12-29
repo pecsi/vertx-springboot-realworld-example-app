@@ -40,9 +40,9 @@ public class UserRepositoryJDBC extends JDBCRepository implements UserRepository
   }
 
   @Override
-  public Single<Long> countByUsername(String username, String excludeUserId) {
+  public Single<Long> countByUsername(String username, String exclusionId) {
     Statement<JsonArray> countByUsernameStatement =
-        userStatements.countBy("username", username, excludeUserId);
+        userStatements.countBy("username", username, exclusionId);
     return jdbcClient
         .rxQueryWithParams(countByUsernameStatement.sql(), countByUsernameStatement.params())
         .map(this::getCountFromResultSet);

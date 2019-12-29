@@ -1,5 +1,6 @@
 package com.example.realworld;
 
+import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.UserStatements;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
@@ -26,6 +27,7 @@ public class RealworldApplicationIntegrationTest {
   protected static VertxConfiguration vertxConfiguration = getVertxConfiguration();
   protected static UserStatements userStatements = getUserStatements();
   protected static FollowedUsersStatements followedUsersStatements = getFollowedUserStatements();
+  protected static UserService userService = getUserService();
 
   private static ConfigurableApplicationContext getApplicationContext() {
     return getObject(
@@ -65,6 +67,10 @@ public class RealworldApplicationIntegrationTest {
 
   private static FollowedUsersStatements getFollowedUserStatements() {
     return getObject(followedUsersStatements, () -> getBean(FollowedUsersStatements.class));
+  }
+
+  private static UserService getUserService() {
+    return getObject(userService, () -> getBean(UserService.class));
   }
 
   private static <T> T getBean(Class<T> clazz) {

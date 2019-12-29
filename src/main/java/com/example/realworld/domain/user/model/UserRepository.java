@@ -9,7 +9,7 @@ public interface UserRepository {
 
   Single<Long> countByUsername(String username);
 
-  Single<Long> countByUsername(String username, String excludeUserId);
+  Single<Long> countByUsername(String username, String exclusionId);
 
   Single<Long> countByEmail(String email);
 

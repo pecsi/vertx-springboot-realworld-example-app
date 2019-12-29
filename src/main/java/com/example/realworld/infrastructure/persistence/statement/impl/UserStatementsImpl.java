@@ -86,13 +86,13 @@ public class UserStatementsImpl implements UserStatements {
   }
 
   @Override
-  public Statement<JsonArray> countBy(String field, String value, String excludeId) {
+  public Statement<JsonArray> countBy(String field, String value, String exclusionId) {
 
     String sql =
         String.format(
             "SELECT COUNT(*) FROM USERS WHERE UPPER(%s) = ? AND ID <> ?", field.toUpperCase());
 
-    JsonArray params = new JsonArray().add(value.toUpperCase().trim()).add(excludeId);
+    JsonArray params = new JsonArray().add(value.toUpperCase().trim()).add(exclusionId);
 
     return new JsonArrayStatement(sql, params);
   }

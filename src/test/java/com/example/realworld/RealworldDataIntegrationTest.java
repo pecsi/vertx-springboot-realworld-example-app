@@ -1,20 +1,16 @@
 package com.example.realworld;
 
+import com.example.realworld.domain.user.model.NewUser;
+import com.example.realworld.domain.user.model.UpdateUser;
 import com.example.realworld.domain.user.model.User;
-import com.example.realworld.infrastructure.persistence.statement.Statement;
-import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.ext.sql.SQLClientHelper;
 import org.junit.jupiter.api.AfterEach;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
-import java.util.UUID;
 
 public class RealworldDataIntegrationTest extends RealworldApplicationIntegrationTest {
 
@@ -24,49 +20,39 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
   }
 
   protected Single<User> createUser(User user) {
-    user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
-    user.setToken(
-        jwtAuth.generateToken(
-            new JsonObject()
-                .put("sub", user.getId())
-                .put("complementary-subscription", UUID.randomUUID().toString())));
-    Statement<JsonArray> createUserStatement = userStatements.create(user);
-    return SQLClientHelper.inTransactionSingle(
-            jdbcClient,
-            sqlConnection ->
-                sqlConnection.rxUpdateWithParams(
-                    createUserStatement.sql(), createUserStatement.params()))
-        .flatMap(updateResult -> findUserById(user.getId()));
+    return createUser(toNewUser(user))
+        .flatMap(createdUser -> updateUser(toUpdateUser(user), createdUser.getId()));
   }
 
-  protected Single<User> updateUser(User user) {
-    Statement<JsonArray> updateUserStatement = userStatements.update(user);
-    return SQLClientHelper.inTransactionSingle(
-            jdbcClient,
-            sqlConnection ->
-                sqlConnection.rxUpdateWithParams(
-                    updateUserStatement.sql(), updateUserStatement.params()))
-        .map(updateResult -> user);
+  protected Single<User> createUser(NewUser newUser) {
+    return userService.create(newUser);
   }
 
-  protected Single<User> findUserById(String id) {
-    Statement<JsonArray> findUserByIdStatement = userStatements.findById(id);
-    return SQLClientHelper.inTransactionSingle(
-            jdbcClient,
-            sqlConnection ->
-                sqlConnection.rxQueryWithParams(
-                    findUserByIdStatement.sql(), findUserByIdStatement.params()))
-        .map(ParserUtils::toUser);
+  protected Single<User> updateUser(UpdateUser updateUser, String exclusionId) {
+    return userService.update(updateUser, exclusionId);
   }
 
   protected Single<User> follow(User currentUser, User followedUser) {
-    Statement<JsonArray> followStatement =
-        followedUsersStatements.follow(currentUser.getId(), followedUser.getId());
-    return SQLClientHelper.inTransactionSingle(
-            jdbcClient,
-            sqlConnection ->
-                sqlConnection.rxUpdateWithParams(followStatement.sql(), followStatement.params()))
-        .flatMap(updateResult -> Single.just(currentUser));
+    return userService
+        .follow(currentUser.getId(), followedUser.getId())
+        .andThen(Single.just(currentUser));
+  }
+
+  private UpdateUser toUpdateUser(User createdUser) {
+    UpdateUser updateUser = new UpdateUser();
+    updateUser.setUsername(createdUser.getUsername());
+    updateUser.setEmail(createdUser.getEmail());
+    updateUser.setBio(createdUser.getBio());
+    updateUser.setImage(createdUser.getImage());
+    return updateUser;
+  }
+
+  private NewUser toNewUser(User user) {
+    NewUser newUser = new NewUser();
+    newUser.setUsername(user.getUsername());
+    newUser.setEmail(user.getEmail());
+    newUser.setPassword(user.getPassword());
+    return newUser;
   }
 
   private static void dropDatabase(VertxTestContext vertxTestContext) {

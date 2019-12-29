@@ -10,8 +10,6 @@ import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.UUID;
-
 import static com.example.realworld.constants.TestsConstants.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -27,7 +25,6 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
       VertxTestContext vertxTestContext) {
 
     User user = new User();
-    user.setId(UUID.randomUUID().toString());
     user.setUsername("user1");
     user.setEmail("user1@mail.com");
     user.setImage("image");
@@ -68,7 +65,6 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
           VertxTestContext vertxTestContext) {
 
     User user1 = new User();
-    user1.setId(UUID.randomUUID().toString());
     user1.setUsername("user1");
     user1.setEmail("user1@mail.com");
     user1.setImage("image");
@@ -76,7 +72,6 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
     user1.setPassword("user1_123");
 
     User user2 = new User();
-    user2.setId(UUID.randomUUID().toString());
     user2.setUsername("user2");
     user2.setEmail("user2@mail.com");
     user2.setImage("image");
@@ -120,7 +115,6 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
           VertxTestContext vertxTestContext) {
 
     User user1 = new User();
-    user1.setId(UUID.randomUUID().toString());
     user1.setUsername("user1");
     user1.setEmail("user1@mail.com");
     user1.setImage("image");
@@ -128,7 +122,6 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
     user1.setPassword("user1_123");
 
     User user2 = new User();
-    user2.setId(UUID.randomUUID().toString());
     user2.setUsername("user2");
     user2.setEmail("user2@mail.com");
     user2.setImage("image");
@@ -174,7 +167,6 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
           VertxTestContext vertxTestContext) {
 
     User user1 = new User();
-    user1.setId(UUID.randomUUID().toString());
     user1.setUsername("user1");
     user1.setEmail("user1@mail.com");
     user1.setImage("image");
@@ -182,7 +174,6 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
     user1.setPassword("user1_123");
 
     User user2 = new User();
-    user2.setId(UUID.randomUUID().toString());
     user2.setUsername("user2");
     user2.setEmail("user2@mail.com");
     user2.setImage("image");

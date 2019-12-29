@@ -15,8 +15,6 @@ import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.UUID;
-
 import static com.example.realworld.constants.TestsConstants.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -58,7 +56,6 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
   void shouldReturnConflictCodeWhenUsernameAlreadyExists(VertxTestContext vertxTestContext) {
 
     User user = new User();
-    user.setId(UUID.randomUUID().toString());
     user.setUsername("user1");
     user.setEmail("user1@mail.com");
     user.setPassword("user1_123");
@@ -96,7 +93,6 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
   void shouldReturnConflictCodeWhenEmailAlreadyExists(VertxTestContext vertxTestContext) {
 
     User user = new User();
-    user.setId(UUID.randomUUID().toString());
     user.setUsername("user1");
     user.setEmail("user1@mail.com");
     user.setPassword("user1_123");
@@ -133,7 +129,6 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
   void shouldReturnUserOnValidLoginRequest(VertxTestContext vertxTestContext) {
 
     User user = new User();
-    user.setId(UUID.randomUUID().toString());
     user.setUsername("user1");
     user.setEmail("user1@mail.com");
     user.setImage("image");
@@ -198,7 +193,6 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
   void shouldReturnUnauthorizedCodeWhenPasswordDoesNotMatch(VertxTestContext vertxTestContext) {
 
     User user = new User();
-    user.setId(UUID.randomUUID().toString());
     user.setUsername("user1");
     user.setEmail("user1@mail.com");
     user.setPassword("user1_123");
@@ -255,7 +249,6 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
   public void shouldReturnUserWithStatusCode200(VertxTestContext vertxTestContext) {
 
     User user = new User();
-    user.setId(UUID.randomUUID().toString());
     user.setUsername("user1");
     user.setEmail("user1@mail.com");
     user.setImage("image");
@@ -299,7 +292,6 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
   public void shouldUpdateUser(VertxTestContext vertxTestContext) {
 
     User user = new User();
-    user.setId(UUID.randomUUID().toString());
     user.setUsername("user1");
     user.setEmail("user1@mail.com");
     user.setImage("image");
@@ -340,14 +332,12 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
       VertxTestContext vertxTestContext) {
 
     User user1 = new User();
-    user1.setId(UUID.randomUUID().toString());
     user1.setUsername("user1");
     user1.setEmail("user1@mail.com");
     user1.setImage("image");
     user1.setPassword("user1_123");
 
     User user2 = new User();
-    user2.setId(UUID.randomUUID().toString());
     user2.setUsername("user2");
     user2.setEmail("user2@mail.com");
     user2.setImage("image");
@@ -390,14 +380,12 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
       VertxTestContext vertxTestContext) {
 
     User user1 = new User();
-    user1.setId(UUID.randomUUID().toString());
     user1.setUsername("user1");
     user1.setEmail("user1@mail.com");
     user1.setImage("image");
     user1.setPassword("user1_123");
 
     User user2 = new User();
-    user2.setId(UUID.randomUUID().toString());
     user2.setUsername("user2");
     user2.setEmail("user2@mail.com");
     user2.setImage("image");

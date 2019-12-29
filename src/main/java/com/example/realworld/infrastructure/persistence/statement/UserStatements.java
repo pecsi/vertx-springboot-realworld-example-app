@@ -13,7 +13,7 @@ public interface UserStatements {
 
   Statement<JsonArray> countBy(String field, String value);
 
-  Statement<JsonArray> countBy(String field, String value, String excludeId);
+  Statement<JsonArray> countBy(String field, String value, String exclusionId);
 
   Statement<JsonArray> findByEmail(String email);
 
