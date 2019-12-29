@@ -50,7 +50,7 @@ public class ProfilesRoute extends AbstractHttpRoute {
         (String userId) -> {
           String username = routingContext.pathParam(USERNAME);
           profileOperations.getProfile(
-              username, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
+              username, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
         });
   }
 
@@ -61,7 +61,7 @@ public class ProfilesRoute extends AbstractHttpRoute {
         (String userId) -> {
           String username = routingContext.pathParam(USERNAME);
           profileOperations.follow(
-              username, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
+              username, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
         });
   }
 
@@ -72,7 +72,7 @@ public class ProfilesRoute extends AbstractHttpRoute {
         (String userId) -> {
           String username = routingContext.pathParam(USERNAME);
           profileOperations.unfollow(
-              username, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
+              username, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
         });
   }
 }

@@ -1,4 +1,4 @@
-package com.example.realworld.domain.user.exception;
+package com.example.realworld.domain.general.exception;
 
 import java.util.LinkedList;
 import java.util.List;

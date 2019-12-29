@@ -38,11 +38,14 @@ public class UserRoute extends AbstractHttpRoute {
     String userId = routingContext.get(USER_ID_CONTEXT_KEY);
     UpdateUserRequest updateUserRequest = getBodyAndValid(routingContext, UpdateUserRequest.class);
     userOperations.update(
-        userId, updateUserRequest, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
+        userId,
+        updateUserRequest,
+        responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
   }
 
   private void getUser(RoutingContext routingContext) {
     String userId = routingContext.get(USER_ID_CONTEXT_KEY);
-    userOperations.findById(userId, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
+    userOperations.findById(
+        userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
   }
 }

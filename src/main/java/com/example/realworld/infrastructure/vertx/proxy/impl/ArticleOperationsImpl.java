@@ -22,8 +22,13 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
       String currentUserId, int offset, int limit, Handler<AsyncResult<ArticlesResponse>> handler) {
     articleService
         .findRecentArticles(currentUserId, offset, limit)
+        .flatMap(
+            articles ->
+                articleService
+                    .totalUserArticlesFollowed(currentUserId)
+                    .map(articlesCount -> new ArticlesResponse(articles, articlesCount)))
         .subscribe(
-            article -> handler.handle(Future.succeededFuture(new ArticlesResponse())),
+            articlesResponse -> handler.handle(Future.succeededFuture(articlesResponse)),
             throwable -> handler.handle(error(throwable)));
   }
 }

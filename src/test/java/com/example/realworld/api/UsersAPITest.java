@@ -43,7 +43,8 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                 response ->
                     vertxTestContext.verify(
                         () -> {
-                          UserResponse result = readValue(response.body(), UserResponse.class);
+                          UserResponse result =
+                              readValue(response.body(), UserResponse.class, true);
                           assertThat(result.getUsername(), notNullValue());
                           assertThat(result.getEmail(), notNullValue());
                           assertThat(result.getToken(), notNullValue());
@@ -77,7 +78,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                               vertxTestContext.verify(
                                   () -> {
                                     ErrorResponse result =
-                                        readValue(response.body(), ErrorResponse.class);
+                                        readValue(response.body(), ErrorResponse.class, true);
                                     assertThat(
                                         response.statusCode(),
                                         is(HttpResponseStatus.CONFLICT.code()));
@@ -114,7 +115,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                               vertxTestContext.verify(
                                   () -> {
                                     ErrorResponse result =
-                                        readValue(response.body(), ErrorResponse.class);
+                                        readValue(response.body(), ErrorResponse.class, true);
                                     assertThat(
                                         response.statusCode(),
                                         is(HttpResponseStatus.CONFLICT.code()));
@@ -152,7 +153,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                               vertxTestContext.verify(
                                   () -> {
                                     UserResponse userResponse =
-                                        readValue(response.body(), UserResponse.class);
+                                        readValue(response.body(), UserResponse.class, true);
                                     assertThat(userResponse.getUsername(), is(user.getUsername()));
                                     assertThat(userResponse.getEmail(), is(user.getEmail()));
                                     assertThat(userResponse.getBio(), is(user.getBio()));
@@ -180,7 +181,8 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                 response ->
                     vertxTestContext.verify(
                         () -> {
-                          ErrorResponse result = readValue(response.body(), ErrorResponse.class);
+                          ErrorResponse result =
+                              readValue(response.body(), ErrorResponse.class, true);
                           assertThat(
                               response.statusCode(), is(HttpResponseStatus.UNAUTHORIZED.code()));
                           assertThat(result.getBody(), contains("Unauthorized"));
@@ -213,7 +215,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                               vertxTestContext.verify(
                                   () -> {
                                     ErrorResponse result =
-                                        readValue(response.body(), ErrorResponse.class);
+                                        readValue(response.body(), ErrorResponse.class, true);
                                     assertThat(
                                         response.statusCode(),
                                         is(HttpResponseStatus.UNAUTHORIZED.code()));
@@ -236,7 +238,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                     vertxTestContext.verify(
                         () -> {
                           ErrorResponse errorResponse =
-                              readValue(response.body(), ErrorResponse.class);
+                              readValue(response.body(), ErrorResponse.class, true);
                           assertThat(
                               response.statusCode(), is(HttpResponseStatus.UNAUTHORIZED.code()));
                           assertThat(errorResponse.getBody(), contains("Unauthorized"));
@@ -270,7 +272,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                                 vertxTestContext.verify(
                                     () -> {
                                       UserResponse userResponse =
-                                          readValue(response.body(), UserResponse.class);
+                                          readValue(response.body(), UserResponse.class, true);
                                       assertThat(
                                           response.statusCode(), is(HttpResponseStatus.OK.code()));
                                       assertThat(
@@ -316,7 +318,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                               vertxTestContext.verify(
                                   () -> {
                                     UserResponse userResponse =
-                                        readValue(response.body(), UserResponse.class);
+                                        readValue(response.body(), UserResponse.class, true);
                                     assertThat(
                                         userResponse.getBio(), is(updateUserRequest.getBio()));
                                     assertThat(
@@ -362,7 +364,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                               vertxTestContext.verify(
                                   () -> {
                                     ErrorResponse errorResponse =
-                                        readValue(response.body(), ErrorResponse.class);
+                                        readValue(response.body(), ErrorResponse.class, true);
                                     assertThat(
                                         response.statusCode(),
                                         is(HttpResponseStatus.CONFLICT.code()));
@@ -410,7 +412,7 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
                               vertxTestContext.verify(
                                   () -> {
                                     ErrorResponse errorResponse =
-                                        readValue(response.body(), ErrorResponse.class);
+                                        readValue(response.body(), ErrorResponse.class, true);
                                     assertThat(
                                         response.statusCode(),
                                         is(HttpResponseStatus.CONFLICT.code()));

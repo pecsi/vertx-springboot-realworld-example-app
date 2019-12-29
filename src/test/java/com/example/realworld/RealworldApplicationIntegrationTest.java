@@ -25,9 +25,9 @@ public class RealworldApplicationIntegrationTest {
   protected static JDBCClient jdbcClient = getJDBCClient();
   protected static ObjectMapper wrapUnwrapRootValueObjectMapper =
       getWrapUnwrapRootValueObjectMapper();
+  protected static ObjectMapper defaultObjectMapper = getDefaultObjectMapper();
   protected static VertxConfiguration vertxConfiguration = getVertxConfiguration();
   protected static int port = vertxConfiguration.getServer().getPort();
-  protected static UserStatements userStatements = getUserStatements();
   protected static FollowedUsersStatements followedUsersStatements = getFollowedUserStatements();
   protected static UserService userService = getUserService();
   protected static ArticleService articleService = getArticleService();
@@ -57,6 +57,10 @@ public class RealworldApplicationIntegrationTest {
     return getObject(
         wrapUnwrapRootValueObjectMapper,
         () -> getBean("wrapUnwrapRootValueObjectMapper", ObjectMapper.class));
+  }
+
+  private static ObjectMapper getDefaultObjectMapper() {
+    return getObject(defaultObjectMapper, () -> getBean("defaultObjectMapper", ObjectMapper.class));
   }
 
   private static VertxConfiguration getVertxConfiguration() {

@@ -27,7 +27,7 @@
 |===
 ^|Name | Type ^| Description
 |[[articles]]`@articles`|`Array of link:dataobjects.html#ArticleResponse[ArticleResponse]`|-
-|[[articlesCount]]`@articlesCount`|`Number (int)`|-
+|[[articlesCount]]`@articlesCount`|`Number (Long)`|-
 |===
 
 [[LoginRequest]]

@@ -1,9 +1,12 @@
 package com.example.realworld;
 
+import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.domain.article.model.NewArticle;
 import com.example.realworld.domain.user.model.NewUser;
 import com.example.realworld.domain.user.model.UpdateUser;
 import com.example.realworld.domain.user.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.reactivex.core.buffer.Buffer;
@@ -11,6 +14,8 @@ import io.vertx.reactivex.ext.sql.SQLClientHelper;
 import org.junit.jupiter.api.AfterEach;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 public class RealworldDataIntegrationTest extends RealworldApplicationIntegrationTest {
 
@@ -36,6 +41,30 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
     return userService
         .follow(currentUser.getId(), followedUser.getId())
         .andThen(Single.just(currentUser));
+  }
+
+  protected Flowable<Article> createArticles(
+      User author, String title, String description, String body, int quantity) {
+    List<NewArticle> newArticles = createArticlesFor(author, title, description, body, quantity);
+    return Flowable.fromIterable(newArticles)
+        .flatMapSingle(article -> articleService.create(article));
+  }
+
+  private List<NewArticle> createArticlesFor(
+      User author, String title, String description, String body, int quantity) {
+    List<NewArticle> newArticles = new LinkedList<>();
+
+    for (int articleIndex = 0; articleIndex < quantity; articleIndex++) {
+      String indexIdentifier = "_" + articleIndex;
+      NewArticle newArticle = new NewArticle();
+      newArticle.setAuthor(author);
+      newArticle.setTitle(title + indexIdentifier);
+      newArticle.setDescription(description + indexIdentifier);
+      newArticle.setBody(body + indexIdentifier);
+      newArticles.add(newArticle);
+    }
+
+    return newArticles;
   }
 
   private UpdateUser toUpdateUser(User createdUser) {
@@ -86,10 +115,14 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
     return result;
   }
 
-  protected <T> T readValue(String value, Class<T> clazz) {
+  protected <T> T readValue(
+      String value, Class<T> clazz, boolean userWrapUnwrapRootValueObjectMapper) {
     T result;
     try {
-      result = wrapUnwrapRootValueObjectMapper.readValue(value, clazz);
+      result =
+          userWrapUnwrapRootValueObjectMapper
+              ? wrapUnwrapRootValueObjectMapper.readValue(value, clazz)
+              : defaultObjectMapper.readValue(value, clazz);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }

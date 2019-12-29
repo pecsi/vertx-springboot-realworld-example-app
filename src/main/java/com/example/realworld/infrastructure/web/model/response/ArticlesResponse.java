@@ -1,15 +1,17 @@
 package com.example.realworld.infrastructure.web.model.response;
 
+import com.example.realworld.domain.article.model.Article;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @DataObject(generateConverter = true)
 public class ArticlesResponse {
 
   private List<ArticleResponse> articles;
-  private int articlesCount;
+  private Long articlesCount;
 
   public ArticlesResponse() {}
 
@@ -23,11 +25,10 @@ public class ArticlesResponse {
     return jsonObject;
   }
 
-  //  public ArticlesResponse(Articles result) {
-  //    this.articles =
-  //        result.getArticles().stream().map(ArticleResponse::new).collect(Collectors.toList());
-  //    this.articlesCount = result.getArticlesCount();
-  //  }
+  public ArticlesResponse(List<Article> result, Long articlesCount) {
+    this.articles = result.stream().map(ArticleResponse::new).collect(Collectors.toList());
+    this.articlesCount = articlesCount;
+  }
 
   public List<ArticleResponse> getArticles() {
     return articles;
@@ -37,11 +38,11 @@ public class ArticlesResponse {
     this.articles = articles;
   }
 
-  public int getArticlesCount() {
+  public Long getArticlesCount() {
     return articlesCount;
   }
 
-  public void setArticlesCount(int articlesCount) {
+  public void setArticlesCount(Long articlesCount) {
     this.articlesCount = articlesCount;
   }
 }

@@ -10,6 +10,12 @@ public class User {
   private String email;
   private String token;
 
+  public User() {}
+
+  public User(String id) {
+    this.id = id;
+  }
+
   public String getId() {
     return id;
   }

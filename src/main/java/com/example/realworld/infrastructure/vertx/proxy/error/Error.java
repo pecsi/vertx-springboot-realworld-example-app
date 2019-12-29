@@ -1,6 +1,6 @@
 package com.example.realworld.infrastructure.vertx.proxy.error;
 
-import com.example.realworld.domain.user.exception.BusinessException;
+import com.example.realworld.domain.general.exception.BusinessException;
 
 public class Error<E extends BusinessException> {
 

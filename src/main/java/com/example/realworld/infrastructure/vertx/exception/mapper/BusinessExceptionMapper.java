@@ -1,6 +1,10 @@
 package com.example.realworld.infrastructure.vertx.exception.mapper;
 
-import com.example.realworld.domain.user.exception.*;
+import com.example.realworld.domain.general.exception.BusinessException;
+import com.example.realworld.domain.user.exception.EmailAlreadyExistsException;
+import com.example.realworld.domain.user.exception.InvalidLoginException;
+import com.example.realworld.domain.user.exception.UserNotFoundException;
+import com.example.realworld.domain.user.exception.UsernameAlreadyExistsException;
 import com.example.realworld.infrastructure.vertx.proxy.error.Error;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;

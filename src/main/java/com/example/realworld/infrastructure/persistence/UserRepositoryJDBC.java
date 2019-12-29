@@ -28,7 +28,7 @@ public class UserRepositoryJDBC extends JDBCRepository implements UserRepository
     Statement<JsonArray> createUserStatement = userStatements.create(user);
     return jdbcClient
         .rxUpdateWithParams(createUserStatement.sql(), createUserStatement.params())
-        .flatMap(updateResult -> Single.just(user));
+        .map(updateResult -> user);
   }
 
   @Override

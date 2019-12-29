@@ -1,21 +1,18 @@
 package com.example.realworld.api;
 
 import com.example.realworld.RealworldDataIntegrationTest;
-import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.user.model.User;
+import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.time.LocalDateTime;
-import java.util.LinkedList;
-import java.util.List;
-
-import static com.example.realworld.constants.TestsConstants.API_PREFIX;
-import static com.example.realworld.constants.TestsConstants.HOST;
+import static com.example.realworld.constants.TestsConstants.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -59,40 +56,50 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
     userFollowed.setPassword("userFollowed_123");
 
     createUser(loggedUser)
-        .flatMap(createdLoggedUser -> createUser(userFollowed).map(user -> createdLoggedUser))
-        .subscribe(user -> vertxTestContext.completeNow());
-  }
-
-  private List<Article> createArticlesFor(
-      User author, String title, String description, String body, int quantity) {
-
-    List<Article> articles = new LinkedList<>();
-
-    for (int articleIndex = 0; articleIndex < quantity; articleIndex++) {
-
-      String indexIdentifier = "_" + articleIndex;
-
-      articles.add(
-          createArticle(
-              author,
-              title + indexIdentifier,
-              description + indexIdentifier,
-              body + indexIdentifier,
-              ""));
-    }
-
-    return articles;
-  }
-
-  private Article createArticle(
-      User author, String title, String description, String body, String slug) {
-    Article article = new Article();
-    article.setAuthor(author);
-    article.setTitle(title);
-    article.setDescription(description);
-    article.setBody(body);
-    article.setSlug(slug);
-    article.setCreatedAt(LocalDateTime.now());
-    return article;
+        .flatMap(
+            createdLoggedUser ->
+                createUser(userFollowed)
+                    .flatMap(
+                        createdUserFollowed ->
+                            follow(createdLoggedUser, createdUserFollowed)
+                                .flatMap(
+                                    createdLoggedUserWithFollow ->
+                                        Single.create(
+                                            (SingleEmitter<User> singleEmitter) ->
+                                                createArticles(
+                                                        createdUserFollowed,
+                                                        "title",
+                                                        "description",
+                                                        "body",
+                                                        10)
+                                                    .subscribe(
+                                                        article -> {},
+                                                        vertxTestContext::failNow,
+                                                        () ->
+                                                            singleEmitter.onSuccess(
+                                                                createdLoggedUser))))))
+        .subscribe(
+            createdUserFollowed ->
+                webClient
+                    .get(port, HOST, FEED_PATH)
+                    .putHeader(
+                        AUTHORIZATION_HEADER,
+                        AUTHORIZATION_HEADER_VALUE_PREFIX + createdUserFollowed.getToken())
+                    .addQueryParam("offset", "0")
+                    .addQueryParam("limit", "5")
+                    .as(BodyCodec.string())
+                    .send(
+                        vertxTestContext.succeeding(
+                            response ->
+                                vertxTestContext.verify(
+                                    () -> {
+                                      ArticlesResponse articlesResponse =
+                                          readValue(response.body(), ArticlesResponse.class, false);
+                                      assertThat(
+                                          response.statusCode(), is(HttpResponseStatus.OK.code()));
+                                      assertThat(articlesResponse.getArticles().size(), is(5));
+                                      assertThat(articlesResponse.getArticlesCount(), is(10L));
+                                      vertxTestContext.completeNow();
+                                    }))));
   }
 }

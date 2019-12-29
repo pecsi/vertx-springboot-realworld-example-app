@@ -100,7 +100,7 @@ public class AbstractHttpVerticle extends AbstractVerticle {
 
                 response.end(
                     writeValueAsString(
-                        new ErrorResponse(failureRoutingContext.failure().getMessage())));
+                        new ErrorResponse(failureRoutingContext.failure().toString())));
               }
             });
   }

@@ -5,7 +5,6 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface FollowedUsersRepository {
   Single<Long> countByCurrentUserIdAndFollowedUserId(String currentUserId, String followedUserId);
@@ -14,5 +13,7 @@ public interface FollowedUsersRepository {
 
   Completable unfollow(String currentUserId, String followedUserId);
 
-  Single<Optional<List<Article>>> findRecentArticles(String currentUserId, int offset, int limit);
+  Single<List<Article>> findRecentArticles(String currentUserId, int offset, int limit);
+
+  Single<Long> totalUserArticlesFollowed(String currentUserId);
 }

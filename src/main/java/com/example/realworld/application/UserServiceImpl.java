@@ -193,10 +193,6 @@ public class UserServiceImpl extends ApplicationService implements UserService {
         .map(this::isCountResultGreaterThanZero);
   }
 
-  private boolean isCountResultGreaterThanZero(Long countResult) {
-    return countResult > 0;
-  }
-
   private boolean isPresent(String property) {
     return property != null && !property.isEmpty();
   }

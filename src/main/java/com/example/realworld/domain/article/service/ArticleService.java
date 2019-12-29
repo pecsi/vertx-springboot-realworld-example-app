@@ -1,17 +1,18 @@
 package com.example.realworld.domain.article.service;
 
 import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.user.model.User;
+import com.example.realworld.domain.article.model.NewArticle;
 import io.reactivex.Single;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ArticleService {
 
-  Single<Optional<List<Article>>> findRecentArticles(String currentUserId, int offset, int limit);
+  Single<List<Article>> findRecentArticles(String currentUserId, int offset, int limit);
 
-  Single<Article> create(String title, String description, String body, User author);
+  Single<Article> create(NewArticle newArticle);
+
+  Single<Long> totalUserArticlesFollowed(String currentUserId);
 
   //  Articles findArticles(
   //    int offset,

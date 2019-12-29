@@ -11,4 +11,5 @@ public class ValidationMessages {
   public static final String TITLE_MUST_BE_NOT_BLANK = "title must not be blank";
   public static final String DESCRIPTION_MUST_BE_NOT_BLANK = "description must not be blank";
   public static final String BODY_MUST_BE_NOT_BLANK = "body must not be blank";
+  public static final String AUTHOR_MUST_BE_NOT_NULL = "author must be not null";
 }

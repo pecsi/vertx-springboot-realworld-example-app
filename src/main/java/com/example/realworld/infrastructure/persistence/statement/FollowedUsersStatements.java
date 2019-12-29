@@ -12,4 +12,6 @@ public interface FollowedUsersStatements {
   Statement<JsonArray> unfollow(String currentUserId, String followedUserId);
 
   Statement<JsonArray> findRecentArticles(String currentUserId, int offset, int limit);
+
+  Statement<JsonArray> totalUserArticlesFollowed(String currentUserId);
 }

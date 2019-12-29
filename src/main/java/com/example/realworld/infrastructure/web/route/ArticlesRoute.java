@@ -45,10 +45,19 @@ public class ArticlesRoute extends AbstractHttpRoute {
         false,
         (String userId) -> {
           MultiMap queryParams = routingContext.queryParams();
-          int offset = Integer.parseInt(queryParams.get(OFFSET));
-          int limit = Integer.parseInt(queryParams.get(LIMIT));
+
+          int offset = getQueryParam(queryParams, OFFSET, 0);
+          int limit = getQueryParam(queryParams, LIMIT, 20);
           articleOperations.findRecentArticles(
-              userId, offset, limit, responseOrFail(routingContext, HttpResponseStatus.OK.code()));
+              userId,
+              offset,
+              limit,
+              responseOrFail(routingContext, HttpResponseStatus.OK.code(), false));
         });
+  }
+
+  private int getQueryParam(MultiMap queryParams, String name, int defaultValue) {
+    String queryParam = queryParams.get(name);
+    return queryParam != null ? Integer.parseInt(queryParam) : defaultValue;
   }
 }

@@ -1,6 +1,6 @@
 package com.example.realworld.infrastructure.validator;
 
-import com.example.realworld.domain.user.exception.BusinessException;
+import com.example.realworld.domain.general.exception.BusinessException;
 import com.example.realworld.domain.user.model.ModelValidator;
 import org.springframework.stereotype.Component;
 

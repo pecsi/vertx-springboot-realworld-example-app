@@ -1,3 +1,9 @@
 package com.example.realworld.domain.article.model;
 
-public interface ArticleRepository {}
+import io.reactivex.Single;
+
+public interface ArticleRepository {
+  Single<Long> countBySlug(String slug);
+
+  Single<Article> store(Article article);
+}

@@ -45,7 +45,7 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
                                 vertxTestContext.verify(
                                     () -> {
                                       ProfileResponse profileResponse =
-                                          readValue(response.body(), ProfileResponse.class);
+                                          readValue(response.body(), ProfileResponse.class, true);
                                       assertThat(
                                           profileResponse.getUsername(),
                                           is(persistedUser.getUsername()));
@@ -98,7 +98,7 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
                                 vertxTestContext.verify(
                                     () -> {
                                       ProfileResponse profileResponse =
-                                          readValue(response.body(), ProfileResponse.class);
+                                          readValue(response.body(), ProfileResponse.class, true);
                                       assertThat(
                                           profileResponse.getUsername(), is(user2.getUsername()));
                                       assertThat(profileResponse.getBio(), is(user2.getBio()));
@@ -146,7 +146,7 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
                                 vertxTestContext.verify(
                                     () -> {
                                       ProfileResponse profileResponse =
-                                          readValue(response.body(), ProfileResponse.class);
+                                          readValue(response.body(), ProfileResponse.class, true);
                                       assertThat(
                                           profileResponse.getUsername(),
                                           is(persistedUser2.getUsername()));
@@ -200,7 +200,7 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
                                 vertxTestContext.verify(
                                     () -> {
                                       ProfileResponse profileResponse =
-                                          readValue(response.body(), ProfileResponse.class);
+                                          readValue(response.body(), ProfileResponse.class, true);
                                       assertThat(
                                           profileResponse.getUsername(), is(user2.getUsername()));
                                       assertThat(profileResponse.getBio(), is(user2.getBio()));

@@ -1,5 +1,6 @@
 package com.example.realworld.infrastructure.web.model.response;
 
+import com.example.realworld.domain.article.model.Article;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import io.vertx.codegen.annotations.DataObject;
@@ -40,18 +41,18 @@ public class ArticleResponse {
     return jsonObject;
   }
 
-  //  public ArticleResponse(Article article) {
-  //    this.slug = article.getSlug();
-  //    this.title = article.getTitle();
-  //    this.description = article.getDescription();
-  //    this.body = article.getBody();
-  //    this.tagList = article.getTagList();
-  //    this.createdAt = article.getCreatedAt();
-  //    this.updatedAt = article.getUpdatedAt();
-  //    this.favorited = article.isFavorited();
-  //    this.favoritesCount = article.getFavoritesCount();
-  //    this.author = article.getAuthor();
-  //  }
+  public ArticleResponse(Article article) {
+    this.slug = article.getSlug();
+    this.title = article.getTitle();
+    this.description = article.getDescription();
+    this.body = article.getBody();
+    //    this.tagList = article.getTagList();
+    this.createdAt = article.getCreatedAt();
+    this.updatedAt = article.getUpdatedAt();
+    //    this.favorited = article.isFavorited();
+    //    this.favoritesCount = article.getFavoritesCount();
+    //    this.author = article.getAuthor();
+  }
 
   public String getSlug() {
     return slug;

@@ -26,7 +26,7 @@ public class ArticlesResponseConverter {
           break;
         case "articlesCount":
           if (member.getValue() instanceof Number) {
-            obj.setArticlesCount(((Number)member.getValue()).intValue());
+            obj.setArticlesCount(((Number)member.getValue()).longValue());
           }
           break;
       }
@@ -43,6 +43,8 @@ public class ArticlesResponseConverter {
       obj.getArticles().forEach(item -> array.add(item.toJson()));
       json.put("articles", array);
     }
-    json.put("articlesCount", obj.getArticlesCount());
+    if (obj.getArticlesCount() != null) {
+      json.put("articlesCount", obj.getArticlesCount());
+    }
   }
 }

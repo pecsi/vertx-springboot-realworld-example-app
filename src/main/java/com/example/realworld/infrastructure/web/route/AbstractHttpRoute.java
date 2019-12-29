@@ -70,7 +70,10 @@ public abstract class AbstractHttpRoute implements HttpRoute {
 
   protected void unauthorizedResponse(RoutingContext routingContext) {
     response(
-        routingContext, HttpResponseStatus.UNAUTHORIZED.code(), new ErrorResponse("Unauthorized"));
+        routingContext,
+        HttpResponseStatus.UNAUTHORIZED.code(),
+        new ErrorResponse("Unauthorized"),
+        true);
   }
 
   protected <T> void userId(RoutingContext routingContext, boolean optional, Consumer<T> consumer) {
@@ -120,37 +123,33 @@ public abstract class AbstractHttpRoute implements HttpRoute {
     }
   }
 
-  protected <T> void response(RoutingContext routingContext, int statusCode, T response) {
+  protected <T> void response(
+      RoutingContext routingContext,
+      int statusCode,
+      T response,
+      boolean useWrapUnwrapRootValueObjectMapper) {
     try {
       routingContext
           .response()
           .setStatusCode(statusCode)
-          .end(wrapUnwrapRootValueObjectMapper.writeValueAsString(response));
+          .end(
+              useWrapUnwrapRootValueObjectMapper
+                  ? wrapUnwrapRootValueObjectMapper.writeValueAsString(response)
+                  : defaultObjectMapper.writeValueAsString(response));
     } catch (JsonProcessingException e) {
       routingContext.fail(e);
     }
   }
 
   protected <T> Handler<AsyncResult<T>> responseOrFail(
-      RoutingContext routingContext, int statusCode) {
+      RoutingContext routingContext, int statusCode, boolean useWrapUnwrapRootValueObjectMapper) {
     return asyncResult -> {
       if (asyncResult.succeeded()) {
         T result = asyncResult.result();
-        response(routingContext, statusCode, result);
+        response(routingContext, statusCode, result, useWrapUnwrapRootValueObjectMapper);
       } else {
         routingContext.fail(asyncResult.cause());
       }
     };
   }
-
-  //  protected <T> BiConsumer<? super T, ? super Throwable> responseOrFail(
-  //      RoutingContext routingContext, int statusCode, Function<T, Object> responseFunction) {
-  //    return (result, throwable) -> {
-  //      if (throwable != null) {
-  //        routingContext.fail(throwable);
-  //      } else {
-  //        response(routingContext, statusCode, responseFunction.apply(result));
-  //      }
-  //    };
-  //  }
 }
