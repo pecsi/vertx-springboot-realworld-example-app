@@ -18,7 +18,6 @@ import static org.hamcrest.Matchers.is;
 public class ProfilesAPITest extends RealworldDataIntegrationTest {
 
   private final String PROFILES_RESOURCE_PATH = API_PREFIX + "/profiles";
-  private final int port = vertxConfiguration.getServer().getPort();
 
   @Test
   public void givenAnPersistedUserShouldReturnProfileDataWithStatusCode200(

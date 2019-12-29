@@ -25,7 +25,6 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
   private final String USERS_RESOURCE_PATH = API_PREFIX + "/users";
   private final String USER_RESOURCE_PATH = API_PREFIX + "/user";
   private final String LOGIN_PATH = USERS_RESOURCE_PATH + "/login";
-  private final int port = vertxConfiguration.getServer().getPort();
 
   @Test
   void shouldCreateAUser(VertxTestContext vertxTestContext) {

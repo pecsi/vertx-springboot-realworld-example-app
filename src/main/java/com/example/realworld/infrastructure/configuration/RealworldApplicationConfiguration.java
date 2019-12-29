@@ -3,6 +3,7 @@ package com.example.realworld.infrastructure.configuration;
 import com.example.realworld.application.ArticleServiceImpl;
 import com.example.realworld.application.ProfileServiceImpl;
 import com.example.realworld.application.UserServiceImpl;
+import com.example.realworld.domain.article.model.ArticleRepository;
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.user.model.*;
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.slugify.Slugify;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
@@ -28,7 +30,6 @@ import io.vertx.serviceproxy.ServiceProxyBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 
 @Configuration
 public class RealworldApplicationConfiguration {
@@ -54,9 +55,9 @@ public class RealworldApplicationConfiguration {
   }
 
   @Bean
-  @DependsOn({"flyway", "flywayInitializer"})
-  public ArticleService articleService(FollowedUsersRepository followedUsersRepository) {
-    return new ArticleServiceImpl(followedUsersRepository);
+  public ArticleService articleService(
+      ArticleRepository articleRepository, FollowedUsersRepository followedUsersRepository) {
+    return new ArticleServiceImpl(articleRepository, followedUsersRepository);
   }
 
   @Bean
@@ -96,6 +97,11 @@ public class RealworldApplicationConfiguration {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new JavaTimeModule());
     return objectMapper;
+  }
+
+  @Bean
+  public Slugify slugify() {
+    return new Slugify();
   }
 
   @Bean
