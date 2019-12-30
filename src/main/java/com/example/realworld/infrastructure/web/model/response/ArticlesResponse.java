@@ -1,11 +1,9 @@
 package com.example.realworld.infrastructure.web.model.response;
 
-import com.example.realworld.domain.article.model.Article;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @DataObject(generateConverter = true)
 public class ArticlesResponse {
@@ -25,8 +23,8 @@ public class ArticlesResponse {
     return jsonObject;
   }
 
-  public ArticlesResponse(List<Article> result, Long articlesCount) {
-    this.articles = result.stream().map(ArticleResponse::new).collect(Collectors.toList());
+  public ArticlesResponse(List<ArticleResponse> articles, Long articlesCount) {
+    this.articles = articles;
     this.articlesCount = articlesCount;
   }
 

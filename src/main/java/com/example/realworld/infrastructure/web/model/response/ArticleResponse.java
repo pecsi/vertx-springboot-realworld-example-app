@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.web.model.response;
 
 import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.domain.profile.model.Profile;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import io.vertx.codegen.annotations.DataObject;
@@ -41,7 +42,7 @@ public class ArticleResponse {
     return jsonObject;
   }
 
-  public ArticleResponse(Article article) {
+  public ArticleResponse(Article article, Profile profile) {
     this.slug = article.getSlug();
     this.title = article.getTitle();
     this.description = article.getDescription();
@@ -51,7 +52,7 @@ public class ArticleResponse {
     this.updatedAt = article.getUpdatedAt();
     //    this.favorited = article.isFavorited();
     //    this.favoritesCount = article.getFavoritesCount();
-    //    this.author = article.getAuthor();
+    this.author = new ProfileResponse(profile);
   }
 
   public String getSlug() {

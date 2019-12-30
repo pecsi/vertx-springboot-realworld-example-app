@@ -1,9 +1,7 @@
 package com.example.realworld.infrastructure.persistence;
 
 import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.user.exception.UserNotFoundException;
 import com.example.realworld.domain.user.model.FollowedUsersRepository;
-import com.example.realworld.domain.user.model.UserRepository;
 import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
 import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
@@ -20,15 +18,11 @@ public class FollowedUsersRepositoryJDBC extends JDBCRepository implements Follo
 
   private JDBCClient jdbcClient;
   private FollowedUsersStatements followedUsersStatements;
-  private UserRepository userRepository;
 
   public FollowedUsersRepositoryJDBC(
-      JDBCClient jdbcClient,
-      FollowedUsersStatements followedUsersStatements,
-      UserRepository userRepository) {
+      JDBCClient jdbcClient, FollowedUsersStatements followedUsersStatements) {
     this.jdbcClient = jdbcClient;
     this.followedUsersStatements = followedUsersStatements;
-    this.userRepository = userRepository;
   }
 
   @Override
@@ -68,18 +62,7 @@ public class FollowedUsersRepositoryJDBC extends JDBCRepository implements Follo
         followedUsersStatements.findRecentArticles(currentUserId, offset, limit);
     return jdbcClient
         .rxQueryWithParams(findRecentArticlesStatement.sql(), findRecentArticlesStatement.params())
-        .map(ParserUtils::toArticleList)
-        .flattenAsFlowable(articles -> articles)
-        .flatMapSingle(
-            article ->
-                userRepository
-                    .findById(article.getAuthor().getId())
-                    .map(
-                        author -> {
-                          article.setAuthor(author.orElseThrow(UserNotFoundException::new));
-                          return article;
-                        }))
-        .toList();
+        .map(ParserUtils::toArticleList);
   }
 
   @Override

@@ -45,7 +45,7 @@ public class ParserUtils {
                   article.setSlug(row.getString("SLUG"));
                   article.setCreatedAt(fromTimestamp(row.getString("CREATED_AT")));
                   article.setUpdatedAt(fromTimestamp(row.getString("UPDATED_AT")));
-                  article.setAuthor(new User(row.getString("AUTHOR_ID")));
+                  article.setAuthor(new User(row.getString("AUTHOR_USERNAME")));
                   return article;
                 })
             .collect(Collectors.toList());

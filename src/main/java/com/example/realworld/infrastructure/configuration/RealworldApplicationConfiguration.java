@@ -137,12 +137,13 @@ public class RealworldApplicationConfiguration {
   public ArticleOperations articleOperations(
       Vertx vertx,
       ArticleService articleService,
+      ProfileService profileService,
       @Qualifier("defaultObjectMapper") ObjectMapper objectMapper) {
     return registerServiceAndCreateProxy(
         vertx,
         ArticleOperations.class,
         ArticleOperations.SERVICE_ADDRESS,
-        new ArticleOperationsImpl(articleService, objectMapper));
+        new ArticleOperationsImpl(articleService, profileService, objectMapper));
   }
 
   private <T> T registerServiceAndCreateProxy(

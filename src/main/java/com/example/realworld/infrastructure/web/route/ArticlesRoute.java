@@ -45,7 +45,6 @@ public class ArticlesRoute extends AbstractHttpRoute {
         false,
         (String userId) -> {
           MultiMap queryParams = routingContext.queryParams();
-
           int offset = getQueryParam(queryParams, OFFSET, 0);
           int limit = getQueryParam(queryParams, LIMIT, 20);
           articleOperations.findRecentArticles(
