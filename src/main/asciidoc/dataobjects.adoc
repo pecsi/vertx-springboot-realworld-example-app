@@ -10,12 +10,14 @@
 ^|Name | Type ^| Description
 |[[author]]`@author`|`link:dataobjects.html#ProfileResponse[ProfileResponse]`|-
 |[[body]]`@body`|`String`|-
+|[[createdAt]]`@createdAt`|`String`|-
 |[[description]]`@description`|`String`|-
 |[[favorited]]`@favorited`|`Boolean`|-
-|[[favoritesCount]]`@favoritesCount`|`Number (int)`|-
+|[[favoritesCount]]`@favoritesCount`|`Number (Long)`|-
 |[[slug]]`@slug`|`String`|-
 |[[tagList]]`@tagList`|`Array of String`|-
 |[[title]]`@title`|`String`|-
+|[[updatedAt]]`@updatedAt`|`String`|-
 |===
 
 [[ArticlesResponse]]

@@ -24,6 +24,11 @@ public class ArticleResponseConverter {
             obj.setBody((String)member.getValue());
           }
           break;
+        case "createdAt":
+          if (member.getValue() instanceof String) {
+            obj.setCreatedAt((String)member.getValue());
+          }
+          break;
         case "description":
           if (member.getValue() instanceof String) {
             obj.setDescription((String)member.getValue());
@@ -36,7 +41,7 @@ public class ArticleResponseConverter {
           break;
         case "favoritesCount":
           if (member.getValue() instanceof Number) {
-            obj.setFavoritesCount(((Number)member.getValue()).intValue());
+            obj.setFavoritesCount(((Number)member.getValue()).longValue());
           }
           break;
         case "slug":
@@ -59,6 +64,11 @@ public class ArticleResponseConverter {
             obj.setTitle((String)member.getValue());
           }
           break;
+        case "updatedAt":
+          if (member.getValue() instanceof String) {
+            obj.setUpdatedAt((String)member.getValue());
+          }
+          break;
       }
     }
   }
@@ -74,11 +84,16 @@ public class ArticleResponseConverter {
     if (obj.getBody() != null) {
       json.put("body", obj.getBody());
     }
+    if (obj.getCreatedAt() != null) {
+      json.put("createdAt", obj.getCreatedAt());
+    }
     if (obj.getDescription() != null) {
       json.put("description", obj.getDescription());
     }
     json.put("favorited", obj.isFavorited());
-    json.put("favoritesCount", obj.getFavoritesCount());
+    if (obj.getFavoritesCount() != null) {
+      json.put("favoritesCount", obj.getFavoritesCount());
+    }
     if (obj.getSlug() != null) {
       json.put("slug", obj.getSlug());
     }
@@ -89,6 +104,9 @@ public class ArticleResponseConverter {
     }
     if (obj.getTitle() != null) {
       json.put("title", obj.getTitle());
+    }
+    if (obj.getUpdatedAt() != null) {
+      json.put("updatedAt", obj.getUpdatedAt());
     }
   }
 }

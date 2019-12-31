@@ -1,10 +1,7 @@
 package com.example.realworld.application;
 
 import com.example.realworld.domain.article.exception.SlugAlreadyExistsException;
-import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.article.model.ArticleRepository;
-import com.example.realworld.domain.article.model.NewArticle;
-import com.example.realworld.domain.article.model.SlugProvider;
+import com.example.realworld.domain.article.model.*;
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.domain.tag.exception.TagNotFoundException;
 import com.example.realworld.domain.tag.model.NewTag;
@@ -24,6 +21,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
 
   private ArticleRepository articleRepository;
   private FollowedUsersRepository followedUsersRepository;
+  private FavoritesRepository favoritesRepository;
   private SlugProvider slugProvider;
   private ModelValidator modelValidator;
   private TagService tagService;
@@ -31,11 +29,13 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   public ArticleServiceImpl(
       ArticleRepository articleRepository,
       FollowedUsersRepository followedUsersRepository,
+      FavoritesRepository favoritesRepository,
       SlugProvider slugProvider,
       ModelValidator modelValidator,
       TagService tagService) {
     this.articleRepository = articleRepository;
     this.followedUsersRepository = followedUsersRepository;
+    this.favoritesRepository = favoritesRepository;
     this.slugProvider = slugProvider;
     this.modelValidator = modelValidator;
     this.tagService = tagService;
@@ -58,6 +58,18 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   @Override
   public Single<Long> totalUserArticlesFollowed(String currentUserId) {
     return followedUsersRepository.totalUserArticlesFollowed(currentUserId);
+  }
+
+  @Override
+  public Single<Boolean> isFavorited(String articleId, String currentUserId) {
+    return favoritesRepository
+        .countByArticleIdAndUserId(articleId, currentUserId)
+        .map(this::isCountResultGreaterThanZero);
+  }
+
+  @Override
+  public Single<Long> favoritesCount(String articleId) {
+    return favoritesRepository.countByArticleId(articleId);
   }
 
   private Completable validSlug(String slug) {

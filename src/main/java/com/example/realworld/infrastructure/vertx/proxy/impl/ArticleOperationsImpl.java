@@ -40,20 +40,33 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
         .flattenAsFlowable(articles -> articles)
         .flatMapSingle(
             article ->
-                tagService
-                    .findTagsByArticle(article.getId())
+                articleService
+                    .isFavorited(article.getId(), currentUserId)
                     .flatMap(
-                        tags ->
-                            profileService
-                                .getProfile(article.getAuthor().getUsername(), currentUserId)
-                                .map(
-                                    profile ->
-                                        new ArticleResponse(
-                                            article,
-                                            profile,
-                                            tags.stream()
-                                                .map(Tag::getName)
-                                                .collect(Collectors.toList())))))
+                        isFavorited ->
+                            articleService
+                                .favoritesCount(article.getId())
+                                .flatMap(
+                                    favoritesCount ->
+                                        tagService
+                                            .findTagsByArticle(article.getId())
+                                            .flatMap(
+                                                tags ->
+                                                    profileService
+                                                        .getProfile(
+                                                            article.getAuthor().getUsername(),
+                                                            currentUserId)
+                                                        .map(
+                                                            profile ->
+                                                                new ArticleResponse(
+                                                                    article,
+                                                                    profile,
+                                                                    tags.stream()
+                                                                        .map(Tag::getName)
+                                                                        .collect(
+                                                                            Collectors.toList()),
+                                                                    isFavorited,
+                                                                    favoritesCount))))))
         .toList()
         .flatMap(
             articleResponses ->

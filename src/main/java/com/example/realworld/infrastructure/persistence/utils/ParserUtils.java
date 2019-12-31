@@ -112,4 +112,8 @@ public class ParserUtils {
   private static LocalDateTime fromTimestamp(String timestamp) {
     return timestamp != null ? LocalDateTime.parse(timestamp, dateTimeFormatter) : null;
   }
+
+  public static String format(LocalDateTime localDateTime, String pattern) {
+    return localDateTime.format(DateTimeFormatter.ofPattern(pattern));
+  }
 }

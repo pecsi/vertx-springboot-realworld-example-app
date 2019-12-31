@@ -23,15 +23,6 @@ public class Article {
     this.tags = new LinkedList<>();
   }
 
-  //  @OneToMany(mappedBy = "article", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  //  private List<Comment> comments;
-  //
-  //  @OneToMany(mappedBy = "article", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  //  private List<ArticlesTags> tags;
-  //
-  //  @OneToMany(mappedBy = "article", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  //  private List<ArticlesUsers> favorites;
-
   public String getId() {
     return id;
   }
