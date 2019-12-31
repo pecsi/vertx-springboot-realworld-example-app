@@ -1,6 +1,7 @@
 package com.example.realworld;
 
 import com.example.realworld.domain.article.service.ArticleService;
+import com.example.realworld.domain.tag.service.TagService;
 import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.UserStatements;
@@ -31,6 +32,7 @@ public class RealworldApplicationIntegrationTest {
   protected static FollowedUsersStatements followedUsersStatements = getFollowedUserStatements();
   protected static UserService userService = getUserService();
   protected static ArticleService articleService = getArticleService();
+  protected static TagService tagService = getTagService();
 
   private static ConfigurableApplicationContext getApplicationContext() {
     return getObject(
@@ -82,6 +84,10 @@ public class RealworldApplicationIntegrationTest {
 
   private static ArticleService getArticleService() {
     return getObject(articleService, () -> getBean(ArticleService.class));
+  }
+
+  private static TagService getTagService() {
+    return getObject(tagService, () -> getBean(TagService.class));
   }
 
   private static <T> T getBean(Class<T> clazz) {

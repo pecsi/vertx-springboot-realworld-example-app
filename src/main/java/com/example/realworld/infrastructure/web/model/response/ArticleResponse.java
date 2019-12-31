@@ -42,14 +42,14 @@ public class ArticleResponse {
     return jsonObject;
   }
 
-  public ArticleResponse(Article article, Profile profile) {
+  public ArticleResponse(Article article, Profile profile, List<String> tagList) {
     this.slug = article.getSlug();
     this.title = article.getTitle();
     this.description = article.getDescription();
     this.body = article.getBody();
-    //    this.tagList = article.getTagList();
     this.createdAt = article.getCreatedAt();
     this.updatedAt = article.getUpdatedAt();
+    this.tagList = tagList;
     //    this.favorited = article.isFavorited();
     //    this.favoritesCount = article.getFavoritesCount();
     this.author = new ProfileResponse(profile);

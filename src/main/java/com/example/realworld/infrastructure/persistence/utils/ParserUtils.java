@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.persistence.utils;
 
 import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
@@ -28,32 +29,59 @@ public class ParserUtils {
   }
 
   public static List<Article> toArticleList(ResultSet resultSet) {
-    return parseResultSet(resultSet, ParserUtils::getArticleFromResultSet, LinkedList::new);
+    return parseResultSet(resultSet, ParserUtils::getArticlesFromResultSet, LinkedList::new);
   }
 
-  private static List<Article> getArticleFromResultSet(ResultSet resultSet) {
+  public static List<Tag> toTagList(ResultSet resultSet) {
+    return parseResultSet(resultSet, ParserUtils::getTagsFromResultSet, LinkedList::new);
+  }
+
+  public static Optional<Tag> toTagOptional(ResultSet resultSet) {
+    return parseResultSet(resultSet, ParserUtils::getTagOptionalFromResultSet, Optional::empty);
+  }
+
+  private static Optional<Tag> getTagOptionalFromResultSet(ResultSet resultSet) {
+    return Optional.of(getTagFromResultset(resultSet));
+  }
+
+  private static List<Tag> getTagsFromResultSet(ResultSet resultSet) {
     List<JsonObject> rows = resultSet.getRows();
-    List<Article> articles =
-        rows.stream()
-            .map(
-                row -> {
-                  Article article = new Article();
-                  article.setId(row.getString("ID"));
-                  article.setTitle(row.getString("TITLE"));
-                  article.setDescription(row.getString("DESCRIPTION"));
-                  article.setBody(row.getString("BODY"));
-                  article.setSlug(row.getString("SLUG"));
-                  article.setCreatedAt(fromTimestamp(row.getString("CREATED_AT")));
-                  article.setUpdatedAt(fromTimestamp(row.getString("UPDATED_AT")));
-                  article.setAuthor(new User(row.getString("AUTHOR_USERNAME")));
-                  return article;
-                })
-            .collect(Collectors.toList());
-    return articles;
+    return rows.stream().map(ParserUtils::getTagFromRow).collect(Collectors.toList());
+  }
+
+  private static List<Article> getArticlesFromResultSet(ResultSet resultSet) {
+    List<JsonObject> rows = resultSet.getRows();
+    return rows.stream()
+        .map(
+            row -> {
+              Article article = new Article();
+              article.setId(row.getString("ID"));
+              article.setTitle(row.getString("TITLE"));
+              article.setDescription(row.getString("DESCRIPTION"));
+              article.setBody(row.getString("BODY"));
+              article.setSlug(row.getString("SLUG"));
+              article.setCreatedAt(fromTimestamp(row.getString("CREATED_AT")));
+              article.setUpdatedAt(fromTimestamp(row.getString("UPDATED_AT")));
+              article.setAuthor(new User(row.getString("AUTHOR_USERNAME")));
+              return article;
+            })
+        .collect(Collectors.toList());
   }
 
   private static Optional<User> getUserOptionalFromResultSet(ResultSet resultSet) {
     return Optional.of(getUserFromResultSet(resultSet));
+  }
+
+  private static Tag getTagFromResultset(ResultSet resultSet) {
+    JsonObject row = resultSet.getRows().get(0);
+    return getTagFromRow(row);
+  }
+
+  private static Tag getTagFromRow(JsonObject row) {
+    Tag tag = new Tag();
+    tag.setId(row.getString("ID"));
+    tag.setName(row.getString("NAME"));
+    return tag;
   }
 
   private static User getUserFromResultSet(ResultSet resultSet) {

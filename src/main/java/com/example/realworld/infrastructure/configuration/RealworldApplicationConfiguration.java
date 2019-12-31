@@ -2,11 +2,15 @@ package com.example.realworld.infrastructure.configuration;
 
 import com.example.realworld.application.ArticleServiceImpl;
 import com.example.realworld.application.ProfileServiceImpl;
+import com.example.realworld.application.TagServiceImpl;
 import com.example.realworld.application.UserServiceImpl;
 import com.example.realworld.domain.article.model.ArticleRepository;
 import com.example.realworld.domain.article.model.SlugProvider;
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.domain.profile.service.ProfileService;
+import com.example.realworld.domain.tag.model.ArticlesTagsRepository;
+import com.example.realworld.domain.tag.model.TagRepository;
+import com.example.realworld.domain.tag.service.TagService;
 import com.example.realworld.domain.user.model.*;
 import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
@@ -63,6 +67,14 @@ public class RealworldApplicationConfiguration {
       ModelValidator modelValidator) {
     return new ArticleServiceImpl(
         articleRepository, followedUsersRepository, slugProvider, modelValidator);
+  }
+
+  @Bean
+  public TagService tagService(
+      TagRepository tagRepository,
+      ArticlesTagsRepository articlesTagsRepository,
+      ModelValidator modelValidator) {
+    return new TagServiceImpl(tagRepository, articlesTagsRepository, modelValidator);
   }
 
   @Bean
@@ -138,12 +150,13 @@ public class RealworldApplicationConfiguration {
       Vertx vertx,
       ArticleService articleService,
       ProfileService profileService,
+      TagService tagService,
       @Qualifier("defaultObjectMapper") ObjectMapper objectMapper) {
     return registerServiceAndCreateProxy(
         vertx,
         ArticleOperations.class,
         ArticleOperations.SERVICE_ADDRESS,
-        new ArticleOperationsImpl(articleService, profileService, objectMapper));
+        new ArticleOperationsImpl(articleService, profileService, tagService, objectMapper));
   }
 
   private <T> T registerServiceAndCreateProxy(

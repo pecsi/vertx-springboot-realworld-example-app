@@ -1,6 +1,7 @@
 package com.example.realworld.api;
 
 import com.example.realworld.RealworldDataIntegrationTest;
+import com.example.realworld.domain.tag.model.NewTag;
 import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -54,6 +55,12 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
     userFollowed.setUsername("userFollowed");
     userFollowed.setEmail("userFollowed@mail.com");
     userFollowed.setPassword("userFollowed_123");
+
+    NewTag tag1 = new NewTag();
+    tag1.setName("tag1");
+
+    NewTag tag2 = new NewTag();
+    tag2.setName("tag2");
 
     createUser(loggedUser)
         .flatMap(

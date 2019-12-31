@@ -2,6 +2,8 @@ package com.example.realworld;
 
 import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.article.model.NewArticle;
+import com.example.realworld.domain.tag.model.NewTag;
+import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.NewUser;
 import com.example.realworld.domain.user.model.UpdateUser;
 import com.example.realworld.domain.user.model.User;
@@ -48,6 +50,10 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
     List<NewArticle> newArticles = createArticlesFor(author, title, description, body, quantity);
     return Flowable.fromIterable(newArticles)
         .flatMapSingle(article -> articleService.create(article));
+  }
+
+  protected Flowable<Tag> createTags(NewTag... newTags) {
+    return Flowable.fromArray(newTags).flatMapSingle(newTag -> tagService.create(newTag));
   }
 
   private List<NewArticle> createArticlesFor(
