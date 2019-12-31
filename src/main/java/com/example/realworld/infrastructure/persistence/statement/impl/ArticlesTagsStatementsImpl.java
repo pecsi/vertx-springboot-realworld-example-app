@@ -23,7 +23,7 @@ public class ArticlesTagsStatementsImpl implements ArticlesTagsStatements {
   @Override
   public Statement<JsonArray> store(String tagId, String articleId) {
 
-    String sql = "INSERT INTO ARTICLES_TAGS (TAG_ID, ARTICLE_ID) VALUES ('?', '?')";
+    String sql = "INSERT INTO ARTICLES_TAGS (TAG_ID, ARTICLE_ID) VALUES (?, ?)";
 
     JsonArray params = new JsonArray().add(tagId).add(articleId);
 

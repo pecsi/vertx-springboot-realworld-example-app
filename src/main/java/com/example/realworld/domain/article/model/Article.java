@@ -1,8 +1,11 @@
 package com.example.realworld.domain.article.model;
 
+import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 
 import java.time.LocalDateTime;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Article {
 
@@ -14,6 +17,11 @@ public class Article {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private User author;
+  private List<Tag> tags;
+
+  public Article() {
+    this.tags = new LinkedList<>();
+  }
 
   //  @OneToMany(mappedBy = "article", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   //  private List<Comment> comments;
@@ -86,5 +94,13 @@ public class Article {
 
   public void setAuthor(User author) {
     this.author = author;
+  }
+
+  public List<Tag> getTags() {
+    return tags;
+  }
+
+  public void setTags(List<Tag> tags) {
+    this.tags = tags;
   }
 }

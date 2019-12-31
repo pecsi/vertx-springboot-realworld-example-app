@@ -6,9 +6,13 @@ import com.example.realworld.domain.article.model.ArticleRepository;
 import com.example.realworld.domain.article.model.NewArticle;
 import com.example.realworld.domain.article.model.SlugProvider;
 import com.example.realworld.domain.article.service.ArticleService;
+import com.example.realworld.domain.tag.exception.TagNotFoundException;
+import com.example.realworld.domain.tag.model.NewTag;
+import com.example.realworld.domain.tag.service.TagService;
 import com.example.realworld.domain.user.model.FollowedUsersRepository;
 import com.example.realworld.domain.user.model.ModelValidator;
 import io.reactivex.Completable;
+import io.reactivex.Flowable;
 import io.reactivex.Single;
 
 import java.time.LocalDateTime;
@@ -22,16 +26,19 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   private FollowedUsersRepository followedUsersRepository;
   private SlugProvider slugProvider;
   private ModelValidator modelValidator;
+  private TagService tagService;
 
   public ArticleServiceImpl(
       ArticleRepository articleRepository,
       FollowedUsersRepository followedUsersRepository,
       SlugProvider slugProvider,
-      ModelValidator modelValidator) {
+      ModelValidator modelValidator,
+      TagService tagService) {
     this.articleRepository = articleRepository;
     this.followedUsersRepository = followedUsersRepository;
     this.slugProvider = slugProvider;
     this.modelValidator = modelValidator;
+    this.tagService = tagService;
   }
 
   @Override
@@ -43,7 +50,9 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   public Single<Article> create(NewArticle newArticle) {
     modelValidator.validate(newArticle);
     Article article = createFromNewArticle(newArticle);
-    return validSlug(article.getSlug()).andThen(articleRepository.store(article));
+    return validSlug(article.getSlug())
+        .andThen(configTags(article, newArticle.getTags()))
+        .andThen(articleRepository.store(article));
   }
 
   @Override
@@ -62,6 +71,16 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
             });
   }
 
+  private Completable configTags(Article article, List<NewTag> newTags) {
+    return Flowable.fromIterable(newTags)
+        .flatMapSingle(newTag -> tagService.findTagByName(newTag.getName()))
+        .flatMapCompletable(
+            tag -> {
+              article.getTags().add(tag.orElseThrow(TagNotFoundException::new));
+              return Completable.complete();
+            });
+  }
+
   private Single<Boolean> isSlugAlreadyExists(String slug) {
     return articleRepository.countBySlug(slug).map(this::isCountResultGreaterThanZero);
   }
@@ -73,7 +92,9 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     article.setDescription(newArticle.getDescription());
     article.setBody(newArticle.getBody());
     article.setAuthor(newArticle.getAuthor());
-    article.setCreatedAt(LocalDateTime.now());
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
     return article;
   }
 

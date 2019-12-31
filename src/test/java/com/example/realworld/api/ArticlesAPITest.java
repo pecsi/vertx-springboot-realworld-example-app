@@ -5,8 +5,6 @@ import com.example.realworld.domain.tag.model.NewTag;
 import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
@@ -71,27 +69,26 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
                             follow(createdLoggedUser, createdUserFollowed)
                                 .flatMap(
                                     createdLoggedUserWithFollow ->
-                                        Single.create(
-                                            (SingleEmitter<User> singleEmitter) ->
-                                                createArticles(
-                                                        createdUserFollowed,
-                                                        "title",
-                                                        "description",
-                                                        "body",
-                                                        10)
-                                                    .subscribe(
-                                                        article -> {},
-                                                        vertxTestContext::failNow,
-                                                        () ->
-                                                            singleEmitter.onSuccess(
-                                                                createdLoggedUser))))))
+                                        createTags(tag1, tag2)
+                                            .toList()
+                                            .flatMap(
+                                                tags ->
+                                                    createArticles(
+                                                            createdUserFollowed,
+                                                            "title",
+                                                            "description",
+                                                            "body",
+                                                            10,
+                                                            tags)
+                                                        .toList()
+                                                        .map(articles -> createdLoggedUser)))))
         .subscribe(
-            createdUserFollowed ->
+            currentUser ->
                 webClient
                     .get(port, HOST, FEED_PATH)
                     .putHeader(
                         AUTHORIZATION_HEADER,
-                        AUTHORIZATION_HEADER_VALUE_PREFIX + createdUserFollowed.getToken())
+                        AUTHORIZATION_HEADER_VALUE_PREFIX + currentUser.getToken())
                     .addQueryParam("offset", "0")
                     .addQueryParam("limit", "5")
                     .as(BodyCodec.string())

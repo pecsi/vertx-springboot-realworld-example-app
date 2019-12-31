@@ -64,9 +64,10 @@ public class RealworldApplicationConfiguration {
       ArticleRepository articleRepository,
       FollowedUsersRepository followedUsersRepository,
       SlugProvider slugProvider,
-      ModelValidator modelValidator) {
+      ModelValidator modelValidator,
+      TagService tagService) {
     return new ArticleServiceImpl(
-        articleRepository, followedUsersRepository, slugProvider, modelValidator);
+        articleRepository, followedUsersRepository, slugProvider, modelValidator, tagService);
   }
 
   @Bean

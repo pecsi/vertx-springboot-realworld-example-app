@@ -46,8 +46,9 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
   }
 
   protected Flowable<Article> createArticles(
-      User author, String title, String description, String body, int quantity) {
-    List<NewArticle> newArticles = createArticlesFor(author, title, description, body, quantity);
+      User author, String title, String description, String body, int quantity, List<Tag> tags) {
+    List<NewArticle> newArticles =
+        createArticlesFor(author, title, description, body, quantity, tags);
     return Flowable.fromIterable(newArticles)
         .flatMapSingle(article -> articleService.create(article));
   }
@@ -57,7 +58,7 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
   }
 
   private List<NewArticle> createArticlesFor(
-      User author, String title, String description, String body, int quantity) {
+      User author, String title, String description, String body, int quantity, List<Tag> tags) {
     List<NewArticle> newArticles = new LinkedList<>();
 
     for (int articleIndex = 0; articleIndex < quantity; articleIndex++) {
@@ -67,6 +68,16 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
       newArticle.setTitle(title + indexIdentifier);
       newArticle.setDescription(description + indexIdentifier);
       newArticle.setBody(body + indexIdentifier);
+
+      List<NewTag> newTags = new LinkedList<>();
+      for (Tag tag : tags) {
+        NewTag newTag = new NewTag();
+        newTag.setName(tag.getName());
+        newTags.add(newTag);
+      }
+
+      newArticle.setTags(newTags);
+
       newArticles.add(newArticle);
     }
 

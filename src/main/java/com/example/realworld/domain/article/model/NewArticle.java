@@ -1,6 +1,7 @@
 package com.example.realworld.domain.article.model;
 
 import com.example.realworld.application.constants.ValidationMessages;
+import com.example.realworld.domain.tag.model.NewTag;
 import com.example.realworld.domain.user.model.User;
 
 import javax.validation.constraints.NotBlank;
@@ -21,7 +22,7 @@ public class NewArticle {
   @NotNull(message = ValidationMessages.AUTHOR_MUST_BE_NOT_NULL)
   private User author;
 
-  private List<String> tagList;
+  private List<NewTag> tags;
 
   public String getTitle() {
     return title;
@@ -47,12 +48,12 @@ public class NewArticle {
     this.body = body;
   }
 
-  public List<String> getTagList() {
-    return tagList;
+  public List<NewTag> getTags() {
+    return tags;
   }
 
-  public void setTagList(List<String> tagList) {
-    this.tagList = tagList;
+  public void setTags(List<NewTag> tags) {
+    this.tags = tags;
   }
 
   public User getAuthor() {
