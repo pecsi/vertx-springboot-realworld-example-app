@@ -1,7 +1,7 @@
 package com.example.realworld.domain.article.model;
 
+import com.example.realworld.domain.profile.model.Profile;
 import com.example.realworld.domain.tag.model.Tag;
-import com.example.realworld.domain.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.LinkedList;
@@ -16,8 +16,10 @@ public class Article {
   private String body;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
-  private User author;
+  private Profile author;
   private List<Tag> tags;
+  private boolean isFavorited;
+  private Long favoritesCount;
 
   public Article() {
     this.tags = new LinkedList<>();
@@ -79,11 +81,11 @@ public class Article {
     this.updatedAt = updatedAt;
   }
 
-  public User getAuthor() {
+  public Profile getAuthor() {
     return author;
   }
 
-  public void setAuthor(User author) {
+  public void setAuthor(Profile author) {
     this.author = author;
   }
 
@@ -93,5 +95,21 @@ public class Article {
 
   public void setTags(List<Tag> tags) {
     this.tags = tags;
+  }
+
+  public boolean isFavorited() {
+    return isFavorited;
+  }
+
+  public void setFavorited(boolean favorited) {
+    isFavorited = favorited;
+  }
+
+  public Long getFavoritesCount() {
+    return favoritesCount;
+  }
+
+  public void setFavoritesCount(Long favoritesCount) {
+    this.favoritesCount = favoritesCount;
   }
 }

@@ -3,6 +3,7 @@ package com.example.realworld.infrastructure.persistence;
 import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.article.model.ArticleRepository;
 import com.example.realworld.domain.tag.model.ArticlesTagsRepository;
+import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.persistence.statement.ArticleStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
 import io.reactivex.Flowable;
@@ -38,9 +39,9 @@ public class ArticleRepositoryJDBC extends JDBCRepository implements ArticleRepo
   }
 
   @Override
-  public Single<Article> store(Article article) {
+  public Single<Article> store(Article article, User author) {
     article.setId(UUID.randomUUID().toString());
-    Statement<JsonArray> storeArticleStatement = articleStatements.store(article);
+    Statement<JsonArray> storeArticleStatement = articleStatements.store(article, author);
     return jdbcClient
         .rxUpdateWithParams(storeArticleStatement.sql(), storeArticleStatement.params())
         .flatMapCompletable(

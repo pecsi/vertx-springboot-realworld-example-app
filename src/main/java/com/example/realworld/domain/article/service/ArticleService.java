@@ -14,10 +14,6 @@ public interface ArticleService {
 
   Single<Long> totalUserArticlesFollowed(String currentUserId);
 
-  Single<Boolean> isFavorited(String articleId, String currentUserId);
-
-  Single<Long> favoritesCount(String articleId);
-
   //  Articles findArticles(
   //    int offset,
   //    int limit,

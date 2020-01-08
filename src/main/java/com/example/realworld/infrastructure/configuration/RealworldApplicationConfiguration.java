@@ -8,11 +8,15 @@ import com.example.realworld.domain.article.model.ArticleRepository;
 import com.example.realworld.domain.article.model.FavoritesRepository;
 import com.example.realworld.domain.article.model.SlugProvider;
 import com.example.realworld.domain.article.service.ArticleService;
+import com.example.realworld.domain.profile.model.FollowedUsersRepository;
 import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.tag.model.ArticlesTagsRepository;
 import com.example.realworld.domain.tag.model.TagRepository;
 import com.example.realworld.domain.tag.service.TagService;
-import com.example.realworld.domain.user.model.*;
+import com.example.realworld.domain.user.model.CryptographyProvider;
+import com.example.realworld.domain.user.model.ModelValidator;
+import com.example.realworld.domain.user.model.TokenProvider;
+import com.example.realworld.domain.user.model.UserRepository;
 import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
@@ -67,6 +71,7 @@ public class RealworldApplicationConfiguration {
       FavoritesRepository favoritesRepository,
       SlugProvider slugProvider,
       ModelValidator modelValidator,
+      ProfileService profileService,
       TagService tagService) {
     return new ArticleServiceImpl(
         articleRepository,
@@ -74,6 +79,7 @@ public class RealworldApplicationConfiguration {
         favoritesRepository,
         slugProvider,
         modelValidator,
+        profileService,
         tagService);
   }
 

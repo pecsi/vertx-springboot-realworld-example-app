@@ -1,7 +1,7 @@
 package com.example.realworld.infrastructure.persistence;
 
 import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.user.model.FollowedUsersRepository;
+import com.example.realworld.domain.profile.model.FollowedUsersRepository;
 import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
 import com.example.realworld.infrastructure.persistence.utils.ParserUtils;

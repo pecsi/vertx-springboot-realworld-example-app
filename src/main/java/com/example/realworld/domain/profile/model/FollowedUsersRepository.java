@@ -1,4 +1,4 @@
-package com.example.realworld.domain.user.model;
+package com.example.realworld.domain.profile.model;
 
 import com.example.realworld.domain.article.model.Article;
 import io.reactivex.Completable;

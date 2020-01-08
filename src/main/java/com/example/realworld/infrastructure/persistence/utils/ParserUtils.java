@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.persistence.utils;
 
 import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.domain.profile.model.Profile;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 import io.vertx.core.json.JsonObject;
@@ -62,7 +63,7 @@ public class ParserUtils {
               article.setSlug(row.getString("SLUG"));
               article.setCreatedAt(fromTimestamp(row.getString("CREATED_AT")));
               article.setUpdatedAt(fromTimestamp(row.getString("UPDATED_AT")));
-              article.setAuthor(new User(row.getString("AUTHOR_USERNAME")));
+              article.setAuthor(new Profile(row.getString("AUTHOR_USERNAME")));
               return article;
             })
         .collect(Collectors.toList());

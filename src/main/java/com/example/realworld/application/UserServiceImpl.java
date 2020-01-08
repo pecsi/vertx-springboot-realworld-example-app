@@ -1,5 +1,6 @@
 package com.example.realworld.application;
 
+import com.example.realworld.domain.profile.model.FollowedUsersRepository;
 import com.example.realworld.domain.user.exception.EmailAlreadyExistsException;
 import com.example.realworld.domain.user.exception.InvalidLoginException;
 import com.example.realworld.domain.user.exception.UserNotFoundException;

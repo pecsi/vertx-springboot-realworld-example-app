@@ -10,10 +10,18 @@ public class Profile {
   private boolean following;
 
   public Profile(User user, boolean isFollowing) {
+    this(user);
+    this.following = isFollowing;
+  }
+
+  public Profile(User user) {
     this.username = user.getUsername();
     this.bio = user.getBio();
     this.image = user.getImage();
-    this.following = isFollowing;
+  }
+
+  public Profile(String username) {
+    this.username = username;
   }
 
   public String getUsername() {
