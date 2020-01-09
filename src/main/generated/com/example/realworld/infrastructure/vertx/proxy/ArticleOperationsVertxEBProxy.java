@@ -33,6 +33,8 @@ import io.vertx.serviceproxy.ServiceException;
 import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
 import io.vertx.serviceproxy.ProxyUtils;
 
+import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
+import java.util.List;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -62,7 +64,7 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
   }
 
   @Override
-  public  void findRecentArticles(String currentUserId, int offset, int limit, Handler<AsyncResult<ArticlesResponse>> handler){
+  public  void findRecentArticles(String currentUserId, int offset, int limit, Handler<AsyncResult<ArticlesFeedResponse>> handler){
     if (closed) {
       handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
       return;
@@ -74,6 +76,30 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
 
     DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
     _deliveryOptions.addHeader("action", "findRecentArticles");
+    _vertx.eventBus().<JsonObject>send(_address, _json, _deliveryOptions, res -> {
+      if (res.failed()) {
+        handler.handle(Future.failedFuture(res.cause()));
+      } else {
+        handler.handle(Future.succeededFuture(res.result().body() == null ? null : new ArticlesFeedResponse(res.result().body())));
+      }
+    });
+  }
+  @Override
+  public  void findArticles(String currentUserId, int offset, int limit, List<String> tags, List<String> authors, List<String> favorited, Handler<AsyncResult<ArticlesResponse>> handler){
+    if (closed) {
+      handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
+      return;
+    }
+    JsonObject _json = new JsonObject();
+    _json.put("currentUserId", currentUserId);
+    _json.put("offset", offset);
+    _json.put("limit", limit);
+    _json.put("tags", new JsonArray(tags));
+    _json.put("authors", new JsonArray(authors));
+    _json.put("favorited", new JsonArray(favorited));
+
+    DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
+    _deliveryOptions.addHeader("action", "findArticles");
     _vertx.eventBus().<JsonObject>send(_address, _json, _deliveryOptions, res -> {
       if (res.failed()) {
         handler.handle(Future.failedFuture(res.cause()));

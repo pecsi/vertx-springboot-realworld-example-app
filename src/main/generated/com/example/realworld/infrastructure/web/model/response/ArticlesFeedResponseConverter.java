@@ -6,12 +6,12 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Converter for {@link com.example.realworld.infrastructure.web.model.response.ArticlesResponse}.
- * NOTE: This class has been automatically generated from the {@link com.example.realworld.infrastructure.web.model.response.ArticlesResponse} original class using Vert.x codegen.
+ * Converter for {@link com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse}.
+ * NOTE: This class has been automatically generated from the {@link com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse} original class using Vert.x codegen.
  */
-public class ArticlesResponseConverter {
+public class ArticlesFeedResponseConverter {
 
-  public static void fromJson(Iterable<java.util.Map.Entry<String, Object>> json, ArticlesResponse obj) {
+  public static void fromJson(Iterable<java.util.Map.Entry<String, Object>> json, ArticlesFeedResponse obj) {
     for (java.util.Map.Entry<String, Object> member : json) {
       switch (member.getKey()) {
         case "articles":
@@ -26,23 +26,25 @@ public class ArticlesResponseConverter {
           break;
         case "articlesCount":
           if (member.getValue() instanceof Number) {
-            obj.setArticlesCount(((Number)member.getValue()).intValue());
+            obj.setArticlesCount(((Number)member.getValue()).longValue());
           }
           break;
       }
     }
   }
 
-  public static void toJson(ArticlesResponse obj, JsonObject json) {
+  public static void toJson(ArticlesFeedResponse obj, JsonObject json) {
     toJson(obj, json.getMap());
   }
 
-  public static void toJson(ArticlesResponse obj, java.util.Map<String, Object> json) {
+  public static void toJson(ArticlesFeedResponse obj, java.util.Map<String, Object> json) {
     if (obj.getArticles() != null) {
       JsonArray array = new JsonArray();
       obj.getArticles().forEach(item -> array.add(item.toJson()));
       json.put("articles", array);
     }
-    json.put("articlesCount", obj.getArticlesCount());
+    if (obj.getArticlesCount() != null) {
+      json.put("articlesCount", obj.getArticlesCount());
+    }
   }
 }

@@ -3,7 +3,7 @@ package com.example.realworld.api;
 import com.example.realworld.RealworldDataIntegrationTest;
 import com.example.realworld.domain.tag.model.NewTag;
 import com.example.realworld.domain.user.model.User;
-import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
+import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -97,12 +97,13 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
                             response ->
                                 vertxTestContext.verify(
                                     () -> {
-                                      ArticlesResponse articlesResponse =
-                                          readValue(response.body(), ArticlesResponse.class, false);
+                                      ArticlesFeedResponse articlesFeedResponse =
+                                          readValue(
+                                              response.body(), ArticlesFeedResponse.class, false);
                                       assertThat(
                                           response.statusCode(), is(HttpResponseStatus.OK.code()));
-                                      assertThat(articlesResponse.getArticles().size(), is(5));
-                                      assertThat(articlesResponse.getArticlesCount(), is(10L));
+                                      assertThat(articlesFeedResponse.getArticles().size(), is(5));
+                                      assertThat(articlesFeedResponse.getArticlesCount(), is(10L));
                                       vertxTestContext.completeNow();
                                     }))));
   }

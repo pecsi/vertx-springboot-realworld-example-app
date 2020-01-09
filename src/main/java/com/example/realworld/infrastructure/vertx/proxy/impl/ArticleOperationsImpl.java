@@ -1,36 +1,32 @@
 package com.example.realworld.infrastructure.vertx.proxy.impl;
 
 import com.example.realworld.domain.article.service.ArticleService;
-import com.example.realworld.domain.profile.service.ProfileService;
-import com.example.realworld.domain.tag.service.TagService;
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
+import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
+import java.util.List;
+
 public class ArticleOperationsImpl extends AbstractOperations implements ArticleOperations {
 
   private ArticleService articleService;
-  private ProfileService profileService;
-  private TagService tagService;
 
-  public ArticleOperationsImpl(
-      ArticleService articleService,
-      ProfileService profileService,
-      TagService tagService,
-      ObjectMapper objectMapper) {
+  public ArticleOperationsImpl(ArticleService articleService, ObjectMapper objectMapper) {
     super(objectMapper);
     this.articleService = articleService;
-    this.profileService = profileService;
-    this.tagService = tagService;
   }
 
   @Override
   public void findRecentArticles(
-      String currentUserId, int offset, int limit, Handler<AsyncResult<ArticlesResponse>> handler) {
+      String currentUserId,
+      int offset,
+      int limit,
+      Handler<AsyncResult<ArticlesFeedResponse>> handler) {
     articleService
         .findRecentArticles(currentUserId, offset, limit)
         .flattenAsFlowable(articles -> articles)
@@ -40,9 +36,22 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
             articleResponses ->
                 articleService
                     .totalUserArticlesFollowed(currentUserId)
-                    .map(articlesCount -> new ArticlesResponse(articleResponses, articlesCount)))
+                    .map(
+                        articlesCount -> new ArticlesFeedResponse(articleResponses, articlesCount)))
         .subscribe(
             articlesResponse -> handler.handle(Future.succeededFuture(articlesResponse)),
             throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void findArticles(
+      String currentUserId,
+      int offset,
+      int limit,
+      List<String> tags,
+      List<String> authors,
+      List<String> favorited,
+      Handler<AsyncResult<ArticlesResponse>> handler) {
+    articleService.findArticles(currentUserId, offset, limit, tags, authors, favorited);
   }
 }

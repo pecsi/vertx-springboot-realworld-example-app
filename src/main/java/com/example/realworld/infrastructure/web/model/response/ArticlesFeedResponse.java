@@ -6,20 +6,26 @@ import io.vertx.core.json.JsonObject;
 import java.util.List;
 
 @DataObject(generateConverter = true)
-public class ArticlesResponse {
+public class ArticlesFeedResponse {
+
   private List<ArticleResponse> articles;
-  private int articlesCount;
+  private Long articlesCount;
 
-  public ArticlesResponse() {}
+  public ArticlesFeedResponse() {}
 
-  public ArticlesResponse(JsonObject jsonObject) {
-    ArticlesResponseConverter.fromJson(jsonObject, this);
+  public ArticlesFeedResponse(JsonObject jsonObject) {
+    ArticlesFeedResponseConverter.fromJson(jsonObject, this);
   }
 
   public JsonObject toJson() {
     JsonObject jsonObject = new JsonObject();
-    ArticlesResponseConverter.toJson(this, jsonObject);
+    ArticlesFeedResponseConverter.toJson(this, jsonObject);
     return jsonObject;
+  }
+
+  public ArticlesFeedResponse(List<ArticleResponse> articles, Long articlesCount) {
+    this.articles = articles;
+    this.articlesCount = articlesCount;
   }
 
   public List<ArticleResponse> getArticles() {
@@ -30,11 +36,11 @@ public class ArticlesResponse {
     this.articles = articles;
   }
 
-  public int getArticlesCount() {
+  public Long getArticlesCount() {
     return articlesCount;
   }
 
-  public void setArticlesCount(int articlesCount) {
+  public void setArticlesCount(Long articlesCount) {
     this.articlesCount = articlesCount;
   }
 }

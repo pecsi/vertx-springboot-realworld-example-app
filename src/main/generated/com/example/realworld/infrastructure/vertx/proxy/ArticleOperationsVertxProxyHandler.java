@@ -41,6 +41,8 @@ import io.vertx.serviceproxy.ServiceException;
 import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
 import io.vertx.serviceproxy.HelperUtils;
 
+import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
+import java.util.List;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -118,6 +120,26 @@ public class ArticleOperationsVertxProxyHandler extends ProxyHandler {
           service.findRecentArticles((java.lang.String)json.getValue("currentUserId"),
                         json.getValue("offset") == null ? null : (json.getLong("offset").intValue()),
                         json.getValue("limit") == null ? null : (json.getLong("limit").intValue()),
+                        res -> {
+                        if (res.failed()) {
+                          if (res.cause() instanceof ServiceException) {
+                            msg.reply(res.cause());
+                          } else {
+                            msg.reply(new ServiceException(-1, res.cause().getMessage()));
+                          }
+                        } else {
+                          msg.reply(res.result() == null ? null : res.result().toJson());
+                        }
+                     });
+          break;
+        }
+        case "findArticles": {
+          service.findArticles((java.lang.String)json.getValue("currentUserId"),
+                        json.getValue("offset") == null ? null : (json.getLong("offset").intValue()),
+                        json.getValue("limit") == null ? null : (json.getLong("limit").intValue()),
+                        HelperUtils.convertList(json.getJsonArray("tags").getList()),
+                        HelperUtils.convertList(json.getJsonArray("authors").getList()),
+                        HelperUtils.convertList(json.getJsonArray("favorited").getList()),
                         res -> {
                         if (res.failed()) {
                           if (res.cause() instanceof ServiceException) {

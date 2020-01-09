@@ -9,6 +9,8 @@ import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class ArticlesRoute extends AbstractHttpRoute {
 
@@ -35,8 +37,31 @@ public class ArticlesRoute extends AbstractHttpRoute {
         .handler(routingContext -> jwtHandler(routingContext, true));
 
     articlesRouter.get(articlesPath + FEED).handler(this::feed);
+    articlesRouter.get(articlesPath).handler(this::getArticles);
 
     return articlesRouter;
+  }
+
+  private void getArticles(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        true,
+        (String userId) -> {
+          MultiMap queryParams = routingContext.queryParams();
+          int offset = getQueryParam(queryParams, OFFSET, 0);
+          int limit = getQueryParam(queryParams, LIMIT, 20);
+          List<String> tags = queryParams.getAll("tag");
+          List<String> authors = queryParams.getAll("author");
+          List<String> favorited = queryParams.getAll("favorited");
+          articleOperations.findArticles(
+              userId,
+              offset,
+              limit,
+              tags,
+              authors,
+              favorited,
+              responseOrFail(routingContext, HttpResponseStatus.OK.code(), false));
+        });
   }
 
   private void feed(RoutingContext routingContext) {

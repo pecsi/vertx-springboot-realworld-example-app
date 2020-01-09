@@ -163,14 +163,12 @@ public class RealworldApplicationConfiguration {
   public ArticleOperations articleOperations(
       Vertx vertx,
       ArticleService articleService,
-      ProfileService profileService,
-      TagService tagService,
       @Qualifier("defaultObjectMapper") ObjectMapper objectMapper) {
     return registerServiceAndCreateProxy(
         vertx,
         ArticleOperations.class,
         ArticleOperations.SERVICE_ADDRESS,
-        new ArticleOperationsImpl(articleService, profileService, tagService, objectMapper));
+        new ArticleOperationsImpl(articleService, objectMapper));
   }
 
   private <T> T registerServiceAndCreateProxy(

@@ -14,13 +14,14 @@ public interface ArticleService {
 
   Single<Long> totalUserArticlesFollowed(String currentUserId);
 
-  //  Articles findArticles(
-  //    int offset,
-  //    int limit,
-  //    Long loggedUserId,
-  //    List<String> tags,
-  //    List<String> authors,
-  //    List<String> favorited);
+  Single<List<Article>> findArticles(
+      String currentUserId,
+      int offset,
+      int limit,
+      List<String> tags,
+      List<String> authors,
+      List<String> favorited);
+
   //
   //  Article create(
   //    String title, String description, String body, List<String> tagList, Long authorId);

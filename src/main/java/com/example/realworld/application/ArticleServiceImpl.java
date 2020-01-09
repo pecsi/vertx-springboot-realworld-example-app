@@ -116,6 +116,17 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     return followedUsersRepository.totalUserArticlesFollowed(currentUserId);
   }
 
+  @Override
+  public Single<List<Article>> findArticles(
+      String currentUserId,
+      int offset,
+      int limit,
+      List<String> tags,
+      List<String> authors,
+      List<String> favorited) {
+    return null;
+  }
+
   public Single<Boolean> isFavorited(String articleId, String currentUserId) {
     return favoritesRepository
         .countByArticleIdAndUserId(articleId, currentUserId)
