@@ -124,7 +124,37 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
       List<String> tags,
       List<String> authors,
       List<String> favorited) {
-    return null;
+
+    return articleRepository
+        .findArticles(currentUserId, offset, getLimit(limit))
+        .flattenAsFlowable(articles -> articles)
+        .flatMapSingle(
+            article ->
+                isFavorited(article.getId(), currentUserId)
+                    .flatMap(
+                        isFavorited ->
+                            favoritesCount(article.getId())
+                                .flatMap(
+                                    favoritesCount ->
+                                        tagService
+                                            .findTagsByArticle(article.getId())
+                                            .flatMap(
+                                                tags ->
+                                                    profileService
+                                                        .getProfile(
+                                                            article.getAuthor().getUsername(),
+                                                            currentUserId)
+                                                        .map(
+                                                            profile ->
+                                                                completeArticle(
+                                                                    article,
+                                                                    profile,
+                                                                    tags,
+                                                                    isFavorited,
+                                                                    favoritesCount))))))
+        .sorted(articleComparator())
+        .toList();
+    ;
   }
 
   public Single<Boolean> isFavorited(String articleId, String currentUserId) {

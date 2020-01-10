@@ -6,12 +6,14 @@ import com.example.realworld.domain.tag.model.ArticlesTagsRepository;
 import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.persistence.statement.ArticleStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
+import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -49,9 +51,15 @@ public class ArticleRepositoryJDBC extends JDBCRepository implements ArticleRepo
                 Flowable.fromIterable(article.getTags())
                     .flatMapCompletable(tag -> articlesTagsRepository.tagArticle(tag, article)))
         .toSingleDefault(article);
+  }
 
-    //    return jdbcClient
-    //        .rxUpdateWithParams(storeArticleStatement.sql(), storeArticleStatement.params())
-    //        .map(updateResult -> article);
+  @Override
+  public Single<List<Article>> findArticles(
+      int offset, int limit, List<String> tags, List<String> authors, List<String> favorited) {
+    Statement<JsonArray> findAriclesStatement =
+        articleStatements.findArticles(offset, limit, tags, authors, favorited);
+    return jdbcClient
+        .rxQueryWithParams(findAriclesStatement.sql(), findAriclesStatement.params())
+        .map(ParserUtils::toArticleList);
   }
 }
