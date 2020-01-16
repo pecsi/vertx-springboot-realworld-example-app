@@ -12,7 +12,7 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
   public Statement<JsonArray> countByCurrentUserIdAndFollowedUserId(
       String currentUserId, String followedUserId) {
 
-    String sql = "SELECT COUNT(*) FROM FOLLOWED_USERS WHERE USER_ID = ? AND FOLLOWED_ID = ?";
+    String sql = "SELECT COUNT(*) FROM USERS_FOLLOWED WHERE USER_ID = ? AND FOLLOWED_ID = ?";
 
     JsonArray params = new JsonArray().add(currentUserId).add(followedUserId);
 
@@ -22,7 +22,7 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
   @Override
   public Statement<JsonArray> follow(String currentUserId, String followedUserId) {
 
-    String sql = "INSERT INTO FOLLOWED_USERS (USER_ID, FOLLOWED_ID) VALUES (?, ?)";
+    String sql = "INSERT INTO USERS_FOLLOWED (USER_ID, FOLLOWED_ID) VALUES (?, ?)";
 
     JsonArray params = new JsonArray().add(currentUserId).add(followedUserId);
 
@@ -32,7 +32,7 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
   @Override
   public Statement<JsonArray> unfollow(String currentUserId, String followedUserId) {
 
-    String sql = "DELETE FROM FOLLOWED_USERS WHERE USER_ID = ? AND FOLLOWED_ID = ?";
+    String sql = "DELETE FROM USERS_FOLLOWED WHERE USER_ID = ? AND FOLLOWED_ID = ?";
 
     JsonArray params = new JsonArray().add(currentUserId).add(followedUserId);
 
@@ -51,9 +51,9 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
             + "articles.CREATED_AT, "
             + "articles.UPDATED_AT, "
             + "users2.USERNAME AS AUTHOR_USERNAME "
-            + "FROM FOLLOWED_USERS followed_users "
-            + "INNER JOIN USERS users1 ON followed_users.USER_ID = users1.ID AND (users1.ID = ?) "
-            + "INNER JOIN USERS users2 ON followed_users.FOLLOWED_ID = users2.ID "
+            + "FROM USERS_FOLLOWED users_followed "
+            + "INNER JOIN USERS users1 ON users_followed.USER_ID = users1.ID AND (users1.ID = ?) "
+            + "INNER JOIN USERS users2 ON users_followed.FOLLOWED_ID = users2.ID "
             + "INNER JOIN ARTICLES articles ON users2.ID = articles.AUTHOR_ID order by articles.CREATED_AT desc limit ? offset ?";
 
     JsonArray params = new JsonArray().add(currentUserId).add(limit).add(offset);
@@ -66,9 +66,9 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
 
     String sql =
         "SELECT COUNT(distinct articles.ID) "
-            + "FROM FOLLOWED_USERS followed_users "
-            + "INNER JOIN USERS users1 ON followed_users.USER_ID = users1.ID AND (users1.ID = ?) "
-            + "INNER JOIN USERS users2 ON followed_users.FOLLOWED_ID = users2.ID "
+            + "FROM USERS_FOLLOWED users_followed "
+            + "INNER JOIN USERS users1 ON users_followed.USER_ID = users1.ID AND (users1.ID = ?) "
+            + "INNER JOIN USERS users2 ON users_followed.FOLLOWED_ID = users2.ID "
             + "INNER JOIN ARTICLES articles ON users2.ID = articles.AUTHOR_ID";
 
     JsonArray params = new JsonArray().add(currentUserId);

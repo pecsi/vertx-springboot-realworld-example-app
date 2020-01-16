@@ -1,6 +1,6 @@
 package com.example.realworld.domain.user.model;
 
-public interface CryptographyProvider {
+public interface HashProvider {
   String hashPassword(String plainPassword);
 
   boolean isPasswordValid(String plainText, String hashed);

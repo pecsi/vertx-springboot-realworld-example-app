@@ -13,7 +13,7 @@ import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.tag.model.ArticlesTagsRepository;
 import com.example.realworld.domain.tag.model.TagRepository;
 import com.example.realworld.domain.tag.service.TagService;
-import com.example.realworld.domain.user.model.CryptographyProvider;
+import com.example.realworld.domain.user.model.HashProvider;
 import com.example.realworld.domain.user.model.ModelValidator;
 import com.example.realworld.domain.user.model.TokenProvider;
 import com.example.realworld.domain.user.model.UserRepository;
@@ -48,7 +48,7 @@ public class RealworldApplicationConfiguration {
   public UserService userService(
       UserRepository userRepository,
       FollowedUsersRepository followedUsersRepository,
-      CryptographyProvider cryptographyService,
+      HashProvider cryptographyService,
       TokenProvider tokenProvider,
       ModelValidator modelValidator) {
     return new UserServiceImpl(

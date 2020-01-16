@@ -2,6 +2,8 @@ package com.example.realworld;
 
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.domain.tag.service.TagService;
+import com.example.realworld.domain.user.model.HashProvider;
+import com.example.realworld.domain.user.model.TokenProvider;
 import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.UserStatements;
@@ -33,6 +35,8 @@ public class RealworldApplicationIntegrationTest {
   protected static UserService userService = getUserService();
   protected static ArticleService articleService = getArticleService();
   protected static TagService tagService = getTagService();
+  protected static TokenProvider tokenProvider = getTokenProvider();
+  protected static HashProvider hashProvider = getHashProvider();
 
   private static ConfigurableApplicationContext getApplicationContext() {
     return getObject(
@@ -90,6 +94,14 @@ public class RealworldApplicationIntegrationTest {
     return getObject(tagService, () -> getBean(TagService.class));
   }
 
+  private static TokenProvider getTokenProvider() {
+    return getObject(tokenProvider, () -> getBean(TokenProvider.class));
+  }
+
+  private static HashProvider getHashProvider() {
+    return getObject(hashProvider, () -> getBean(HashProvider.class));
+  }
+
   private static <T> T getBean(Class<T> clazz) {
     return configurableApplicationContext.getBean(clazz);
   }
@@ -98,7 +110,7 @@ public class RealworldApplicationIntegrationTest {
     return configurableApplicationContext.getBean(name, clazz);
   }
 
-  private static <T> T getObject(T object, Supplier<T> supplier) {
+  protected static <T> T getObject(T object, Supplier<T> supplier) {
     if (object != null) {
       return object;
     } else {

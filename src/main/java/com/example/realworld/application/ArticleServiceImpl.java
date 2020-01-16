@@ -126,7 +126,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
       List<String> favorited) {
 
     return articleRepository
-        .findArticles(currentUserId, offset, getLimit(limit))
+        .findArticles(offset, getLimit(limit), tags, authors, favorited)
         .flattenAsFlowable(articles -> articles)
         .flatMapSingle(
             article ->
@@ -139,7 +139,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
                                         tagService
                                             .findTagsByArticle(article.getId())
                                             .flatMap(
-                                                tags ->
+                                                persistedTags ->
                                                     profileService
                                                         .getProfile(
                                                             article.getAuthor().getUsername(),
@@ -149,12 +149,12 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
                                                                 completeArticle(
                                                                     article,
                                                                     profile,
-                                                                    tags,
+                                                                    persistedTags,
                                                                     isFavorited,
                                                                     favoritesCount))))))
         .sorted(articleComparator())
         .toList();
-    ;
+
   }
 
   public Single<Boolean> isFavorited(String articleId, String currentUserId) {

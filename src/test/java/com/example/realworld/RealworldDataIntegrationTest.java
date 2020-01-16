@@ -16,19 +16,64 @@ import io.vertx.reactivex.ext.sql.SQLClientHelper;
 import org.junit.jupiter.api.AfterEach;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
-public class RealworldDataIntegrationTest extends RealworldApplicationIntegrationTest {
+public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIntegrationTest {
 
   @AfterEach
   public void afterEach(VertxTestContext vertxTestContext) {
-    clearDatabase(vertxTestContext);
+    clearDatabase();
+    vertxTestContext.completeNow();
   }
 
   protected Single<User> createUser(User user) {
     return createUser(toNewUser(user))
         .flatMap(createdUser -> updateUser(toUpdateUser(user), createdUser.getId()));
+  }
+
+  protected User createUserEntityManager(User user) {
+    user.setId(UUID.randomUUID().toString());
+    user.setPassword(hashProvider.hashPassword(user.getPassword()));
+    user.setToken(tokenProvider.generateToken(user.getId()));
+    String sql =
+        String.format(
+            "INSERT INTO USERS (ID, USERNAME, BIO, IMAGE, PASSWORD, EMAIL, TOKEN) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+            user.getId(),
+            user.getUsername(),
+            user.getBio(),
+            user.getImage(),
+            user.getPassword(),
+            user.getEmail(),
+            user.getToken());
+    executeSql(sql);
+    return user;
+  }
+
+  protected void followEntityManager(User currentUser, User followedUser) {
+    String sql =
+        String.format(
+            "INSERT INTO USERS_FOLLOWED (USER_ID, FOLLOWED_ID) VALUES ('%s', '%s')",
+            currentUser.getId(), followedUser.getId());
+    executeSql(sql);
+  }
+
+  protected List<Tag> createTagsEntityManager(Tag... tags) {
+    StringBuilder builder = new StringBuilder();
+
+    for (Tag tag : tags) {
+      tag.setId(UUID.randomUUID().toString());
+      String sql =
+          String.format(
+              "INSERT INTO TAGS (ID, NAME) VALUES ('%s', '%s');", tag.getId(), tag.getName());
+      builder.append(sql);
+    }
+
+    executeSql(builder.toString());
+
+    return Arrays.asList(tags);
   }
 
   protected Single<User> createUser(NewUser newUser) {
@@ -99,17 +144,6 @@ public class RealworldDataIntegrationTest extends RealworldApplicationIntegratio
     newUser.setEmail(user.getEmail());
     newUser.setPassword(user.getPassword());
     return newUser;
-  }
-
-  private static void dropDatabase(VertxTestContext vertxTestContext) {
-    String dropDatabaseStatement = "DROP TABLE USERS; DROP TABLE FOLLOWED_USERS;";
-    executeStatement(vertxTestContext, dropDatabaseStatement);
-  }
-
-  private void clearDatabase(VertxTestContext vertxTestContext) {
-    String clearDatabaseStatement =
-        "SET FOREIGN_KEY_CHECKS = 0; DELETE FROM USERS; DELETE FROM FOLLOWED_USERS; SET FOREIGN_KEY_CHECKS = 1;";
-    executeStatement(vertxTestContext, clearDatabaseStatement);
   }
 
   private static void executeStatement(VertxTestContext testContext, String sql) {

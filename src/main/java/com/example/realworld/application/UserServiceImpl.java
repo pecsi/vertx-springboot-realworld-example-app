@@ -18,19 +18,19 @@ public class UserServiceImpl extends ApplicationService implements UserService {
 
   private UserRepository userRepository;
   private FollowedUsersRepository followedUsersRepository;
-  private CryptographyProvider cryptographyProvider;
+  private HashProvider hashProvider;
   private TokenProvider tokenProvider;
   private ModelValidator modelValidator;
 
   public UserServiceImpl(
       UserRepository userRepository,
       FollowedUsersRepository followedUsersRepository,
-      CryptographyProvider cryptographyProvider,
+      HashProvider hashProvider,
       TokenProvider tokenProvider,
       ModelValidator modelValidator) {
     this.userRepository = userRepository;
     this.followedUsersRepository = followedUsersRepository;
-    this.cryptographyProvider = cryptographyProvider;
+    this.hashProvider = hashProvider;
     this.tokenProvider = tokenProvider;
     this.modelValidator = modelValidator;
   }
@@ -42,7 +42,7 @@ public class UserServiceImpl extends ApplicationService implements UserService {
     user.setId(UUID.randomUUID().toString());
     user.setUsername(newUser.getUsername());
     user.setEmail(newUser.getEmail());
-    user.setPassword(cryptographyProvider.hashPassword(newUser.getPassword()));
+    user.setPassword(hashProvider.hashPassword(newUser.getPassword()));
     user.setToken(tokenProvider.generateToken(user.getId()));
 
     return validUsername(user.getUsername())
@@ -171,7 +171,7 @@ public class UserServiceImpl extends ApplicationService implements UserService {
   }
 
   private boolean isPasswordInvalid(String password, User user) {
-    return !cryptographyProvider.isPasswordValid(password, user.getPassword());
+    return !hashProvider.isPasswordValid(password, user.getPassword());
   }
 
   private Single<Boolean> isUsernameExists(String username) {

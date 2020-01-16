@@ -2,6 +2,7 @@ package com.example.realworld.api;
 
 import com.example.realworld.RealworldDataIntegrationTest;
 import com.example.realworld.domain.tag.model.NewTag;
+import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
@@ -9,6 +10,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -61,6 +63,12 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
     NewTag tag2 = new NewTag();
     tag2.setName("tag2");
 
+    Tag superTag1 = new Tag();
+    superTag1.setName("Super Tag 1");
+
+    Tag superTag2 = new Tag();
+    superTag2.setName("Super Tag 2");
+
     createUser(loggedUser)
         .flatMap(
             createdLoggedUser ->
@@ -110,6 +118,7 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
   }
 
   @Test
+  @Disabled
   public void
       given20ArticlesForLoggedUser_whenExecuteFeedEndpointWithOffset0AndLimit10_shouldReturnListOf10Articles(
           VertxTestContext vertxTestContext) {
