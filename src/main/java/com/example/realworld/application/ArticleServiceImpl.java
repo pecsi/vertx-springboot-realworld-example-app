@@ -1,16 +1,19 @@
 package com.example.realworld.application;
 
+import com.example.realworld.application.data.ArticleData;
+import com.example.realworld.application.data.ArticlesData;
+import com.example.realworld.application.data.ProfileData;
 import com.example.realworld.domain.article.exception.SlugAlreadyExistsException;
 import com.example.realworld.domain.article.model.*;
 import com.example.realworld.domain.article.service.ArticleService;
-import com.example.realworld.domain.profile.model.FollowedUsersRepository;
-import com.example.realworld.domain.profile.model.Profile;
+import com.example.realworld.domain.profile.model.UsersFollowedRepository;
 import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.tag.exception.TagNotFoundException;
 import com.example.realworld.domain.tag.model.NewTag;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.tag.service.TagService;
 import com.example.realworld.domain.user.model.ModelValidator;
+import com.example.realworld.domain.user.model.User;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
@@ -18,13 +21,14 @@ import io.reactivex.Single;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ArticleServiceImpl extends ApplicationService implements ArticleService {
 
   private static final int DEFAULT_LIMIT = 20;
 
   private ArticleRepository articleRepository;
-  private FollowedUsersRepository followedUsersRepository;
+  private UsersFollowedRepository usersFollowedRepository;
   private FavoritesRepository favoritesRepository;
   private SlugProvider slugProvider;
   private ModelValidator modelValidator;
@@ -33,14 +37,14 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
 
   public ArticleServiceImpl(
       ArticleRepository articleRepository,
-      FollowedUsersRepository followedUsersRepository,
+      UsersFollowedRepository usersFollowedRepository,
       FavoritesRepository favoritesRepository,
       SlugProvider slugProvider,
       ModelValidator modelValidator,
       ProfileService profileService,
       TagService tagService) {
     this.articleRepository = articleRepository;
-    this.followedUsersRepository = followedUsersRepository;
+    this.usersFollowedRepository = usersFollowedRepository;
     this.favoritesRepository = favoritesRepository;
     this.slugProvider = slugProvider;
     this.modelValidator = modelValidator;
@@ -49,39 +53,20 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   }
 
   @Override
-  public Single<List<Article>> findRecentArticles(String currentUserId, int offset, int limit) {
-    return followedUsersRepository
+  public Single<ArticlesData> findRecentArticles(String currentUserId, int offset, int limit) {
+    return usersFollowedRepository
         .findRecentArticles(currentUserId, offset, getLimit(limit))
         .flattenAsFlowable(articles -> articles)
-        .flatMapSingle(
-            article ->
-                isFavorited(article.getId(), currentUserId)
-                    .flatMap(
-                        isFavorited ->
-                            favoritesCount(article.getId())
-                                .flatMap(
-                                    favoritesCount ->
-                                        tagService
-                                            .findTagsByArticle(article.getId())
-                                            .flatMap(
-                                                tags ->
-                                                    profileService
-                                                        .getProfile(
-                                                            article.getAuthor().getUsername(),
-                                                            currentUserId)
-                                                        .map(
-                                                            profile ->
-                                                                completeArticle(
-                                                                    article,
-                                                                    profile,
-                                                                    tags,
-                                                                    isFavorited,
-                                                                    favoritesCount))))))
+        .flatMapSingle(article -> toArticleData(article, currentUserId))
         .sorted(articleComparator())
-        .toList();
+        .toList()
+        .flatMap(
+            articles ->
+                totalUserArticlesFollowed(currentUserId)
+                    .map(articlesCount -> new ArticlesData(articles, articlesCount)));
   }
 
-  private Comparator<Article> articleComparator() {
+  private Comparator<ArticleData> articleComparator() {
     return (article1, article2) -> {
       if (article1.getCreatedAt().isBefore(article2.getCreatedAt())) {
         return -1;
@@ -93,68 +78,77 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     };
   }
 
-  private Article completeArticle(
-      Article target, Profile profile, List<Tag> tags, boolean isFavorited, Long favoritesCount) {
-    target.setAuthor(profile);
-    target.setTags(tags);
-    target.setFavorited(isFavorited);
-    target.setFavoritesCount(favoritesCount);
-    return target;
+  private Single<ArticleData> toArticleData(Article article, String currentUserId) {
+    return isFavorited(article.getId(), currentUserId)
+        .flatMap(
+            isFavorited ->
+                favoritesCount(article.getId())
+                    .flatMap(
+                        favoritesCount ->
+                            tagService
+                                .findTagsByArticle(article.getId())
+                                .flatMap(
+                                    tags ->
+                                        profileService
+                                            .getProfile(
+                                                article.getAuthor().getUsername(), currentUserId)
+                                            .map(
+                                                profileData ->
+                                                    configArticleData(
+                                                        article,
+                                                        profileData,
+                                                        tags,
+                                                        isFavorited,
+                                                        favoritesCount)))));
+  }
+
+  private ArticleData configArticleData(
+      Article article,
+      ProfileData authorProfile,
+      List<Tag> tags,
+      boolean isFavorited,
+      Long favoritesCount) {
+    ArticleData articleData = new ArticleData(article);
+    articleData.setTagList(tags.stream().map(Tag::getName).collect(Collectors.toList()));
+    articleData.setFavorited(isFavorited);
+    articleData.setFavoritesCount(favoritesCount);
+    articleData.setAuthor(authorProfile);
+    return articleData;
   }
 
   @Override
-  public Single<Article> create(NewArticle newArticle) {
+  public Single<ArticleData> create(String currentUserId, NewArticle newArticle) {
     modelValidator.validate(newArticle);
-    Article article = createFromNewArticle(newArticle);
+    Article article = createFromNewArticle(currentUserId, newArticle);
     return validSlug(article.getSlug())
         .andThen(configTags(article, newArticle.getTags()))
-        .andThen(articleRepository.store(article, newArticle.getAuthor()));
+        .andThen(articleRepository.store(article))
+        .map(ArticleData::new);
   }
 
   @Override
   public Single<Long> totalUserArticlesFollowed(String currentUserId) {
-    return followedUsersRepository.totalUserArticlesFollowed(currentUserId);
+    return usersFollowedRepository.totalUserArticlesFollowed(currentUserId);
   }
 
   @Override
-  public Single<List<Article>> findArticles(
+  public Single<ArticlesData> findArticles(
       String currentUserId,
       int offset,
       int limit,
       List<String> tags,
       List<String> authors,
       List<String> favorited) {
-
     return articleRepository
         .findArticles(offset, getLimit(limit), tags, authors, favorited)
         .flattenAsFlowable(articles -> articles)
-        .flatMapSingle(
-            article ->
-                isFavorited(article.getId(), currentUserId)
-                    .flatMap(
-                        isFavorited ->
-                            favoritesCount(article.getId())
-                                .flatMap(
-                                    favoritesCount ->
-                                        tagService
-                                            .findTagsByArticle(article.getId())
-                                            .flatMap(
-                                                persistedTags ->
-                                                    profileService
-                                                        .getProfile(
-                                                            article.getAuthor().getUsername(),
-                                                            currentUserId)
-                                                        .map(
-                                                            profile ->
-                                                                completeArticle(
-                                                                    article,
-                                                                    profile,
-                                                                    persistedTags,
-                                                                    isFavorited,
-                                                                    favoritesCount))))))
+        .flatMapSingle(article -> toArticleData(article, currentUserId))
         .sorted(articleComparator())
-        .toList();
-
+        .toList()
+        .flatMap(
+            articles ->
+                totalUserArticlesFollowed(currentUserId)
+                    .map(articlesCount -> new ArticlesData(articles, articlesCount)));
   }
 
   public Single<Boolean> isFavorited(String articleId, String currentUserId) {
@@ -192,13 +186,13 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     return articleRepository.countBySlug(slug).map(this::isCountResultGreaterThanZero);
   }
 
-  private Article createFromNewArticle(NewArticle newArticle) {
+  private Article createFromNewArticle(String currentUserId, NewArticle newArticle) {
     Article article = new Article();
     article.setTitle(newArticle.getTitle());
     article.setSlug(slugProvider.slugify(article.getTitle()));
     article.setDescription(newArticle.getDescription());
     article.setBody(newArticle.getBody());
-    article.setAuthor(new Profile((newArticle.getAuthor())));
+    article.setAuthor(new User(currentUserId));
     LocalDateTime now = LocalDateTime.now();
     article.setCreatedAt(now);
     article.setUpdatedAt(now);

@@ -1,9 +1,9 @@
 package com.example.realworld.infrastructure.persistence;
 
 import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.profile.model.FollowedUsersRepository;
-import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
+import com.example.realworld.domain.profile.model.UsersFollowedRepository;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
+import com.example.realworld.infrastructure.persistence.statement.UsersFollowedStatements;
 import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -14,43 +14,43 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public class FollowedUsersRepositoryJDBC extends JDBCRepository implements FollowedUsersRepository {
+public class UsersFollowedRepositoryJDBC extends JDBCRepository implements UsersFollowedRepository {
 
   private JDBCClient jdbcClient;
-  private FollowedUsersStatements followedUsersStatements;
+  private UsersFollowedStatements usersFollowedStatements;
 
-  public FollowedUsersRepositoryJDBC(
-      JDBCClient jdbcClient, FollowedUsersStatements followedUsersStatements) {
+  public UsersFollowedRepositoryJDBC(
+      JDBCClient jdbcClient, UsersFollowedStatements usersFollowedStatements) {
     this.jdbcClient = jdbcClient;
-    this.followedUsersStatements = followedUsersStatements;
+    this.usersFollowedStatements = usersFollowedStatements;
   }
 
   @Override
   public Single<Long> countByCurrentUserIdAndFollowedUserId(
-      String currentUserId, String followedUserId) {
-    Statement<JsonArray> countByCurrentUserIdAndFollowedUserIdStatement =
-        followedUsersStatements.countByCurrentUserIdAndFollowedUserId(
-            currentUserId, followedUserId);
+      String currentUserId, String userFollowedId) {
+    Statement<JsonArray> countByCurrentUserIdAndUserFollowedIdStatement =
+        usersFollowedStatements.countByCurrentUserIdAndUserFollowedId(
+            currentUserId, userFollowedId);
     return jdbcClient
         .rxQueryWithParams(
-            countByCurrentUserIdAndFollowedUserIdStatement.sql(),
-            countByCurrentUserIdAndFollowedUserIdStatement.params())
+            countByCurrentUserIdAndUserFollowedIdStatement.sql(),
+            countByCurrentUserIdAndUserFollowedIdStatement.params())
         .map(this::getCountFromResultSet);
   }
 
   @Override
-  public Completable follow(String currentUserId, String followedUserId) {
+  public Completable follow(String currentUserId, String userFollowedId) {
     Statement<JsonArray> followStatement =
-        followedUsersStatements.follow(currentUserId, followedUserId);
+        usersFollowedStatements.follow(currentUserId, userFollowedId);
     return jdbcClient
         .rxUpdateWithParams(followStatement.sql(), followStatement.params())
         .flatMapCompletable(updateResult -> Completable.complete());
   }
 
   @Override
-  public Completable unfollow(String currentUserId, String followedUserId) {
+  public Completable unfollow(String currentUserId, String userFollowedId) {
     Statement<JsonArray> unfollowStatement =
-        followedUsersStatements.unfollow(currentUserId, followedUserId);
+        usersFollowedStatements.unfollow(currentUserId, userFollowedId);
     return jdbcClient
         .rxUpdateWithParams(unfollowStatement.sql(), unfollowStatement.params())
         .flatMapCompletable(updateResult -> Completable.complete());
@@ -59,7 +59,7 @@ public class FollowedUsersRepositoryJDBC extends JDBCRepository implements Follo
   @Override
   public Single<List<Article>> findRecentArticles(String currentUserId, int offset, int limit) {
     Statement<JsonArray> findRecentArticlesStatement =
-        followedUsersStatements.findRecentArticles(currentUserId, offset, limit);
+        usersFollowedStatements.findRecentArticles(currentUserId, offset, limit);
     return jdbcClient
         .rxQueryWithParams(findRecentArticlesStatement.sql(), findRecentArticlesStatement.params())
         .map(ParserUtils::toArticleList);
@@ -68,7 +68,7 @@ public class FollowedUsersRepositoryJDBC extends JDBCRepository implements Follo
   @Override
   public Single<Long> totalUserArticlesFollowed(String currentUserId) {
     Statement<JsonArray> totalUserArticlesFollowedStatement =
-        followedUsersStatements.totalUserArticlesFollowed(currentUserId);
+        usersFollowedStatements.totalUserArticlesFollowed(currentUserId);
     return jdbcClient
         .rxQueryWithParams(
             totalUserArticlesFollowedStatement.sql(), totalUserArticlesFollowedStatement.params())

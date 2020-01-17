@@ -1,6 +1,7 @@
 package com.example.realworld.domain.article.service;
 
-import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.application.data.ArticleData;
+import com.example.realworld.application.data.ArticlesData;
 import com.example.realworld.domain.article.model.NewArticle;
 import io.reactivex.Single;
 
@@ -8,13 +9,13 @@ import java.util.List;
 
 public interface ArticleService {
 
-  Single<List<Article>> findRecentArticles(String currentUserId, int offset, int limit);
+  Single<ArticlesData> findRecentArticles(String currentUserId, int offset, int limit);
 
-  Single<Article> create(NewArticle newArticle);
+  Single<ArticleData> create(String currentUserId, NewArticle newArticle);
 
   Single<Long> totalUserArticlesFollowed(String currentUserId);
 
-  Single<List<Article>> findArticles(
+  Single<ArticlesData> findArticles(
       String currentUserId,
       int offset,
       int limit,

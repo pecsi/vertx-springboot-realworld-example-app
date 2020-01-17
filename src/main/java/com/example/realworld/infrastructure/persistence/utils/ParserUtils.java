@@ -1,7 +1,6 @@
 package com.example.realworld.infrastructure.persistence.utils;
 
 import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.profile.model.Profile;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 import io.vertx.core.json.JsonObject;
@@ -63,7 +62,12 @@ public class ParserUtils {
               article.setSlug(row.getString("SLUG"));
               article.setCreatedAt(fromTimestamp(row.getString("CREATED_AT")));
               article.setUpdatedAt(fromTimestamp(row.getString("UPDATED_AT")));
-              article.setAuthor(new Profile(row.getString("AUTHOR_USERNAME")));
+
+              User author = new User();
+              author.setId(row.getString("AUTHOR_ID"));
+              author.setUsername(row.getString("AUTHOR_USERNAME"));
+
+              article.setAuthor(author);
               return article;
             })
         .collect(Collectors.toList());
@@ -115,6 +119,8 @@ public class ParserUtils {
   }
 
   public static String format(LocalDateTime localDateTime, String pattern) {
-    return localDateTime.format(DateTimeFormatter.ofPattern(pattern));
+    return localDateTime != null
+        ? localDateTime.format(DateTimeFormatter.ofPattern(pattern))
+        : null;
   }
 }

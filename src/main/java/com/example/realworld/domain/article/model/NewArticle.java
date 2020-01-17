@@ -2,10 +2,8 @@ package com.example.realworld.domain.article.model;
 
 import com.example.realworld.application.constants.ValidationMessages;
 import com.example.realworld.domain.tag.model.NewTag;
-import com.example.realworld.domain.user.model.User;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public class NewArticle {
@@ -18,9 +16,6 @@ public class NewArticle {
 
   @NotBlank(message = ValidationMessages.BODY_MUST_BE_NOT_BLANK)
   private String body;
-
-  @NotNull(message = ValidationMessages.AUTHOR_MUST_BE_NOT_NULL)
-  private User author;
 
   private List<NewTag> tags;
 
@@ -54,13 +49,5 @@ public class NewArticle {
 
   public void setTags(List<NewTag> tags) {
     this.tags = tags;
-  }
-
-  public User getAuthor() {
-    return author;
-  }
-
-  public void setAuthor(User author) {
-    this.author = author;
   }
 }

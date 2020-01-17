@@ -43,8 +43,6 @@ public class ArticlesFeedResponseConverter {
       obj.getArticles().forEach(item -> array.add(item.toJson()));
       json.put("articles", array);
     }
-    if (obj.getArticlesCount() != null) {
-      json.put("articlesCount", obj.getArticlesCount());
-    }
+    json.put("articlesCount", obj.getArticlesCount());
   }
 }

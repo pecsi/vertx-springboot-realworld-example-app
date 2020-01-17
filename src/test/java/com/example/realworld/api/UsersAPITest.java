@@ -60,33 +60,28 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
     user.setEmail("user1@mail.com");
     user.setPassword("user1_123");
 
-    createUser(user)
-        .subscribe(
-            persistedUser -> {
-              NewUserRequest newUser = new NewUserRequest();
-              newUser.setUsername(user.getUsername());
-              newUser.setEmail("user2@mail.com");
-              newUser.setPassword("user2_123");
+    saveUser(user);
 
-              webClient
-                  .post(port, TestsConstants.HOST, USERS_RESOURCE_PATH)
-                  .as(BodyCodec.string())
-                  .sendBuffer(
-                      toBuffer(newUser),
-                      vertxTestContext.succeeding(
-                          response ->
-                              vertxTestContext.verify(
-                                  () -> {
-                                    ErrorResponse result =
-                                        readValue(response.body(), ErrorResponse.class, true);
-                                    assertThat(
-                                        response.statusCode(),
-                                        is(HttpResponseStatus.CONFLICT.code()));
-                                    assertThat(
-                                        result.getBody(), contains("username already exists"));
-                                    vertxTestContext.completeNow();
-                                  })));
-            });
+    NewUserRequest newUser = new NewUserRequest();
+    newUser.setUsername(user.getUsername());
+    newUser.setEmail("user2@mail.com");
+    newUser.setPassword("user2_123");
+
+    webClient
+        .post(port, TestsConstants.HOST, USERS_RESOURCE_PATH)
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(newUser),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ErrorResponse result =
+                              readValue(response.body(), ErrorResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.CONFLICT.code()));
+                          assertThat(result.getBody(), contains("username already exists"));
+                          vertxTestContext.completeNow();
+                        })));
   }
 
   @Test
@@ -97,32 +92,28 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
     user.setEmail("user1@mail.com");
     user.setPassword("user1_123");
 
-    createUser(user)
-        .subscribe(
-            persistedUser -> {
-              NewUserRequest newUser = new NewUserRequest();
-              newUser.setUsername("user2");
-              newUser.setEmail(user.getEmail());
-              newUser.setPassword("user2_123");
+    saveUser(user);
 
-              webClient
-                  .post(port, TestsConstants.HOST, USERS_RESOURCE_PATH)
-                  .as(BodyCodec.string())
-                  .sendBuffer(
-                      toBuffer(newUser),
-                      vertxTestContext.succeeding(
-                          response ->
-                              vertxTestContext.verify(
-                                  () -> {
-                                    ErrorResponse result =
-                                        readValue(response.body(), ErrorResponse.class, true);
-                                    assertThat(
-                                        response.statusCode(),
-                                        is(HttpResponseStatus.CONFLICT.code()));
-                                    assertThat(result.getBody(), contains("email already exists"));
-                                    vertxTestContext.completeNow();
-                                  })));
-            });
+    NewUserRequest newUser = new NewUserRequest();
+    newUser.setUsername("user2");
+    newUser.setEmail(user.getEmail());
+    newUser.setPassword("user2_123");
+
+    webClient
+        .post(port, TestsConstants.HOST, USERS_RESOURCE_PATH)
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(newUser),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ErrorResponse result =
+                              readValue(response.body(), ErrorResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.CONFLICT.code()));
+                          assertThat(result.getBody(), contains("email already exists"));
+                          vertxTestContext.completeNow();
+                        })));
   }
 
   @Test
@@ -136,33 +127,30 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
     String userPassword = "user1_123";
     user.setPassword(userPassword);
 
-    createUser(user)
-        .subscribe(
-            persistedUser -> {
-              LoginRequest loginRequest = new LoginRequest();
-              loginRequest.setEmail(persistedUser.getEmail());
-              loginRequest.setPassword(userPassword);
+    saveUser(user);
 
-              webClient
-                  .post(port, TestsConstants.HOST, LOGIN_PATH)
-                  .as(BodyCodec.string())
-                  .sendBuffer(
-                      toBuffer(loginRequest),
-                      vertxTestContext.succeeding(
-                          response ->
-                              vertxTestContext.verify(
-                                  () -> {
-                                    UserResponse userResponse =
-                                        readValue(response.body(), UserResponse.class, true);
-                                    assertThat(userResponse.getUsername(), is(user.getUsername()));
-                                    assertThat(userResponse.getEmail(), is(user.getEmail()));
-                                    assertThat(userResponse.getBio(), is(user.getBio()));
-                                    assertThat(userResponse.getImage(), is(user.getImage()));
-                                    assertThat(
-                                        userResponse.getToken(), is(not(persistedUser.getToken())));
-                                    vertxTestContext.completeNow();
-                                  })));
-            });
+    LoginRequest loginRequest = new LoginRequest();
+    loginRequest.setEmail(user.getEmail());
+    loginRequest.setPassword(userPassword);
+
+    webClient
+        .post(port, TestsConstants.HOST, LOGIN_PATH)
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(loginRequest),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          UserResponse userResponse =
+                              readValue(response.body(), UserResponse.class, true);
+                          assertThat(userResponse.getUsername(), is(user.getUsername()));
+                          assertThat(userResponse.getEmail(), is(user.getEmail()));
+                          assertThat(userResponse.getBio(), is(user.getBio()));
+                          assertThat(userResponse.getImage(), is(user.getImage()));
+                          assertThat(userResponse.getToken(), is(not(user.getToken())));
+                          vertxTestContext.completeNow();
+                        })));
   }
 
   @Test
@@ -198,31 +186,28 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
     user.setEmail("user1@mail.com");
     user.setPassword("user1_123");
 
-    createUser(user)
-        .subscribe(
-            persistedUser -> {
-              LoginRequest loginRequest = new LoginRequest();
-              loginRequest.setEmail(persistedUser.getEmail());
-              loginRequest.setPassword("user123");
+    saveUser(user);
 
-              webClient
-                  .post(port, TestsConstants.HOST, LOGIN_PATH)
-                  .as(BodyCodec.string())
-                  .sendBuffer(
-                      toBuffer(loginRequest),
-                      vertxTestContext.succeeding(
-                          response ->
-                              vertxTestContext.verify(
-                                  () -> {
-                                    ErrorResponse result =
-                                        readValue(response.body(), ErrorResponse.class, true);
-                                    assertThat(
-                                        response.statusCode(),
-                                        is(HttpResponseStatus.UNAUTHORIZED.code()));
-                                    assertThat(result.getBody(), contains("Unauthorized"));
-                                    vertxTestContext.completeNow();
-                                  })));
-            });
+    LoginRequest loginRequest = new LoginRequest();
+    loginRequest.setEmail(user.getEmail());
+    loginRequest.setPassword("user123");
+
+    webClient
+        .post(port, TestsConstants.HOST, LOGIN_PATH)
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(loginRequest),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ErrorResponse result =
+                              readValue(response.body(), ErrorResponse.class, true);
+                          assertThat(
+                              response.statusCode(), is(HttpResponseStatus.UNAUTHORIZED.code()));
+                          assertThat(result.getBody(), contains("Unauthorized"));
+                          vertxTestContext.completeNow();
+                        })));
   }
 
   @Test
@@ -257,36 +242,27 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
     String userPassword = "user1_123";
     user.setPassword(userPassword);
 
-    createUser(user)
-        .subscribe(
-            persistedUser ->
-                webClient
-                    .get(port, TestsConstants.HOST, USER_RESOURCE_PATH)
-                    .putHeader(
-                        AUTHORIZATION_HEADER,
-                        AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser.getToken())
-                    .as(BodyCodec.string())
-                    .send(
-                        vertxTestContext.succeeding(
-                            response ->
-                                vertxTestContext.verify(
-                                    () -> {
-                                      UserResponse userResponse =
-                                          readValue(response.body(), UserResponse.class, true);
-                                      assertThat(
-                                          response.statusCode(), is(HttpResponseStatus.OK.code()));
-                                      assertThat(
-                                          userResponse.getUsername(),
-                                          is(persistedUser.getUsername()));
-                                      assertThat(
-                                          userResponse.getEmail(), is(persistedUser.getEmail()));
-                                      assertThat(userResponse.getBio(), is(persistedUser.getBio()));
-                                      assertThat(
-                                          userResponse.getImage(), is(persistedUser.getImage()));
-                                      assertThat(
-                                          userResponse.getToken(), is(persistedUser.getToken()));
-                                      vertxTestContext.completeNow();
-                                    }))));
+    saveUser(user);
+
+    webClient
+        .get(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + user.getToken())
+        .as(BodyCodec.string())
+        .send(
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          UserResponse userResponse =
+                              readValue(response.body(), UserResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.OK.code()));
+                          assertThat(userResponse.getUsername(), is(user.getUsername()));
+                          assertThat(userResponse.getEmail(), is(user.getEmail()));
+                          assertThat(userResponse.getBio(), is(user.getBio()));
+                          assertThat(userResponse.getImage(), is(user.getImage()));
+                          assertThat(userResponse.getToken(), is(user.getToken()));
+                          vertxTestContext.completeNow();
+                        })));
   }
 
   @Test
@@ -298,34 +274,28 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
     user.setImage("image");
     user.setPassword("user1_123");
 
-    createUser(user)
-        .subscribe(
-            persistedUser -> {
-              UpdateUserRequest updateUserRequest = new UpdateUserRequest();
-              updateUserRequest.setBio("bio");
-              updateUserRequest.setImage("image2");
+    saveUser(user);
 
-              webClient
-                  .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
-                  .putHeader(
-                      AUTHORIZATION_HEADER,
-                      AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser.getToken())
-                  .as(BodyCodec.string())
-                  .sendBuffer(
-                      toBuffer(updateUserRequest),
-                      vertxTestContext.succeeding(
-                          response ->
-                              vertxTestContext.verify(
-                                  () -> {
-                                    UserResponse userResponse =
-                                        readValue(response.body(), UserResponse.class, true);
-                                    assertThat(
-                                        userResponse.getBio(), is(updateUserRequest.getBio()));
-                                    assertThat(
-                                        userResponse.getImage(), is(updateUserRequest.getImage()));
-                                    vertxTestContext.completeNow();
-                                  })));
-            });
+    UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+    updateUserRequest.setBio("bio");
+    updateUserRequest.setImage("image2");
+
+    webClient
+        .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + user.getToken())
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(updateUserRequest),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          UserResponse userResponse =
+                              readValue(response.body(), UserResponse.class, true);
+                          assertThat(userResponse.getBio(), is(updateUserRequest.getBio()));
+                          assertThat(userResponse.getImage(), is(updateUserRequest.getImage()));
+                          vertxTestContext.completeNow();
+                        })));
   }
 
   @Test
@@ -344,36 +314,27 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
     user2.setImage("image");
     user2.setPassword("user1_123");
 
-    createUser(user1)
-        .flatMap(persistedUser1 -> createUser(user2).map(persistedUser2 -> persistedUser1))
-        .subscribe(
-            persistedUser1 -> {
-              UpdateUserRequest updateUserRequest = new UpdateUserRequest();
-              updateUserRequest.setUsername(user2.getUsername());
+    saveUsers(user1, user2);
 
-              webClient
-                  .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
-                  .putHeader(
-                      AUTHORIZATION_HEADER,
-                      AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser1.getToken())
-                  .as(BodyCodec.string())
-                  .sendBuffer(
-                      toBuffer(updateUserRequest),
-                      vertxTestContext.succeeding(
-                          response ->
-                              vertxTestContext.verify(
-                                  () -> {
-                                    ErrorResponse errorResponse =
-                                        readValue(response.body(), ErrorResponse.class, true);
-                                    assertThat(
-                                        response.statusCode(),
-                                        is(HttpResponseStatus.CONFLICT.code()));
-                                    assertThat(
-                                        errorResponse.getBody(),
-                                        contains("username already exists"));
-                                    vertxTestContext.completeNow();
-                                  })));
-            });
+    UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+    updateUserRequest.setUsername(user2.getUsername());
+
+    webClient
+        .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + user1.getToken())
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(updateUserRequest),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ErrorResponse errorResponse =
+                              readValue(response.body(), ErrorResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.CONFLICT.code()));
+                          assertThat(errorResponse.getBody(), contains("username already exists"));
+                          vertxTestContext.completeNow();
+                        })));
   }
 
   @Test
@@ -392,34 +353,26 @@ public class UsersAPITest extends RealworldDataIntegrationTest {
     user2.setImage("image");
     user2.setPassword("user1_123");
 
-    createUser(user1)
-        .flatMap(persistedUser1 -> createUser(user2).map(persistedUser2 -> persistedUser1))
-        .subscribe(
-            persistedUser1 -> {
-              UpdateUserRequest updateUserRequest = new UpdateUserRequest();
-              updateUserRequest.setEmail(user2.getEmail());
+    saveUsers(user1, user2);
 
-              webClient
-                  .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
-                  .putHeader(
-                      AUTHORIZATION_HEADER,
-                      AUTHORIZATION_HEADER_VALUE_PREFIX + persistedUser1.getToken())
-                  .as(BodyCodec.string())
-                  .sendBuffer(
-                      toBuffer(updateUserRequest),
-                      vertxTestContext.succeeding(
-                          response ->
-                              vertxTestContext.verify(
-                                  () -> {
-                                    ErrorResponse errorResponse =
-                                        readValue(response.body(), ErrorResponse.class, true);
-                                    assertThat(
-                                        response.statusCode(),
-                                        is(HttpResponseStatus.CONFLICT.code()));
-                                    assertThat(
-                                        errorResponse.getBody(), contains("email already exists"));
-                                    vertxTestContext.completeNow();
-                                  })));
-            });
+    UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+    updateUserRequest.setEmail(user2.getEmail());
+
+    webClient
+        .put(port, TestsConstants.HOST, USER_RESOURCE_PATH)
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + user1.getToken())
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(updateUserRequest),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ErrorResponse errorResponse =
+                              readValue(response.body(), ErrorResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.CONFLICT.code()));
+                          assertThat(errorResponse.getBody(), contains("email already exists"));
+                          vertxTestContext.completeNow();
+                        })));
   }
 }

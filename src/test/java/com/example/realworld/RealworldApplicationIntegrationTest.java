@@ -1,17 +1,12 @@
 package com.example.realworld;
 
-import com.example.realworld.domain.article.service.ArticleService;
-import com.example.realworld.domain.tag.service.TagService;
+import com.example.realworld.domain.article.model.SlugProvider;
 import com.example.realworld.domain.user.model.HashProvider;
 import com.example.realworld.domain.user.model.TokenProvider;
-import com.example.realworld.domain.user.service.UserService;
-import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.UserStatements;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.reactivex.core.Vertx;
-import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
-import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -24,19 +19,14 @@ public class RealworldApplicationIntegrationTest {
       getApplicationContext();
   protected static Vertx vertx = getVertx();
   protected static WebClient webClient = getWebClient(vertx);
-  protected static JWTAuth jwtAuth = getJWTAuth();
-  protected static JDBCClient jdbcClient = getJDBCClient();
   protected static ObjectMapper wrapUnwrapRootValueObjectMapper =
       getWrapUnwrapRootValueObjectMapper();
   protected static ObjectMapper defaultObjectMapper = getDefaultObjectMapper();
   protected static VertxConfiguration vertxConfiguration = getVertxConfiguration();
   protected static int port = vertxConfiguration.getServer().getPort();
-  protected static FollowedUsersStatements followedUsersStatements = getFollowedUserStatements();
-  protected static UserService userService = getUserService();
-  protected static ArticleService articleService = getArticleService();
-  protected static TagService tagService = getTagService();
   protected static TokenProvider tokenProvider = getTokenProvider();
   protected static HashProvider hashProvider = getHashProvider();
+  protected static SlugProvider slugProvider = getSlugProvider();
 
   private static ConfigurableApplicationContext getApplicationContext() {
     return getObject(
@@ -49,14 +39,6 @@ public class RealworldApplicationIntegrationTest {
 
   private static Vertx getVertx() {
     return getObject(vertx, () -> getBean(Vertx.class));
-  }
-
-  private static JWTAuth getJWTAuth() {
-    return getObject(jwtAuth, () -> getBean(JWTAuth.class));
-  }
-
-  private static JDBCClient getJDBCClient() {
-    return getObject(jdbcClient, () -> getBean(JDBCClient.class));
   }
 
   private static ObjectMapper getWrapUnwrapRootValueObjectMapper() {
@@ -78,28 +60,16 @@ public class RealworldApplicationIntegrationTest {
     return configurableApplicationContext.getBean(UserStatements.class);
   }
 
-  private static FollowedUsersStatements getFollowedUserStatements() {
-    return getObject(followedUsersStatements, () -> getBean(FollowedUsersStatements.class));
-  }
-
-  private static UserService getUserService() {
-    return getObject(userService, () -> getBean(UserService.class));
-  }
-
-  private static ArticleService getArticleService() {
-    return getObject(articleService, () -> getBean(ArticleService.class));
-  }
-
-  private static TagService getTagService() {
-    return getObject(tagService, () -> getBean(TagService.class));
-  }
-
   private static TokenProvider getTokenProvider() {
     return getObject(tokenProvider, () -> getBean(TokenProvider.class));
   }
 
   private static HashProvider getHashProvider() {
     return getObject(hashProvider, () -> getBean(HashProvider.class));
+  }
+
+  private static SlugProvider getSlugProvider() {
+    return getObject(slugProvider, () -> getBean(SlugProvider.class));
   }
 
   private static <T> T getBean(Class<T> clazz) {

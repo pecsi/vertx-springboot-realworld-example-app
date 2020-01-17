@@ -1,6 +1,6 @@
 package com.example.realworld.application;
 
-import com.example.realworld.domain.profile.model.FollowedUsersRepository;
+import com.example.realworld.domain.profile.model.UsersFollowedRepository;
 import com.example.realworld.domain.user.exception.EmailAlreadyExistsException;
 import com.example.realworld.domain.user.exception.InvalidLoginException;
 import com.example.realworld.domain.user.exception.UserNotFoundException;
@@ -17,19 +17,19 @@ import java.util.UUID;
 public class UserServiceImpl extends ApplicationService implements UserService {
 
   private UserRepository userRepository;
-  private FollowedUsersRepository followedUsersRepository;
+  private UsersFollowedRepository usersFollowedRepository;
   private HashProvider hashProvider;
   private TokenProvider tokenProvider;
   private ModelValidator modelValidator;
 
   public UserServiceImpl(
       UserRepository userRepository,
-      FollowedUsersRepository followedUsersRepository,
+      UsersFollowedRepository usersFollowedRepository,
       HashProvider hashProvider,
       TokenProvider tokenProvider,
       ModelValidator modelValidator) {
     this.userRepository = userRepository;
-    this.followedUsersRepository = followedUsersRepository;
+    this.usersFollowedRepository = usersFollowedRepository;
     this.hashProvider = hashProvider;
     this.tokenProvider = tokenProvider;
     this.modelValidator = modelValidator;
@@ -123,19 +123,19 @@ public class UserServiceImpl extends ApplicationService implements UserService {
 
   @Override
   public Single<Boolean> isFollowing(String currentUserId, String followedUserId) {
-    return followedUsersRepository
+    return usersFollowedRepository
         .countByCurrentUserIdAndFollowedUserId(currentUserId, followedUserId)
         .map(this::isCountResultGreaterThanZero);
   }
 
   @Override
   public Completable follow(String currentUserId, String followedUserId) {
-    return followedUsersRepository.follow(currentUserId, followedUserId);
+    return usersFollowedRepository.follow(currentUserId, followedUserId);
   }
 
   @Override
   public Completable unfollow(String currentUserId, String followedUserId) {
-    return followedUsersRepository.unfollow(currentUserId, followedUserId);
+    return usersFollowedRepository.unfollow(currentUserId, followedUserId);
   }
 
   private Completable checkValidations(UpdateUser updateUser, String exclusionId) {

@@ -1,7 +1,6 @@
 package com.example.realworld.infrastructure.persistence.statement.impl;
 
 import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.persistence.statement.ArticleStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
 import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
@@ -21,7 +20,7 @@ public class ArticleStatementsImpl implements ArticleStatements {
   }
 
   @Override
-  public Statement<JsonArray> store(Article article, User author) {
+  public Statement<JsonArray> store(Article article) {
 
     String sql =
         "INSERT INTO ARTICLES (ID, TITLE, DESCRIPTION, BODY, SLUG, AUTHOR_ID, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -33,7 +32,7 @@ public class ArticleStatementsImpl implements ArticleStatements {
             .add(article.getDescription())
             .add(article.getBody())
             .add(article.getSlug())
-            .add(author.getId())
+            .add(article.getAuthor().getId())
             .add(ParserUtils.toTimestamp(article.getCreatedAt()))
             .add(ParserUtils.toTimestamp(article.getUpdatedAt()));
 
@@ -52,6 +51,7 @@ public class ArticleStatementsImpl implements ArticleStatements {
             + "articles.SLUG, "
             + "articles.CREATED_AT, "
             + "articles.UPDATED_AT, "
+            + "users.ID AS AUTHOR_ID, "
             + "users.USERNAME AS AUTHOR_USERNAME "
             + "FROM ARTICLES articles"
             + "INNER JOIN USERS users ON articles.AUTHOR_ID = users.ID ";

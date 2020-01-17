@@ -8,7 +8,7 @@ import com.example.realworld.domain.article.model.ArticleRepository;
 import com.example.realworld.domain.article.model.FavoritesRepository;
 import com.example.realworld.domain.article.model.SlugProvider;
 import com.example.realworld.domain.article.service.ArticleService;
-import com.example.realworld.domain.profile.model.FollowedUsersRepository;
+import com.example.realworld.domain.profile.model.UsersFollowedRepository;
 import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.tag.model.ArticlesTagsRepository;
 import com.example.realworld.domain.tag.model.TagRepository;
@@ -47,13 +47,13 @@ public class RealworldApplicationConfiguration {
   @Bean
   public UserService userService(
       UserRepository userRepository,
-      FollowedUsersRepository followedUsersRepository,
+      UsersFollowedRepository usersFollowedRepository,
       HashProvider cryptographyService,
       TokenProvider tokenProvider,
       ModelValidator modelValidator) {
     return new UserServiceImpl(
         userRepository,
-        followedUsersRepository,
+        usersFollowedRepository,
         cryptographyService,
         tokenProvider,
         modelValidator);
@@ -67,7 +67,7 @@ public class RealworldApplicationConfiguration {
   @Bean
   public ArticleService articleService(
       ArticleRepository articleRepository,
-      FollowedUsersRepository followedUsersRepository,
+      UsersFollowedRepository usersFollowedRepository,
       FavoritesRepository favoritesRepository,
       SlugProvider slugProvider,
       ModelValidator modelValidator,
@@ -75,7 +75,7 @@ public class RealworldApplicationConfiguration {
       TagService tagService) {
     return new ArticleServiceImpl(
         articleRepository,
-        followedUsersRepository,
+        usersFollowedRepository,
         favoritesRepository,
         slugProvider,
         modelValidator,

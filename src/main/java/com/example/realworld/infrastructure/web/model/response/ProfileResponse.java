@@ -1,6 +1,6 @@
 package com.example.realworld.infrastructure.web.model.response;
 
-import com.example.realworld.domain.profile.model.Profile;
+import com.example.realworld.application.data.ProfileData;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
@@ -26,7 +26,7 @@ public class ProfileResponse {
     return jsonObject;
   }
 
-  public ProfileResponse(Profile profile) {
+  public ProfileResponse(ProfileData profile) {
     this.username = profile.getUsername();
     this.bio = profile.getBio();
     this.image = profile.getImage();

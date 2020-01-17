@@ -1,40 +1,40 @@
 package com.example.realworld.infrastructure.persistence.statement.impl;
 
-import com.example.realworld.infrastructure.persistence.statement.FollowedUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
+import com.example.realworld.infrastructure.persistence.statement.UsersFollowedStatements;
 import io.vertx.core.json.JsonArray;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
+public class UsersFollowedStatementsImpl implements UsersFollowedStatements {
 
   @Override
-  public Statement<JsonArray> countByCurrentUserIdAndFollowedUserId(
-      String currentUserId, String followedUserId) {
+  public Statement<JsonArray> countByCurrentUserIdAndUserFollowedId(
+      String currentUserId, String userFollowedId) {
 
     String sql = "SELECT COUNT(*) FROM USERS_FOLLOWED WHERE USER_ID = ? AND FOLLOWED_ID = ?";
 
-    JsonArray params = new JsonArray().add(currentUserId).add(followedUserId);
+    JsonArray params = new JsonArray().add(currentUserId).add(userFollowedId);
 
     return new JsonArrayStatement(sql, params);
   }
 
   @Override
-  public Statement<JsonArray> follow(String currentUserId, String followedUserId) {
+  public Statement<JsonArray> follow(String currentUserId, String userFollowedId) {
 
     String sql = "INSERT INTO USERS_FOLLOWED (USER_ID, FOLLOWED_ID) VALUES (?, ?)";
 
-    JsonArray params = new JsonArray().add(currentUserId).add(followedUserId);
+    JsonArray params = new JsonArray().add(currentUserId).add(userFollowedId);
 
     return new JsonArrayStatement(sql, params);
   }
 
   @Override
-  public Statement<JsonArray> unfollow(String currentUserId, String followedUserId) {
+  public Statement<JsonArray> unfollow(String currentUserId, String userFollowedId) {
 
     String sql = "DELETE FROM USERS_FOLLOWED WHERE USER_ID = ? AND FOLLOWED_ID = ?";
 
-    JsonArray params = new JsonArray().add(currentUserId).add(followedUserId);
+    JsonArray params = new JsonArray().add(currentUserId).add(userFollowedId);
 
     return new JsonArrayStatement(sql, params);
   }
@@ -50,6 +50,7 @@ public class FollowedUsersStatementsImpl implements FollowedUsersStatements {
             + "articles.SLUG, "
             + "articles.CREATED_AT, "
             + "articles.UPDATED_AT, "
+            + "users2.ID AS AUTHOR_ID, "
             + "users2.USERNAME AS AUTHOR_USERNAME "
             + "FROM USERS_FOLLOWED users_followed "
             + "INNER JOIN USERS users1 ON users_followed.USER_ID = users1.ID AND (users1.ID = ?) "

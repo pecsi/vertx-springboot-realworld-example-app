@@ -1,7 +1,6 @@
 package com.example.realworld.infrastructure.web.model.response;
 
-import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.tag.model.Tag;
+import com.example.realworld.application.data.ArticleData;
 import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -9,7 +8,6 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @JsonRootName("article")
 @DataObject(generateConverter = true)
@@ -45,14 +43,14 @@ public class ArticleResponse {
     return jsonObject;
   }
 
-  public ArticleResponse(Article article) {
+  public ArticleResponse(ArticleData article) {
     this.slug = article.getSlug();
     this.title = article.getTitle();
     this.description = article.getDescription();
     this.body = article.getBody();
     this.createdAt = ParserUtils.format(article.getCreatedAt(), datePattern);
     this.updatedAt = ParserUtils.format(article.getUpdatedAt(), datePattern);
-    this.tagList = article.getTags().stream().map(Tag::getName).collect(Collectors.toList());
+    this.tagList = article.getTagList();
     this.favorited = article.isFavorited();
     this.favoritesCount = article.getFavoritesCount();
     this.author = new ProfileResponse(article.getAuthor());

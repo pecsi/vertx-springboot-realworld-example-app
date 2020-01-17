@@ -2,7 +2,6 @@ package com.example.realworld.infrastructure.vertx.proxy.impl;
 
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
-import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,17 +28,9 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
       Handler<AsyncResult<ArticlesFeedResponse>> handler) {
     articleService
         .findRecentArticles(currentUserId, offset, limit)
-        .flattenAsFlowable(articles -> articles)
-        .map(ArticleResponse::new)
-        .toList()
-        .flatMap(
-            articleResponses ->
-                articleService
-                    .totalUserArticlesFollowed(currentUserId)
-                    .map(
-                        articlesCount -> new ArticlesFeedResponse(articleResponses, articlesCount)))
         .subscribe(
-            articlesResponse -> handler.handle(Future.succeededFuture(articlesResponse)),
+            articlesData ->
+                handler.handle(Future.succeededFuture(new ArticlesFeedResponse(articlesData))),
             throwable -> handler.handle(error(throwable)));
   }
 

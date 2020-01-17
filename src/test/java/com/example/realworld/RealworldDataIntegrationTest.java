@@ -1,22 +1,16 @@
 package com.example.realworld;
 
 import com.example.realworld.domain.article.model.Article;
-import com.example.realworld.domain.article.model.NewArticle;
-import com.example.realworld.domain.tag.model.NewTag;
 import com.example.realworld.domain.tag.model.Tag;
-import com.example.realworld.domain.user.model.NewUser;
-import com.example.realworld.domain.user.model.UpdateUser;
 import com.example.realworld.domain.user.model.User;
+import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.reactivex.core.buffer.Buffer;
-import io.vertx.reactivex.ext.sql.SQLClientHelper;
 import org.junit.jupiter.api.AfterEach;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -29,12 +23,13 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
     vertxTestContext.completeNow();
   }
 
-  protected Single<User> createUser(User user) {
-    return createUser(toNewUser(user))
-        .flatMap(createdUser -> updateUser(toUpdateUser(user), createdUser.getId()));
+  protected void saveUsers(User... users) {
+    for (User user : users) {
+      saveUser(user);
+    }
   }
 
-  protected User createUserEntityManager(User user) {
+  protected void saveUser(User user) {
     user.setId(UUID.randomUUID().toString());
     user.setPassword(hashProvider.hashPassword(user.getPassword()));
     user.setToken(tokenProvider.generateToken(user.getId()));
@@ -49,10 +44,9 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
             user.getEmail(),
             user.getToken());
     executeSql(sql);
-    return user;
   }
 
-  protected void followEntityManager(User currentUser, User followedUser) {
+  protected void follow(User currentUser, User followedUser) {
     String sql =
         String.format(
             "INSERT INTO USERS_FOLLOWED (USER_ID, FOLLOWED_ID) VALUES ('%s', '%s')",
@@ -60,7 +54,7 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
     executeSql(sql);
   }
 
-  protected List<Tag> createTagsEntityManager(Tag... tags) {
+  protected void saveTags(Tag... tags) {
     StringBuilder builder = new StringBuilder();
 
     for (Tag tag : tags) {
@@ -72,84 +66,50 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
     }
 
     executeSql(builder.toString());
-
-    return Arrays.asList(tags);
   }
 
-  protected Single<User> createUser(NewUser newUser) {
-    return userService.create(newUser);
-  }
-
-  protected Single<User> updateUser(UpdateUser updateUser, String exclusionId) {
-    return userService.update(updateUser, exclusionId);
-  }
-
-  protected Single<User> follow(User currentUser, User followedUser) {
-    return userService
-        .follow(currentUser.getId(), followedUser.getId())
-        .andThen(Single.just(currentUser));
-  }
-
-  protected Flowable<Article> createArticles(
+  protected List<Article> createArticle(
       User author, String title, String description, String body, int quantity, List<Tag> tags) {
-    List<NewArticle> newArticles =
-        createArticlesFor(author, title, description, body, quantity, tags);
-    return Flowable.fromIterable(newArticles)
-        .flatMapSingle(article -> articleService.create(article));
-  }
+    List<Article> articles = new LinkedList<>();
 
-  protected Flowable<Tag> createTags(NewTag... newTags) {
-    return Flowable.fromArray(newTags).flatMapSingle(newTag -> tagService.create(newTag));
-  }
-
-  private List<NewArticle> createArticlesFor(
-      User author, String title, String description, String body, int quantity, List<Tag> tags) {
-    List<NewArticle> newArticles = new LinkedList<>();
+    StringBuilder builder = new StringBuilder();
 
     for (int articleIndex = 0; articleIndex < quantity; articleIndex++) {
-      String indexIdentifier = "_" + articleIndex;
-      NewArticle newArticle = new NewArticle();
-      newArticle.setAuthor(author);
-      newArticle.setTitle(title + indexIdentifier);
-      newArticle.setDescription(description + indexIdentifier);
-      newArticle.setBody(body + indexIdentifier);
+      String articleIndexIdentifier = "_" + articleIndex;
+      Article article = new Article();
+      article.setId(UUID.randomUUID().toString());
+      article.setTitle(title + articleIndexIdentifier);
+      article.setDescription(description + articleIndexIdentifier);
+      article.setBody(body + articleIndexIdentifier);
+      article.setSlug(slugProvider.slugify(article.getTitle()));
+      article.setAuthor(author);
+      article.setTags(tags);
+      article.setCreatedAt(LocalDateTime.now());
+      articles.add(article);
+      builder.append(
+          String.format(
+              "INSERT INTO ARTICLES (ID, TITLE, DESCRIPTION, BODY, SLUG, AUTHOR_ID, CREATED_AT) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');",
+              article.getId(),
+              article.getTitle(),
+              article.getDescription(),
+              article.getBody(),
+              article.getSlug(),
+              article.getAuthor().getId(),
+              ParserUtils.toTimestamp(article.getCreatedAt())));
 
-      List<NewTag> newTags = new LinkedList<>();
-      for (Tag tag : tags) {
-        NewTag newTag = new NewTag();
-        newTag.setName(tag.getName());
-        newTags.add(newTag);
-      }
-
-      newArticle.setTags(newTags);
-
-      newArticles.add(newArticle);
+      article
+          .getTags()
+          .forEach(
+              tag ->
+                  builder.append(
+                      String.format(
+                          "INSERT INTO ARTICLES_TAGS (ARTICLE_ID, TAG_ID) VALUES ('%s', '%s');",
+                          article.getId(), tag.getId())));
     }
 
-    return newArticles;
-  }
+    executeSql(builder.toString());
 
-  private UpdateUser toUpdateUser(User createdUser) {
-    UpdateUser updateUser = new UpdateUser();
-    updateUser.setUsername(createdUser.getUsername());
-    updateUser.setEmail(createdUser.getEmail());
-    updateUser.setBio(createdUser.getBio());
-    updateUser.setImage(createdUser.getImage());
-    return updateUser;
-  }
-
-  private NewUser toNewUser(User user) {
-    NewUser newUser = new NewUser();
-    newUser.setUsername(user.getUsername());
-    newUser.setEmail(user.getEmail());
-    newUser.setPassword(user.getPassword());
-    return newUser;
-  }
-
-  private static void executeStatement(VertxTestContext testContext, String sql) {
-    SQLClientHelper.inTransactionCompletable(
-            jdbcClient, sqlConnection -> sqlConnection.rxExecute(sql))
-        .subscribe(testContext::completeNow);
+    return articles;
   }
 
   protected Buffer toBuffer(Object value) {

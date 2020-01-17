@@ -1,6 +1,6 @@
 package com.example.realworld.application;
 
-import com.example.realworld.domain.profile.model.Profile;
+import com.example.realworld.application.data.ProfileData;
 import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.user.exception.UserAlreadyFollowedException;
 import com.example.realworld.domain.user.service.UserService;
@@ -16,17 +16,17 @@ public class ProfileServiceImpl extends ApplicationService implements ProfileSer
   }
 
   @Override
-  public Single<Profile> getProfile(String username, String loggedUserId) {
+  public Single<ProfileData> getProfile(String username, String loggedUserId) {
     return userService
         .findByUsername(username)
         .flatMap(
             user ->
                 isFollowing(loggedUserId, user.getId())
-                    .flatMap(isFollowing -> Single.just(new Profile(user, isFollowing))));
+                    .flatMap(isFollowing -> Single.just(new ProfileData(user, isFollowing))));
   }
 
   @Override
-  public Single<Profile> follow(String username, String loggedUserId) {
+  public Single<ProfileData> follow(String username, String loggedUserId) {
     return userService
         .findByUsername(username)
         .flatMap(
@@ -48,7 +48,7 @@ public class ProfileServiceImpl extends ApplicationService implements ProfileSer
   }
 
   @Override
-  public Single<Profile> unfollow(String username, String loggedUserId) {
+  public Single<ProfileData> unfollow(String username, String loggedUserId) {
     return userService
         .findByUsername(username)
         .flatMap(

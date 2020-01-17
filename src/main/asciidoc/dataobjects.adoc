@@ -29,7 +29,7 @@
 |===
 ^|Name | Type ^| Description
 |[[articles]]`@articles`|`Array of link:dataobjects.html#ArticleResponse[ArticleResponse]`|-
-|[[articlesCount]]`@articlesCount`|`Number (Long)`|-
+|[[articlesCount]]`@articlesCount`|`Number (long)`|-
 |===
 
 [[ArticlesResponse]]

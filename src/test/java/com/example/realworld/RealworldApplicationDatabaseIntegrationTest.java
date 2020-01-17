@@ -106,12 +106,15 @@ public class RealworldApplicationDatabaseIntegrationTest
   }
 
   public void clearDatabase() {
+    StringBuilder builder = new StringBuilder();
     dbTables.forEach(
         dbTable ->
-            executeSql(
-                "SET FOREIGN_KEY_CHECKS = 0; DELETE FROM "
-                    + dbTable
-                    + "; SET FOREIGN_KEY_CHECKS = 1;"));
+            builder
+                .append("SET FOREIGN_KEY_CHECKS = 0; ")
+                .append("DELETE FROM ")
+                .append(dbTable)
+                .append("; SET FOREIGN_KEY_CHECKS = 1; "));
+    executeSql(builder.toString());
   }
 
   protected void executeSql(String sql) {
