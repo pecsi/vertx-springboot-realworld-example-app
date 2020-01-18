@@ -1,6 +1,7 @@
 package com.example.realworld.application;
 
 import com.example.realworld.application.data.ProfileData;
+import com.example.realworld.domain.profile.exception.SelfFollowException;
 import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.user.exception.UserAlreadyFollowedException;
 import com.example.realworld.domain.user.service.UserService;
@@ -31,13 +32,14 @@ public class ProfileServiceImpl extends ApplicationService implements ProfileSer
         .findByUsername(username)
         .flatMap(
             user ->
-                validAlreadyFollowing(loggedUserId, user.getId())
+                validSelfFollow(loggedUserId, user.getId())
+                    .andThen(validAlreadyFollowing(loggedUserId, user.getId()))
                     .andThen(userService.follow(loggedUserId, user.getId()))
                     .andThen(getProfile(username, loggedUserId)));
   }
 
-  private Completable validAlreadyFollowing(String currentUserId, String followedUserId) {
-    return isFollowing(currentUserId, followedUserId)
+  private Completable validAlreadyFollowing(String currentUserId, String userFollowedId) {
+    return isFollowing(currentUserId, userFollowedId)
         .flatMapCompletable(
             isFollowing -> {
               if (isFollowing) {
@@ -45,6 +47,16 @@ public class ProfileServiceImpl extends ApplicationService implements ProfileSer
               }
               return Completable.complete();
             });
+  }
+
+  private Completable validSelfFollow(String loggedUserId, String userFollowedId) {
+    return Completable.create(
+        completableEmitter -> {
+          if (loggedUserId.equals(userFollowedId)) {
+            throw new SelfFollowException();
+          }
+          completableEmitter.onComplete();
+        });
   }
 
   @Override

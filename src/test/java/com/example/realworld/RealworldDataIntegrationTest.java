@@ -74,6 +74,8 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
 
     StringBuilder builder = new StringBuilder();
 
+    LocalDateTime now = LocalDateTime.now();
+
     for (int articleIndex = 0; articleIndex < quantity; articleIndex++) {
       String articleIndexIdentifier = "_" + articleIndex;
       Article article = new Article();
@@ -84,7 +86,7 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
       article.setSlug(slugProvider.slugify(article.getTitle()));
       article.setAuthor(author);
       article.setTags(tags);
-      article.setCreatedAt(LocalDateTime.now());
+      article.setCreatedAt(now.plusDays(articleIndex));
       articles.add(article);
       builder.append(
           String.format(
@@ -110,6 +112,19 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
     executeSql(builder.toString());
 
     return articles;
+  }
+
+  protected void favorite(User user, List<Article> articles) {
+
+    StringBuilder builder = new StringBuilder();
+    articles.forEach(
+        article ->
+            builder.append(
+                String.format(
+                    "INSERT INTO ARTICLES_USERS (ARTICLE_ID, USER_ID) VALUES ('%s','%s');",
+                    article.getId(), user.getId())));
+
+    executeSql(builder.toString());
   }
 
   protected Buffer toBuffer(Object value) {

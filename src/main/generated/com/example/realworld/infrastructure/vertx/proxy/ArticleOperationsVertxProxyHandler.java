@@ -41,7 +41,6 @@ import io.vertx.serviceproxy.ServiceException;
 import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
 import io.vertx.serviceproxy.HelperUtils;
 
-import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
 import java.util.List;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.vertx.core.AsyncResult;

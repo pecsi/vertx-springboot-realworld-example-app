@@ -69,10 +69,10 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   private Comparator<ArticleData> articleComparator() {
     return (article1, article2) -> {
       if (article1.getCreatedAt().isBefore(article2.getCreatedAt())) {
-        return -1;
+        return 1;
       }
       if (article1.getCreatedAt().isAfter(article2.getCreatedAt())) {
-        return 1;
+        return -1;
       }
       return 0;
     };
@@ -132,6 +132,12 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   }
 
   @Override
+  public Single<Long> totalArticles(
+      List<String> tags, List<String> authors, List<String> favorited) {
+    return articleRepository.totalArticles(tags, authors, favorited);
+  }
+
+  @Override
   public Single<ArticlesData> findArticles(
       String currentUserId,
       int offset,
@@ -147,7 +153,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
         .toList()
         .flatMap(
             articles ->
-                totalUserArticlesFollowed(currentUserId)
+                totalArticles(tags, authors, favorited)
                     .map(articlesCount -> new ArticlesData(articles, articlesCount)));
   }
 

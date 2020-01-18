@@ -26,7 +26,7 @@ public class ArticlesResponseConverter {
           break;
         case "articlesCount":
           if (member.getValue() instanceof Number) {
-            obj.setArticlesCount(((Number)member.getValue()).intValue());
+            obj.setArticlesCount(((Number)member.getValue()).longValue());
           }
           break;
       }

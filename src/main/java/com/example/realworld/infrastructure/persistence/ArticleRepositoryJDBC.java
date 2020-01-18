@@ -55,10 +55,20 @@ public class ArticleRepositoryJDBC extends JDBCRepository implements ArticleRepo
   @Override
   public Single<List<Article>> findArticles(
       int offset, int limit, List<String> tags, List<String> authors, List<String> favorited) {
-    Statement<JsonArray> findAriclesStatement =
+    Statement<JsonArray> findArticlesStatement =
         articleStatements.findArticles(offset, limit, tags, authors, favorited);
     return jdbcClient
-        .rxQueryWithParams(findAriclesStatement.sql(), findAriclesStatement.params())
+        .rxQueryWithParams(findArticlesStatement.sql(), findArticlesStatement.params())
         .map(ParserUtils::toArticleList);
+  }
+
+  @Override
+  public Single<Long> totalArticles(
+      List<String> tags, List<String> authors, List<String> favorited) {
+    Statement<JsonArray> totalArticlesStatement =
+        articleStatements.totalArticles(tags, authors, favorited);
+    return jdbcClient
+        .rxQueryWithParams(totalArticlesStatement.sql(), totalArticlesStatement.params())
+        .map(resultSet -> resultSet.getRows().get(0).getLong("COUNT(DISTINCT ARTICLES.ID)"));
   }
 }

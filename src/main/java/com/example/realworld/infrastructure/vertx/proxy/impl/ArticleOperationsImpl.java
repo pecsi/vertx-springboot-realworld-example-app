@@ -2,7 +2,6 @@ package com.example.realworld.infrastructure.vertx.proxy.impl;
 
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
-import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
@@ -22,15 +21,12 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
 
   @Override
   public void findRecentArticles(
-      String currentUserId,
-      int offset,
-      int limit,
-      Handler<AsyncResult<ArticlesFeedResponse>> handler) {
+      String currentUserId, int offset, int limit, Handler<AsyncResult<ArticlesResponse>> handler) {
     articleService
         .findRecentArticles(currentUserId, offset, limit)
         .subscribe(
             articlesData ->
-                handler.handle(Future.succeededFuture(new ArticlesFeedResponse(articlesData))),
+                handler.handle(Future.succeededFuture(new ArticlesResponse(articlesData))),
             throwable -> handler.handle(error(throwable)));
   }
 
@@ -43,6 +39,11 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
       List<String> authors,
       List<String> favorited,
       Handler<AsyncResult<ArticlesResponse>> handler) {
-    articleService.findArticles(currentUserId, offset, limit, tags, authors, favorited);
+    articleService
+        .findArticles(currentUserId, offset, limit, tags, authors, favorited)
+        .subscribe(
+            articlesData ->
+                handler.handle(Future.succeededFuture(new ArticlesResponse(articlesData))),
+            throwable -> handler.handle(error(throwable)));
   }
 }

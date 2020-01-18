@@ -11,4 +11,6 @@ public interface ArticleRepository {
 
   Single<List<Article>> findArticles(
       int offset, int limit, List<String> tags, List<String> authors, List<String> favorited);
+
+  Single<Long> totalArticles(List<String> tags, List<String> authors, List<String> favorited);
 }

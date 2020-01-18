@@ -23,6 +23,8 @@ public interface ArticleService {
       List<String> authors,
       List<String> favorited);
 
+  Single<Long> totalArticles(List<String> tags, List<String> authors, List<String> favorited);
+
   //
   //  Article create(
   //    String title, String description, String body, List<String> tagList, Long authorId);

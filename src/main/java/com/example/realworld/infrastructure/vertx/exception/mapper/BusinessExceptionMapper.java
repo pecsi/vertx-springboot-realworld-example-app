@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.vertx.exception.mapper;
 
 import com.example.realworld.domain.general.exception.BusinessException;
+import com.example.realworld.domain.profile.exception.SelfFollowException;
 import com.example.realworld.domain.user.exception.EmailAlreadyExistsException;
 import com.example.realworld.domain.user.exception.InvalidLoginException;
 import com.example.realworld.domain.user.exception.UserNotFoundException;
@@ -41,6 +42,7 @@ public class BusinessExceptionMapper {
     handlerMap.put(EmailAlreadyExistsException.class.getName(), conflict());
     handlerMap.put(InvalidLoginException.class.getName(), unauthorized());
     handlerMap.put(UserNotFoundException.class.getName(), notFound());
+    handlerMap.put(SelfFollowException.class.getName(), conflict());
     //    handlerMap.put(ResourceNotFoundException.class, notFound());
     //    handlerMap.put(TagNotFoundException.class, notFound());
     //    handlerMap.put(ArticleNotFoundException.class, notFound());

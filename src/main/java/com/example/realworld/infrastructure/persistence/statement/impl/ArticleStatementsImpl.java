@@ -4,10 +4,12 @@ import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.infrastructure.persistence.statement.ArticleStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
 import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
+import com.example.realworld.infrastructure.utils.SimpleQueryBuilder;
 import io.vertx.core.json.JsonArray;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class ArticleStatementsImpl implements ArticleStatements {
@@ -53,33 +55,79 @@ public class ArticleStatementsImpl implements ArticleStatements {
             + "articles.UPDATED_AT, "
             + "users.ID AS AUTHOR_ID, "
             + "users.USERNAME AS AUTHOR_USERNAME "
-            + "FROM ARTICLES articles"
-            + "INNER JOIN USERS users ON articles.AUTHOR_ID = users.ID ";
+            + "FROM ARTICLES articles "
+            + "INNER JOIN USERS users ON articles.AUTHOR_ID = users.ID";
 
     JsonArray params = new JsonArray();
 
-    boolean tagsINotEmpty = !tags.isEmpty();
-    boolean favoritedIsNotEmpty = !favorited.isEmpty();
-    boolean authorsINotEmpty = !authors.isEmpty();
+    SimpleQueryBuilder findArticlesQueryBuilder = new SimpleQueryBuilder();
 
-    if (tagsINotEmpty) {
-      sql += "INNER JOIN ARTICLES_TAGS articles_tags ON articles.ID = articles_tags.ARTICLE_ID ";
-      tags.forEach(params::add);
+    findArticlesQueryBuilder.addQueryStatement(sql);
+
+    configQueryBuilderFindArticles(tags, authors, favorited, params, findArticlesQueryBuilder);
+
+    findArticlesQueryBuilder.addAfterWhereStatement(
+        "ORDER BY articles.CREATED_AT DESC, articles.UPDATED_AT DESC LIMIT ? OFFSET ?;");
+
+    params.add(limit).add(offset);
+
+    return new JsonArrayStatement(findArticlesQueryBuilder.toQueryString(), params);
+  }
+
+  private void configQueryBuilderFindArticles(
+      List<String> tags,
+      List<String> authors,
+      List<String> favorited,
+      JsonArray params,
+      SimpleQueryBuilder findArticlesQueryBuilder) {
+
+    if (!tags.isEmpty()) {
+      String tagsQueryStatement =
+          "INNER JOIN ARTICLES_TAGS articles_tags ON articles.ID = articles_tags.ARTICLE_ID "
+              + "INNER JOIN TAGS tags ON articles_tags.TAG_ID = tags.ID";
+      String tagsWhereStatement = String.format("UPPER(tags.NAME) IN (%s)", listParams(tags));
+      findArticlesQueryBuilder.updateQueryStatementConditional(
+          tagsQueryStatement, tagsWhereStatement);
+      tags.forEach(tag -> params.add(tag.toUpperCase().trim()));
     }
 
-    if (favoritedIsNotEmpty) {
-      sql += "INNER JOIN ARTICLES_USERS articles_users ON articles.ID = articles_users.ARTICLE_ID ";
-      favorited.forEach(params::add);
+    if (!favorited.isEmpty()) {
+      String favoritedQueryStatement =
+          "INNER JOIN ARTICLES_USERS articles_users ON articles.ID = articles_users.ARTICLE_ID "
+              + "INNER JOIN USERS usersWhoFavorited ON articles_users.USER_ID = usersWhoFavorited.ID";
+      String favoritedWhereStatement =
+          String.format("UPPER(usersWhoFavorited.USERNAME) IN (%s)", listParams(favorited));
+      findArticlesQueryBuilder.updateQueryStatementConditional(
+          favoritedQueryStatement, favoritedWhereStatement);
+      favorited.forEach(favorite -> params.add(favorite.toUpperCase().trim()));
     }
 
-    if (tagsINotEmpty || favoritedIsNotEmpty || authorsINotEmpty) {
-      sql += "WHERE ";
+    if (!authors.isEmpty()) {
+      String authorsWhereStatement =
+          String.format("UPPER(users.USERNAME) IN (%s)", listParams(authors));
+      findArticlesQueryBuilder.updateQueryStatementConditional(null, authorsWhereStatement);
+      authors.forEach(author -> params.add(author.toUpperCase().trim()));
     }
+  }
 
-    if (authorsINotEmpty) {
-      sql += "users.USERNAME";
-    }
+  @Override
+  public Statement<JsonArray> totalArticles(
+      List<String> tags, List<String> authors, List<String> favorited) {
 
-    return null;
+    JsonArray params = new JsonArray();
+
+    SimpleQueryBuilder totalArticlesQueryBuilder = new SimpleQueryBuilder();
+
+    totalArticlesQueryBuilder.addQueryStatement(
+        "SELECT COUNT(DISTINCT articles.ID) FROM ARTICLES articles "
+            + "INNER JOIN USERS users ON articles.AUTHOR_ID = users.ID");
+
+    configQueryBuilderFindArticles(tags, authors, favorited, params, totalArticlesQueryBuilder);
+
+    return new JsonArrayStatement(totalArticlesQueryBuilder.toQueryString(), params);
+  }
+
+  private String listParams(List<String> listParams) {
+    return listParams.stream().map(param -> "?").collect(Collectors.joining(","));
   }
 }

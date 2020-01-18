@@ -20,18 +20,6 @@
 |[[updatedAt]]`@updatedAt`|`String`|-
 |===
 
-[[ArticlesFeedResponse]]
-== ArticlesFeedResponse
-
-
-[cols=">25%,25%,50%"]
-[frame="topbot"]
-|===
-^|Name | Type ^| Description
-|[[articles]]`@articles`|`Array of link:dataobjects.html#ArticleResponse[ArticleResponse]`|-
-|[[articlesCount]]`@articlesCount`|`Number (long)`|-
-|===
-
 [[ArticlesResponse]]
 == ArticlesResponse
 
@@ -41,7 +29,7 @@
 |===
 ^|Name | Type ^| Description
 |[[articles]]`@articles`|`Array of link:dataobjects.html#ArticleResponse[ArticleResponse]`|-
-|[[articlesCount]]`@articlesCount`|`Number (int)`|-
+|[[articlesCount]]`@articlesCount`|`Number (long)`|-
 |===
 
 [[LoginRequest]]
@@ -80,23 +68,6 @@
 |[[bio]]`@bio`|`String`|-
 |[[following]]`@following`|`Boolean`|-
 |[[image]]`@image`|`String`|-
-|[[username]]`@username`|`String`|-
-|===
-
-[[ProxyUser]]
-== ProxyUser
-
-
-[cols=">25%,25%,50%"]
-[frame="topbot"]
-|===
-^|Name | Type ^| Description
-|[[bio]]`@bio`|`String`|-
-|[[email]]`@email`|`String`|-
-|[[id]]`@id`|`Number (Long)`|-
-|[[image]]`@image`|`String`|-
-|[[password]]`@password`|`String`|-
-|[[token]]`@token`|`String`|-
 |[[username]]`@username`|`String`|-
 |===
 

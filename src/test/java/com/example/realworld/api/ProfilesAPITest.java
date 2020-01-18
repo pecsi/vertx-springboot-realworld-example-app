@@ -114,7 +114,7 @@ public class ProfilesAPITest extends RealworldDataIntegrationTest {
 
     webClient
         .post(port, HOST, PROFILES_RESOURCE_PATH + "/" + user2.getUsername() + "/follow")
-        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + user2.getToken())
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + user1.getToken())
         .as(BodyCodec.string())
         .send(
             vertxTestContext.succeeding(

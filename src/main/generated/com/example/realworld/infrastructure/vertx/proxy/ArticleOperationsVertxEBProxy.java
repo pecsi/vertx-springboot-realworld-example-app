@@ -33,7 +33,6 @@ import io.vertx.serviceproxy.ServiceException;
 import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
 import io.vertx.serviceproxy.ProxyUtils;
 
-import com.example.realworld.infrastructure.web.model.response.ArticlesFeedResponse;
 import java.util.List;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.vertx.core.AsyncResult;
@@ -64,7 +63,7 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
   }
 
   @Override
-  public  void findRecentArticles(String currentUserId, int offset, int limit, Handler<AsyncResult<ArticlesFeedResponse>> handler){
+  public  void findRecentArticles(String currentUserId, int offset, int limit, Handler<AsyncResult<ArticlesResponse>> handler){
     if (closed) {
       handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
       return;
@@ -80,7 +79,7 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
       if (res.failed()) {
         handler.handle(Future.failedFuture(res.cause()));
       } else {
-        handler.handle(Future.succeededFuture(res.result().body() == null ? null : new ArticlesFeedResponse(res.result().body())));
+        handler.handle(Future.succeededFuture(res.result().body() == null ? null : new ArticlesResponse(res.result().body())));
       }
     });
   }

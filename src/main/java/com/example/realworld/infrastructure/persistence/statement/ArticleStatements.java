@@ -12,4 +12,7 @@ public interface ArticleStatements {
 
   Statement<JsonArray> findArticles(
       int offset, int limit, List<String> tags, List<String> authors, List<String> favorited);
+
+  Statement<JsonArray> totalArticles(
+      List<String> tags, List<String> authors, List<String> favorited);
 }
