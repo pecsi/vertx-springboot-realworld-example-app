@@ -42,6 +42,8 @@ import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
 import io.vertx.serviceproxy.HelperUtils;
 
 import java.util.List;
+import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -139,6 +141,22 @@ public class ArticleOperationsVertxProxyHandler extends ProxyHandler {
                         HelperUtils.convertList(json.getJsonArray("tags").getList()),
                         HelperUtils.convertList(json.getJsonArray("authors").getList()),
                         HelperUtils.convertList(json.getJsonArray("favorited").getList()),
+                        res -> {
+                        if (res.failed()) {
+                          if (res.cause() instanceof ServiceException) {
+                            msg.reply(res.cause());
+                          } else {
+                            msg.reply(new ServiceException(-1, res.cause().getMessage()));
+                          }
+                        } else {
+                          msg.reply(res.result() == null ? null : res.result().toJson());
+                        }
+                     });
+          break;
+        }
+        case "create": {
+          service.create((java.lang.String)json.getValue("currentUserId"),
+                        json.getJsonObject("newArticleRequest") == null ? null : new com.example.realworld.infrastructure.web.model.request.NewArticleRequest(json.getJsonObject("newArticleRequest")),
                         res -> {
                         if (res.failed()) {
                           if (res.cause() instanceof ServiceException) {

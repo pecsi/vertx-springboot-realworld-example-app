@@ -2,7 +2,6 @@ package com.example.realworld.infrastructure.web.model.request;
 
 import com.example.realworld.application.constants.ValidationMessages;
 import com.example.realworld.domain.user.model.UpdateUser;
-import com.example.realworld.infrastructure.web.validation.constraint.AtLeastOneFieldMustBeNotNull;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
@@ -11,7 +10,6 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.Pattern;
 
 @JsonRootName("user")
-@AtLeastOneFieldMustBeNotNull
 @DataObject(generateConverter = true)
 public class UpdateUserRequest {
 

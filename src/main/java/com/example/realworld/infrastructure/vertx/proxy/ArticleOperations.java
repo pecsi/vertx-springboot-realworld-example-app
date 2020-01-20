@@ -1,5 +1,7 @@
 package com.example.realworld.infrastructure.vertx.proxy;
 
+import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
@@ -25,4 +27,9 @@ public interface ArticleOperations {
       List<String> authors,
       List<String> favorited,
       Handler<AsyncResult<ArticlesResponse>> handler);
+
+  void create(
+      String currentUserId,
+      NewArticleRequest newArticleRequest,
+      Handler<AsyncResult<ArticleResponse>> handler);
 }

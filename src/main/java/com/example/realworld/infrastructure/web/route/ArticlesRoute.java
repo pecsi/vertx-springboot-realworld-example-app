@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.web.route;
 
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
+import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.reactivex.core.MultiMap;
 import io.vertx.reactivex.core.Vertx;
@@ -38,8 +39,22 @@ public class ArticlesRoute extends AbstractHttpRoute {
 
     articlesRouter.get(articlesPath + FEED).handler(this::feed);
     articlesRouter.get(articlesPath).handler(this::getArticles);
+    articlesRouter.post(articlesPath).handler(this::create);
 
     return articlesRouter;
+  }
+
+  private void create(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (String userId) -> {
+          NewArticleRequest newArticleRequest = getBody(routingContext, NewArticleRequest.class);
+          articleOperations.create(
+              userId,
+              newArticleRequest,
+              responseOrFail(routingContext, HttpResponseStatus.CREATED.code(), true));
+        });
   }
 
   private void getArticles(RoutingContext routingContext) {

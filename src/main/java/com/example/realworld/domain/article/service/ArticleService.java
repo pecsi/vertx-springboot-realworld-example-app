@@ -25,6 +25,8 @@ public interface ArticleService {
 
   Single<Long> totalArticles(List<String> tags, List<String> authors, List<String> favorited);
 
+  Single<ArticleData> findBySlug(String slug, String currentUserId);
+
   //
   //  Article create(
   //    String title, String description, String body, List<String> tagList, Long authorId);

@@ -1,6 +1,5 @@
 package com.example.realworld.infrastructure.web.route;
 
-import com.example.realworld.infrastructure.web.exception.RequestValidationException;
 import com.example.realworld.infrastructure.web.model.response.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,11 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 
 @Component
@@ -90,12 +87,6 @@ public abstract class AbstractHttpRoute implements HttpRoute {
     }
   }
 
-  protected <T> T getBodyAndValid(RoutingContext routingContext, Class<T> clazz) {
-    T result = getBody(routingContext, clazz);
-    validateRequestBody(result);
-    return result;
-  }
-
   protected <T> T getBody(RoutingContext routingContext, Class<T> clazz) {
     T result;
     try {
@@ -108,19 +99,6 @@ public abstract class AbstractHttpRoute implements HttpRoute {
 
   private <T> Optional<T> userIdOptional(RoutingContext routingContext) {
     return Optional.ofNullable(routingContext.get(USER_ID_CONTEXT_KEY));
-  }
-
-  private <T> void validateRequestBody(T body) {
-
-    Set<ConstraintViolation<T>> violations = validator.validate(body);
-
-    if (!violations.isEmpty()) {
-
-      ErrorResponse errorResponse = new ErrorResponse();
-      violations.forEach(constraint -> errorResponse.getBody().add(constraint.getMessage()));
-
-      throw new RequestValidationException(errorResponse);
-    }
   }
 
   protected <T> void response(

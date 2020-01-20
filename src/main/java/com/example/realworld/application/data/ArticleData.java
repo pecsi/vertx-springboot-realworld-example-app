@@ -1,9 +1,11 @@
 package com.example.realworld.application.data;
 
 import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.domain.tag.model.Tag;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ArticleData {
 
@@ -18,13 +20,24 @@ public class ArticleData {
   private LocalDateTime updatedAt;
   private ProfileData author;
 
-  public ArticleData(Article article) {
+  public ArticleData(Article article, ProfileData author) {
     this.slug = article.getSlug();
     this.title = article.getTitle();
     this.description = article.getDescription();
     this.body = article.getBody();
     this.createdAt = article.getCreatedAt();
     this.updatedAt = article.getUpdatedAt();
+    this.author = author;
+  }
+
+  public ArticleData(Article article, List<Tag> tags) {
+    this.slug = article.getSlug();
+    this.title = article.getTitle();
+    this.description = article.getDescription();
+    this.body = article.getBody();
+    this.createdAt = article.getCreatedAt();
+    this.updatedAt = article.getUpdatedAt();
+    this.tagList = tags.stream().map(Tag::getName).collect(Collectors.toList());
   }
 
   public String getSlug() {

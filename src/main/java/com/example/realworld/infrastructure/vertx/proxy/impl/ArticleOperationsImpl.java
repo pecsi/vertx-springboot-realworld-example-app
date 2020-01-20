@@ -2,6 +2,8 @@ package com.example.realworld.infrastructure.vertx.proxy.impl;
 
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
+import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
@@ -44,6 +46,18 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
         .subscribe(
             articlesData ->
                 handler.handle(Future.succeededFuture(new ArticlesResponse(articlesData))),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void create(
+      String currentUserId,
+      NewArticleRequest newArticleRequest,
+      Handler<AsyncResult<ArticleResponse>> handler) {
+    articleService
+        .create(currentUserId, newArticleRequest.toNewArticle())
+        .subscribe(
+            articleData -> handler.handle(Future.succeededFuture(new ArticleResponse(articleData))),
             throwable -> handler.handle(error(throwable)));
   }
 }

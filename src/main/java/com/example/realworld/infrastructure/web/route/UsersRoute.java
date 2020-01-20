@@ -30,13 +30,13 @@ public class UsersRoute extends AbstractHttpRoute {
   }
 
   private void login(RoutingContext routingContext) {
-    LoginRequest loginRequest = getBodyAndValid(routingContext, LoginRequest.class);
+    LoginRequest loginRequest = getBody(routingContext, LoginRequest.class);
     userOperations.login(
         loginRequest, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
   }
 
   private void create(RoutingContext routingContext) {
-    NewUserRequest newUserRequest = getBodyAndValid(routingContext, NewUserRequest.class);
+    NewUserRequest newUserRequest = getBody(routingContext, NewUserRequest.class);
     userOperations.create(
         newUserRequest, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
   }

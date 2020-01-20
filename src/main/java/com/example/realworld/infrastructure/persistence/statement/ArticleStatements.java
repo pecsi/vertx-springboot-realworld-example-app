@@ -15,4 +15,6 @@ public interface ArticleStatements {
 
   Statement<JsonArray> totalArticles(
       List<String> tags, List<String> authors, List<String> favorited);
+
+  Statement<JsonArray> findBySlug(String slug);
 }

@@ -13,6 +13,7 @@ import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -70,5 +71,13 @@ public class ArticleRepositoryJDBC extends JDBCRepository implements ArticleRepo
     return jdbcClient
         .rxQueryWithParams(totalArticlesStatement.sql(), totalArticlesStatement.params())
         .map(resultSet -> resultSet.getRows().get(0).getLong("COUNT(DISTINCT ARTICLES.ID)"));
+  }
+
+  @Override
+  public Single<Optional<Article>> findBySlug(String slug) {
+    Statement<JsonArray> findBySlugStatement = articleStatements.findBySlug(slug);
+    return jdbcClient
+        .rxQueryWithParams(findBySlugStatement.sql(), findBySlugStatement.params())
+        .map(ParserUtils::toArticleOptional);
   }
 }

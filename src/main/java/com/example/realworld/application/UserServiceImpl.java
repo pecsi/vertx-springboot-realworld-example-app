@@ -107,6 +107,7 @@ public class UserServiceImpl extends ApplicationService implements UserService {
 
   @Override
   public Single<User> update(UpdateUser updateUser, String exclusionId) {
+    modelValidator.validate(updateUser);
     return checkValidations(updateUser, exclusionId)
         .andThen(
             userRepository

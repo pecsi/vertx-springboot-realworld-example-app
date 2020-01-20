@@ -70,6 +70,11 @@ public class ProfileServiceImpl extends ApplicationService implements ProfileSer
                     .andThen(getProfile(username, loggedUserId)));
   }
 
+  @Override
+  public Single<ProfileData> getProfileById(String currentUserId) {
+    return userService.findById(currentUserId).map(ProfileData::new);
+  }
+
   private Single<Boolean> isFollowing(String currentUserId, String followedUserId) {
     return Single.just(currentUserId != null)
         .flatMap(

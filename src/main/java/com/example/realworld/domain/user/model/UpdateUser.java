@@ -1,11 +1,20 @@
 package com.example.realworld.domain.user.model;
 
+import com.example.realworld.application.constants.ValidationMessages;
+import com.example.realworld.infrastructure.web.validation.constraint.AtLeastOneFieldMustBeNotNull;
+
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Pattern;
+
+@AtLeastOneFieldMustBeNotNull
 public class UpdateUser {
 
+  @Pattern(regexp = "\\A(?!\\s*\\Z).+", message = ValidationMessages.USERNAME_MUST_BE_NOT_BLANK)
   private String username;
+
   private String bio;
   private String image;
-  private String email;
+  @Email private String email;
 
   public User toUser(String userId) {
     User user = new User();

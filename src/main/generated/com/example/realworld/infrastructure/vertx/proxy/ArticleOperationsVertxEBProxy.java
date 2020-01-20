@@ -34,6 +34,8 @@ import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
 import io.vertx.serviceproxy.ProxyUtils;
 
 import java.util.List;
+import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -104,6 +106,26 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
         handler.handle(Future.failedFuture(res.cause()));
       } else {
         handler.handle(Future.succeededFuture(res.result().body() == null ? null : new ArticlesResponse(res.result().body())));
+      }
+    });
+  }
+  @Override
+  public  void create(String currentUserId, NewArticleRequest newArticleRequest, Handler<AsyncResult<ArticleResponse>> handler){
+    if (closed) {
+      handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
+      return;
+    }
+    JsonObject _json = new JsonObject();
+    _json.put("currentUserId", currentUserId);
+    _json.put("newArticleRequest", newArticleRequest == null ? null : newArticleRequest.toJson());
+
+    DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
+    _deliveryOptions.addHeader("action", "create");
+    _vertx.eventBus().<JsonObject>send(_address, _json, _deliveryOptions, res -> {
+      if (res.failed()) {
+        handler.handle(Future.failedFuture(res.cause()));
+      } else {
+        handler.handle(Future.succeededFuture(res.result().body() == null ? null : new ArticleResponse(res.result().body())));
       }
     });
   }

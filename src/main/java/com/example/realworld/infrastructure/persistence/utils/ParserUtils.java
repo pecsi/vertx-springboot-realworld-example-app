@@ -41,7 +41,7 @@ public class ParserUtils {
   }
 
   private static Optional<Tag> getTagOptionalFromResultSet(ResultSet resultSet) {
-    return Optional.of(getTagFromResultset(resultSet));
+    return Optional.of(getTagFromResultSet(resultSet));
   }
 
   private static List<Tag> getTagsFromResultSet(ResultSet resultSet) {
@@ -49,35 +49,37 @@ public class ParserUtils {
     return rows.stream().map(ParserUtils::getTagFromRow).collect(Collectors.toList());
   }
 
+  public static Optional<Article> toArticleOptional(ResultSet resultSet) {
+    JsonObject row = resultSet.getRows().get(0);
+    return Optional.of(ParserUtils.getArticleFromRow(row));
+  }
+
   private static List<Article> getArticlesFromResultSet(ResultSet resultSet) {
     List<JsonObject> rows = resultSet.getRows();
-    return rows.stream()
-        .map(
-            row -> {
-              Article article = new Article();
-              article.setId(row.getString("ID"));
-              article.setTitle(row.getString("TITLE"));
-              article.setDescription(row.getString("DESCRIPTION"));
-              article.setBody(row.getString("BODY"));
-              article.setSlug(row.getString("SLUG"));
-              article.setCreatedAt(fromTimestamp(row.getString("CREATED_AT")));
-              article.setUpdatedAt(fromTimestamp(row.getString("UPDATED_AT")));
+    return rows.stream().map(ParserUtils::getArticleFromRow).collect(Collectors.toList());
+  }
 
-              User author = new User();
-              author.setId(row.getString("AUTHOR_ID"));
-              author.setUsername(row.getString("AUTHOR_USERNAME"));
-
-              article.setAuthor(author);
-              return article;
-            })
-        .collect(Collectors.toList());
+  private static Article getArticleFromRow(JsonObject row) {
+    Article article = new Article();
+    article.setId(row.getString("ID"));
+    article.setTitle(row.getString("TITLE"));
+    article.setDescription(row.getString("DESCRIPTION"));
+    article.setBody(row.getString("BODY"));
+    article.setSlug(row.getString("SLUG"));
+    article.setCreatedAt(fromTimestamp(row.getString("CREATED_AT")));
+    article.setUpdatedAt(fromTimestamp(row.getString("UPDATED_AT")));
+    User author = new User();
+    author.setId(row.getString("AUTHOR_ID"));
+    author.setUsername(row.getString("AUTHOR_USERNAME"));
+    article.setAuthor(author);
+    return article;
   }
 
   private static Optional<User> getUserOptionalFromResultSet(ResultSet resultSet) {
     return Optional.of(getUserFromResultSet(resultSet));
   }
 
-  private static Tag getTagFromResultset(ResultSet resultSet) {
+  private static Tag getTagFromResultSet(ResultSet resultSet) {
     JsonObject row = resultSet.getRows().get(0);
     return getTagFromRow(row);
   }

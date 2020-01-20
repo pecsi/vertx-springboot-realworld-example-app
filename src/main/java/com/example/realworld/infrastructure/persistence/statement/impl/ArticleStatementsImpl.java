@@ -127,6 +127,16 @@ public class ArticleStatementsImpl implements ArticleStatements {
     return new JsonArrayStatement(totalArticlesQueryBuilder.toQueryString(), params);
   }
 
+  @Override
+  public Statement<JsonArray> findBySlug(String slug) {
+
+    String sql = "SELECT * FROM ARTICLES WHERE SLUG = ?";
+
+    JsonArray params = new JsonArray().add(slug);
+
+    return new JsonArrayStatement(sql, params);
+  }
+
   private String listParams(List<String> listParams) {
     return listParams.stream().map(param -> "?").collect(Collectors.joining(","));
   }

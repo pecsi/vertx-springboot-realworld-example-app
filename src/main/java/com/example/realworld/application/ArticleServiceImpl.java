@@ -3,17 +3,17 @@ package com.example.realworld.application;
 import com.example.realworld.application.data.ArticleData;
 import com.example.realworld.application.data.ArticlesData;
 import com.example.realworld.application.data.ProfileData;
-import com.example.realworld.domain.article.exception.SlugAlreadyExistsException;
+import com.example.realworld.domain.article.exception.ArticleNotFoundException;
 import com.example.realworld.domain.article.model.*;
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.domain.profile.model.UsersFollowedRepository;
 import com.example.realworld.domain.profile.service.ProfileService;
 import com.example.realworld.domain.tag.exception.TagNotFoundException;
-import com.example.realworld.domain.tag.model.NewTag;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.tag.service.TagService;
 import com.example.realworld.domain.user.model.ModelValidator;
 import com.example.realworld.domain.user.model.User;
+import com.example.realworld.domain.user.service.UserService;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
@@ -21,6 +21,7 @@ import io.reactivex.Single;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ArticleServiceImpl extends ApplicationService implements ArticleService {
@@ -34,6 +35,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   private ModelValidator modelValidator;
   private ProfileService profileService;
   private TagService tagService;
+  private UserService userService;
 
   public ArticleServiceImpl(
       ArticleRepository articleRepository,
@@ -42,7 +44,8 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
       SlugProvider slugProvider,
       ModelValidator modelValidator,
       ProfileService profileService,
-      TagService tagService) {
+      TagService tagService,
+      UserService userService) {
     this.articleRepository = articleRepository;
     this.usersFollowedRepository = usersFollowedRepository;
     this.favoritesRepository = favoritesRepository;
@@ -50,6 +53,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     this.modelValidator = modelValidator;
     this.profileService = profileService;
     this.tagService = tagService;
+    this.userService = userService;
   }
 
   @Override
@@ -64,18 +68,6 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
             articles ->
                 totalUserArticlesFollowed(currentUserId)
                     .map(articlesCount -> new ArticlesData(articles, articlesCount)));
-  }
-
-  private Comparator<ArticleData> articleComparator() {
-    return (article1, article2) -> {
-      if (article1.getCreatedAt().isBefore(article2.getCreatedAt())) {
-        return 1;
-      }
-      if (article1.getCreatedAt().isAfter(article2.getCreatedAt())) {
-        return -1;
-      }
-      return 0;
-    };
   }
 
   private Single<ArticleData> toArticleData(Article article, String currentUserId) {
@@ -108,11 +100,10 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
       List<Tag> tags,
       boolean isFavorited,
       Long favoritesCount) {
-    ArticleData articleData = new ArticleData(article);
+    ArticleData articleData = new ArticleData(article, authorProfile);
     articleData.setTagList(tags.stream().map(Tag::getName).collect(Collectors.toList()));
     articleData.setFavorited(isFavorited);
     articleData.setFavoritesCount(favoritesCount);
-    articleData.setAuthor(authorProfile);
     return articleData;
   }
 
@@ -120,10 +111,21 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   public Single<ArticleData> create(String currentUserId, NewArticle newArticle) {
     modelValidator.validate(newArticle);
     Article article = createFromNewArticle(currentUserId, newArticle);
-    return validSlug(article.getSlug())
+    return validAndConfigSlug(article)
         .andThen(configTags(article, newArticle.getTags()))
         .andThen(articleRepository.store(article))
-        .map(ArticleData::new);
+        .flatMap(this::configAuthor)
+        .flatMap(persistedArticle -> toArticleData(persistedArticle, currentUserId));
+  }
+
+  private Single<Article> configAuthor(Article article) {
+    return userService
+        .findById(article.getAuthor().getId())
+        .map(
+            author -> {
+              article.setAuthor(author);
+              return article;
+            });
   }
 
   @Override
@@ -135,6 +137,19 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   public Single<Long> totalArticles(
       List<String> tags, List<String> authors, List<String> favorited) {
     return articleRepository.totalArticles(tags, authors, favorited);
+  }
+
+  @Override
+  public Single<ArticleData> findBySlug(String slug, String currentUserId) {
+    return findBySlug(slug)
+        .flatMap(this::configAuthor)
+        .flatMap(article -> toArticleData(article, currentUserId));
+  }
+
+  public Single<Article> findBySlug(String slug) {
+    return articleRepository
+        .findBySlug(slug)
+        .map(article -> article.orElseThrow(ArticleNotFoundException::new));
   }
 
   @Override
@@ -167,20 +182,20 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     return favoritesRepository.countByArticleId(articleId);
   }
 
-  private Completable validSlug(String slug) {
-    return isSlugAlreadyExists(slug)
+  private Completable validAndConfigSlug(Article article) {
+    return isSlugAlreadyExists(article.getSlug())
         .flatMapCompletable(
             isSlugAlreadyExists -> {
               if (isSlugAlreadyExists) {
-                throw new SlugAlreadyExistsException();
+                article.setSlug(article.getSlug() + "_" + UUID.randomUUID().toString());
               }
               return Completable.complete();
             });
   }
 
-  private Completable configTags(Article article, List<NewTag> newTags) {
-    return Flowable.fromIterable(newTags)
-        .flatMapSingle(newTag -> tagService.findTagByName(newTag.getName()))
+  private Completable configTags(Article article, List<String> tags) {
+    return Flowable.fromIterable(tags)
+        .flatMapSingle(tag -> tagService.findTagByName(tag))
         .flatMapCompletable(
             tag -> {
               article.getTags().add(tag.orElseThrow(TagNotFoundException::new));
@@ -190,6 +205,18 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
 
   private Single<Boolean> isSlugAlreadyExists(String slug) {
     return articleRepository.countBySlug(slug).map(this::isCountResultGreaterThanZero);
+  }
+
+  private Comparator<ArticleData> articleComparator() {
+    return (article1, article2) -> {
+      if (article1.getCreatedAt().isBefore(article2.getCreatedAt())) {
+        return 1;
+      }
+      if (article1.getCreatedAt().isAfter(article2.getCreatedAt())) {
+        return -1;
+      }
+      return 0;
+    };
   }
 
   private Article createFromNewArticle(String currentUserId, NewArticle newArticle) {

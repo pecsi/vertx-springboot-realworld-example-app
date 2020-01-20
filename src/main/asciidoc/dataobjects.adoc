@@ -44,6 +44,20 @@
 |[[password]]`@password`|`String`|-
 |===
 
+[[NewArticleRequest]]
+== NewArticleRequest
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[body]]`@body`|`String`|-
+|[[description]]`@description`|`String`|-
+|[[tags]]`@tags`|`Array of String`|-
+|[[title]]`@title`|`String`|-
+|===
+
 [[NewUserRequest]]
 == NewUserRequest
 

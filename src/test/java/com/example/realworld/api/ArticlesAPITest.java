@@ -4,7 +4,10 @@ import com.example.realworld.RealworldDataIntegrationTest;
 import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
+import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
+import com.example.realworld.infrastructure.web.model.response.ProfileResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -18,7 +21,7 @@ import java.util.List;
 
 import static com.example.realworld.constants.TestsConstants.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 @ExtendWith(VertxExtension.class)
 public class ArticlesAPITest extends RealworldDataIntegrationTest {
@@ -491,6 +494,64 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
                           assertThat(response.statusCode(), is(HttpResponseStatus.OK.code()));
                           assertThat(articlesResponse.getArticles().size(), is(10));
                           assertThat(articlesResponse.getArticlesCount(), is(30L));
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void
+      givenAValidNewArticle_whenExecuteCreateArticleEndpoint_shouldReturnACreatedArticleWithStatusCode204(
+          VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    saveUser(loggedUser);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    NewArticleRequest newArticleRequest = new NewArticleRequest();
+    newArticleRequest.setTitle("title");
+    newArticleRequest.setDescription("description");
+    newArticleRequest.setBody("body");
+    newArticleRequest.setTags(Arrays.asList(tag1.getName(), tag2.getName()));
+
+    webClient
+        .post(port, HOST, ARTICLES_PATH)
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(newArticleRequest),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ArticleResponse articleResponse =
+                              readValue(response.body(), ArticleResponse.class, true);
+
+                          assertThat(articleResponse.getSlug(), notNullValue());
+                          assertThat(articleResponse.getTitle(), is(newArticleRequest.getTitle()));
+                          assertThat(
+                              articleResponse.getDescription(),
+                              is(newArticleRequest.getDescription()));
+                          assertThat(articleResponse.getBody(), is(newArticleRequest.getBody()));
+                          assertThat(
+                              articleResponse.getTagList(),
+                              containsInAnyOrder(newArticleRequest.getTags().toArray()));
+                          assertThat(articleResponse.getCreatedAt(), notNullValue());
+                          assertThat(articleResponse.getUpdatedAt(), notNullValue());
+                          assertThat(articleResponse.isFavorited(), is(false));
+                          assertThat(articleResponse.getFavoritesCount(), is(0L));
+                          ProfileResponse author = articleResponse.getAuthor();
+                          assertThat(author.getUsername(), is(loggedUser.getUsername()));
                           vertxTestContext.completeNow();
                         })));
   }

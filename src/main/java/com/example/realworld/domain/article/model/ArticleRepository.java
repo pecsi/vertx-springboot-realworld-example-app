@@ -3,6 +3,7 @@ package com.example.realworld.domain.article.model;
 import io.reactivex.Single;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ArticleRepository {
   Single<Long> countBySlug(String slug);
@@ -13,4 +14,6 @@ public interface ArticleRepository {
       int offset, int limit, List<String> tags, List<String> authors, List<String> favorited);
 
   Single<Long> totalArticles(List<String> tags, List<String> authors, List<String> favorited);
+
+  Single<Optional<Article>> findBySlug(String slug);
 }

@@ -1,9 +1,9 @@
 package com.example.realworld.domain.article.model;
 
 import com.example.realworld.application.constants.ValidationMessages;
-import com.example.realworld.domain.tag.model.NewTag;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 public class NewArticle {
@@ -17,7 +17,7 @@ public class NewArticle {
   @NotBlank(message = ValidationMessages.BODY_MUST_BE_NOT_BLANK)
   private String body;
 
-  private List<NewTag> tags;
+  @NotEmpty private List<String> tags;
 
   public String getTitle() {
     return title;
@@ -43,11 +43,11 @@ public class NewArticle {
     this.body = body;
   }
 
-  public List<NewTag> getTags() {
+  public List<String> getTags() {
     return tags;
   }
 
-  public void setTags(List<NewTag> tags) {
+  public void setTags(List<String> tags) {
     this.tags = tags;
   }
 }

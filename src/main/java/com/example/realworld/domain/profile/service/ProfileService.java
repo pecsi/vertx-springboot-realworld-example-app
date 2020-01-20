@@ -10,4 +10,6 @@ public interface ProfileService {
   Single<ProfileData> follow(String username, String loggedUserId);
 
   Single<ProfileData> unfollow(String username, String loggedUserId);
+
+  Single<ProfileData> getProfileById(String currentUserId);
 }

@@ -36,7 +36,7 @@ public class UserRoute extends AbstractHttpRoute {
 
   private void updateUser(RoutingContext routingContext) {
     String userId = routingContext.get(USER_ID_CONTEXT_KEY);
-    UpdateUserRequest updateUserRequest = getBodyAndValid(routingContext, UpdateUserRequest.class);
+    UpdateUserRequest updateUserRequest = getBody(routingContext, UpdateUserRequest.class);
     userOperations.update(
         userId,
         updateUserRequest,
