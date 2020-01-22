@@ -44,10 +44,12 @@ import io.vertx.serviceproxy.HelperUtils;
 import java.util.List;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
+import com.example.realworld.infrastructure.web.model.request.NewCommentRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import com.example.realworld.infrastructure.web.model.response.CommentResponse;
 /*
   Generated Proxy code - DO NOT EDIT
   @author Roger the Robot
@@ -204,8 +206,31 @@ public class ArticleOperationsVertxProxyHandler extends ProxyHandler {
                      });
           break;
         }
-        case "deleteBySlug": {
-          service.deleteBySlug((java.lang.String)json.getValue("slug"),
+        case "deleteArticleBySlug": {
+          service.deleteArticleBySlug((java.lang.String)json.getValue("slug"),
+                        (java.lang.String)json.getValue("currentUserId"),
+                        HelperUtils.createHandler(msg));
+          break;
+        }
+        case "createCommentBySlug": {
+          service.createCommentBySlug((java.lang.String)json.getValue("slug"),
+                        (java.lang.String)json.getValue("currentUserId"),
+                        json.getJsonObject("newCommentRequest") == null ? null : new com.example.realworld.infrastructure.web.model.request.NewCommentRequest(json.getJsonObject("newCommentRequest")),
+                        res -> {
+                        if (res.failed()) {
+                          if (res.cause() instanceof ServiceException) {
+                            msg.reply(res.cause());
+                          } else {
+                            msg.reply(new ServiceException(-1, res.cause().getMessage()));
+                          }
+                        } else {
+                          msg.reply(res.result() == null ? null : res.result().toJson());
+                        }
+                     });
+          break;
+        }
+        case "deleteCommentByIdAndAuthorId": {
+          service.deleteCommentByIdAndAuthorId((java.lang.String)json.getValue("commentId"),
                         (java.lang.String)json.getValue("currentUserId"),
                         HelperUtils.createHandler(msg));
           break;

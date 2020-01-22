@@ -1,6 +1,7 @@
 package com.example.realworld;
 
 import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.domain.article.model.Comment;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.persistence.utils.ParserUtils;
@@ -134,6 +135,25 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
         String.format(
             "INSERT INTO ARTICLES_USERS (ARTICLE_ID, USER_ID) VALUES ('%s','%s');",
             article.getId(), user.getId());
+    executeSql(sql);
+  }
+
+  protected void saveComment(Comment comment) {
+    comment.setId(UUID.randomUUID().toString());
+    LocalDateTime now = LocalDateTime.now();
+    comment.setCreatedAt(now);
+    comment.setUpdatedAt(now);
+
+    String sql =
+        String.format(
+            "INSERT INTO COMMENTS (ID, AUTHOR_ID, ARTICLE_ID, CREATED_AT, UPDATED_AT, BODY) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')",
+            comment.getId(),
+            comment.getAuthor().getId(),
+            comment.getArticle().getId(),
+            ParserUtils.toTimestamp(comment.getCreatedAt()),
+            ParserUtils.toTimestamp(comment.getUpdatedAt()),
+            comment.getBody());
+
     executeSql(sql);
   }
 

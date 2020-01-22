@@ -3,9 +3,11 @@ package com.example.realworld.infrastructure.vertx.proxy.impl;
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.request.NewCommentRequest;
 import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
+import com.example.realworld.infrastructure.web.model.response.CommentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -86,9 +88,33 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
   }
 
   @Override
-  public void deleteBySlug(String slug, String currentUserId, Handler<AsyncResult<Void>> handler) {
+  public void deleteArticleBySlug(
+      String slug, String currentUserId, Handler<AsyncResult<Void>> handler) {
     articleService
-        .deleteBySlugAndAuthorId(slug, currentUserId)
+        .deleteArticleBySlugAndAuthorId(slug, currentUserId)
+        .subscribe(
+            () -> handler.handle(Future.succeededFuture()),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void createCommentBySlug(
+      String slug,
+      String currentUserId,
+      NewCommentRequest newCommentRequest,
+      Handler<AsyncResult<CommentResponse>> handler) {
+    articleService
+        .createCommentBySlug(slug, currentUserId, newCommentRequest.getBody())
+        .subscribe(
+            commentData -> handler.handle(Future.succeededFuture(new CommentResponse(commentData))),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void deleteCommentByIdAndAuthorId(
+      String commentId, String currentUserId, Handler<AsyncResult<Void>> handler) {
+    articleService
+        .deleteCommentByIdAndAuthorId(commentId, currentUserId)
         .subscribe(
             () -> handler.handle(Future.succeededFuture()),
             throwable -> handler.handle(error(throwable)));

@@ -2,6 +2,7 @@ package com.example.realworld.domain.article.service;
 
 import com.example.realworld.application.data.ArticleData;
 import com.example.realworld.application.data.ArticlesData;
+import com.example.realworld.application.data.CommentData;
 import com.example.realworld.domain.article.model.NewArticle;
 import com.example.realworld.domain.article.model.UpdateArticle;
 import io.reactivex.Completable;
@@ -31,7 +32,11 @@ public interface ArticleService {
 
   Single<ArticleData> updateBySlug(String slug, String currentUserId, UpdateArticle updateArticle);
 
-  Completable deleteBySlugAndAuthorId(String slug, String currentUserId);
+  Completable deleteArticleBySlugAndAuthorId(String slug, String currentUserId);
+
+  Single<CommentData> createCommentBySlug(String slug, String currentUserId, String commentBody);
+
+  Completable deleteCommentByIdAndAuthorId(String commentId, String currentUserId);
 
   //
   //  Article create(

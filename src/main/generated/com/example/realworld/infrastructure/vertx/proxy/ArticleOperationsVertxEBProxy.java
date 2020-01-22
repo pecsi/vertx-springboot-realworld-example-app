@@ -36,10 +36,12 @@ import io.vertx.serviceproxy.ProxyUtils;
 import java.util.List;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
+import com.example.realworld.infrastructure.web.model.request.NewCommentRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import com.example.realworld.infrastructure.web.model.response.CommentResponse;
 /*
   Generated Proxy code - DO NOT EDIT
   @author Roger the Robot
@@ -172,7 +174,7 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
     });
   }
   @Override
-  public  void deleteBySlug(String slug, String currentUserId, Handler<AsyncResult<Void>> handler){
+  public  void deleteArticleBySlug(String slug, String currentUserId, Handler<AsyncResult<Void>> handler){
     if (closed) {
       handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
       return;
@@ -182,7 +184,48 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
     _json.put("currentUserId", currentUserId);
 
     DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
-    _deliveryOptions.addHeader("action", "deleteBySlug");
+    _deliveryOptions.addHeader("action", "deleteArticleBySlug");
+    _vertx.eventBus().<Void>send(_address, _json, _deliveryOptions, res -> {
+      if (res.failed()) {
+        handler.handle(Future.failedFuture(res.cause()));
+      } else {
+        handler.handle(Future.succeededFuture(res.result().body()));
+      }
+    });
+  }
+  @Override
+  public  void createCommentBySlug(String slug, String currentUserId, NewCommentRequest newCommentRequest, Handler<AsyncResult<CommentResponse>> handler){
+    if (closed) {
+      handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
+      return;
+    }
+    JsonObject _json = new JsonObject();
+    _json.put("slug", slug);
+    _json.put("currentUserId", currentUserId);
+    _json.put("newCommentRequest", newCommentRequest == null ? null : newCommentRequest.toJson());
+
+    DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
+    _deliveryOptions.addHeader("action", "createCommentBySlug");
+    _vertx.eventBus().<JsonObject>send(_address, _json, _deliveryOptions, res -> {
+      if (res.failed()) {
+        handler.handle(Future.failedFuture(res.cause()));
+      } else {
+        handler.handle(Future.succeededFuture(res.result().body() == null ? null : new CommentResponse(res.result().body())));
+      }
+    });
+  }
+  @Override
+  public  void deleteCommentByIdAndAuthorId(String commentId, String currentUserId, Handler<AsyncResult<Void>> handler){
+    if (closed) {
+      handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
+      return;
+    }
+    JsonObject _json = new JsonObject();
+    _json.put("commentId", commentId);
+    _json.put("currentUserId", currentUserId);
+
+    DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
+    _deliveryOptions.addHeader("action", "deleteCommentByIdAndAuthorId");
     _vertx.eventBus().<Void>send(_address, _json, _deliveryOptions, res -> {
       if (res.failed()) {
         handler.handle(Future.failedFuture(res.cause()));

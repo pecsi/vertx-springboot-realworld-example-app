@@ -32,6 +32,21 @@
 |[[articlesCount]]`@articlesCount`|`Number (long)`|-
 |===
 
+[[CommentResponse]]
+== CommentResponse
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[author]]`@author`|`link:dataobjects.html#ProfileResponse[ProfileResponse]`|-
+|[[body]]`@body`|`String`|-
+|[[createdAt]]`@createdAt`|`String`|-
+|[[id]]`@id`|`String`|-
+|[[updatedAt]]`@updatedAt`|`String`|-
+|===
+
 [[LoginRequest]]
 == LoginRequest
 
@@ -56,6 +71,17 @@
 |[[description]]`@description`|`String`|-
 |[[tagList]]`@tagList`|`Array of String`|-
 |[[title]]`@title`|`String`|-
+|===
+
+[[NewCommentRequest]]
+== NewCommentRequest
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[body]]`@body`|`String`|-
 |===
 
 [[NewUserRequest]]

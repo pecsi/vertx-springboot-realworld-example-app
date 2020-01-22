@@ -2,6 +2,7 @@ package com.example.realworld.application;
 
 import com.example.realworld.application.data.ArticleData;
 import com.example.realworld.application.data.ArticlesData;
+import com.example.realworld.application.data.CommentData;
 import com.example.realworld.application.data.ProfileData;
 import com.example.realworld.domain.article.exception.ArticleNotFoundException;
 import com.example.realworld.domain.article.model.*;
@@ -31,6 +32,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   private ArticleRepository articleRepository;
   private UsersFollowedRepository usersFollowedRepository;
   private FavoritesRepository favoritesRepository;
+  private CommentRepository commentRepository;
   private SlugProvider slugProvider;
   private ModelValidator modelValidator;
   private ProfileService profileService;
@@ -41,6 +43,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
       ArticleRepository articleRepository,
       UsersFollowedRepository usersFollowedRepository,
       FavoritesRepository favoritesRepository,
+      CommentRepository commentRepository,
       SlugProvider slugProvider,
       ModelValidator modelValidator,
       ProfileService profileService,
@@ -49,6 +52,7 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     this.articleRepository = articleRepository;
     this.usersFollowedRepository = usersFollowedRepository;
     this.favoritesRepository = favoritesRepository;
+    this.commentRepository = commentRepository;
     this.slugProvider = slugProvider;
     this.modelValidator = modelValidator;
     this.profileService = profileService;
@@ -161,11 +165,53 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   }
 
   @Override
-  public Completable deleteBySlugAndAuthorId(String slug, String currentUserId) {
+  public Completable deleteArticleBySlugAndAuthorId(String slug, String currentUserId) {
     return findBySlugAndAuthorId(slug, currentUserId)
         .flatMapCompletable(
             article ->
                 articleRepository.deleteByArticleIdAndAuthorId(article.getId(), currentUserId));
+  }
+
+  @Override
+  public Single<CommentData> createCommentBySlug(
+      String slug, String currentUserId, String commentBody) {
+    return findBySlug(slug)
+        .flatMap(
+            article ->
+                userService
+                    .findById(currentUserId)
+                    .flatMap(
+                        commentAuthor ->
+                            createComment(article, commentAuthor, commentBody)
+                                .flatMap(
+                                    comment ->
+                                        commentRepository
+                                            .store(comment)
+                                            .flatMap(
+                                                persistedComment ->
+                                                    profileService
+                                                        .getProfileById(commentAuthor.getId())
+                                                        .map(
+                                                            authorProfile ->
+                                                                new CommentData(
+                                                                    persistedComment,
+                                                                    authorProfile))))));
+  }
+
+  @Override
+  public Completable deleteCommentByIdAndAuthorId(String commentId, String currentUserId) {
+    return commentRepository.deleteByCommentIdAndAuthorId(commentId, currentUserId);
+  }
+
+  private Single<Comment> createComment(Article article, User author, String commentBody) {
+    Comment comment = new Comment();
+    comment.setArticle(article);
+    comment.setAuthor(author);
+    comment.setBody(commentBody);
+    LocalDateTime now = LocalDateTime.now();
+    comment.setCreatedAt(now);
+    comment.setUpdatedAt(now);
+    return Single.just(comment);
   }
 
   private Single<Article> configUpdateFields(Article article, UpdateArticle updateArticle) {

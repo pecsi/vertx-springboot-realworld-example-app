@@ -1,20 +1,32 @@
 package com.example.realworld.application.data;
 
+import com.example.realworld.domain.article.model.Comment;
+
 import java.time.LocalDateTime;
 
 public class CommentData {
 
-  private Long id;
+  private String id;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private String body;
   private ProfileData author;
 
-  public Long getId() {
+  public CommentData() {}
+
+  public CommentData(Comment comment, ProfileData author) {
+    this.id = comment.getId();
+    this.createdAt = comment.getCreatedAt();
+    this.updatedAt = comment.getUpdatedAt();
+    this.body = comment.getBody();
+    this.author = author;
+  }
+
+  public String getId() {
     return id;
   }
 
-  public void setId(Long id) {
+  public void setId(String id) {
     this.id = id;
   }
 

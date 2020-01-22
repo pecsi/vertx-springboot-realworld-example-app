@@ -5,6 +5,7 @@ import com.example.realworld.application.ProfileServiceImpl;
 import com.example.realworld.application.TagServiceImpl;
 import com.example.realworld.application.UserServiceImpl;
 import com.example.realworld.domain.article.model.ArticleRepository;
+import com.example.realworld.domain.article.model.CommentRepository;
 import com.example.realworld.domain.article.model.FavoritesRepository;
 import com.example.realworld.domain.article.model.SlugProvider;
 import com.example.realworld.domain.article.service.ArticleService;
@@ -69,6 +70,7 @@ public class RealworldApplicationConfiguration {
       ArticleRepository articleRepository,
       UsersFollowedRepository usersFollowedRepository,
       FavoritesRepository favoritesRepository,
+      CommentRepository commentRepository,
       SlugProvider slugProvider,
       ModelValidator modelValidator,
       ProfileService profileService,
@@ -78,6 +80,7 @@ public class RealworldApplicationConfiguration {
         articleRepository,
         usersFollowedRepository,
         favoritesRepository,
+        commentRepository,
         slugProvider,
         modelValidator,
         profileService,

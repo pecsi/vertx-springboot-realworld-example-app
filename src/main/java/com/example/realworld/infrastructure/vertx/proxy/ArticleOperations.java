@@ -1,9 +1,11 @@
 package com.example.realworld.infrastructure.vertx.proxy;
 
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.request.NewCommentRequest;
 import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
+import com.example.realworld.infrastructure.web.model.response.CommentResponse;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
@@ -42,5 +44,14 @@ public interface ArticleOperations {
       UpdateArticleRequest updateArticleRequest,
       Handler<AsyncResult<ArticleResponse>> handler);
 
-  void deleteBySlug(String slug, String currentUserId, Handler<AsyncResult<Void>> handler);
+  void deleteArticleBySlug(String slug, String currentUserId, Handler<AsyncResult<Void>> handler);
+
+  void createCommentBySlug(
+      String slug,
+      String currentUserId,
+      NewCommentRequest newCommentRequest,
+      Handler<AsyncResult<CommentResponse>> handler);
+
+  void deleteCommentByIdAndAuthorId(
+      String commentId, String currentUserId, Handler<AsyncResult<Void>> handler);
 }

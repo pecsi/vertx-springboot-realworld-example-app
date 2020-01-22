@@ -2,12 +2,15 @@ package com.example.realworld.api;
 
 import com.example.realworld.RealworldDataIntegrationTest;
 import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.domain.article.model.Comment;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.request.NewCommentRequest;
 import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
+import com.example.realworld.infrastructure.web.model.response.CommentResponse;
 import com.example.realworld.infrastructure.web.model.response.ProfileResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.junit5.VertxExtension;
@@ -737,6 +740,129 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
 
     webClient
         .delete(port, HOST, ARTICLES_PATH + "/" + article.getSlug())
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .send(
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          assertThat(response.statusCode(), is(HttpResponseStatus.OK.code()));
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void
+      givenAnExistentArticle_whenExecuteCreateCommentEndpoint_shouldReturnACreatedCommentWithStatusCode200(
+          VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    User author = new User();
+    author.setUsername("author");
+    author.setEmail("author@mail.com");
+    author.setPassword("author_123");
+
+    saveUsers(loggedUser, author);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    Article article = new Article();
+    article.setTitle("Title");
+    article.setDescription("Description");
+    article.setBody("Body");
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
+    article.setTags(Arrays.asList(tag1, tag2));
+    article.setAuthor(author);
+
+    saveArticle(article);
+
+    NewCommentRequest newCommentRequest = new NewCommentRequest();
+    newCommentRequest.setBody("body");
+
+    webClient
+        .post(port, HOST, ARTICLES_PATH + "/" + article.getSlug() + "/comments")
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(newCommentRequest),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          CommentResponse commentResponse =
+                              readValue(response.body(), CommentResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.OK.code()));
+                          assertThat(commentResponse.getId(), notNullValue());
+                          assertThat(commentResponse.getCreatedAt(), notNullValue());
+                          assertThat(commentResponse.getUpdatedAt(), notNullValue());
+                          assertThat(commentResponse.getBody(), is(newCommentRequest.getBody()));
+                          ProfileResponse commentResponseAuthor = commentResponse.getAuthor();
+                          assertThat(
+                              commentResponseAuthor.getUsername(), is(loggedUser.getUsername()));
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void
+      givenAnExistentArticleWithOneComment_whenExecuteDeleteCommentEndpoint_shouldReturnStatusCode200(
+          VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    User author = new User();
+    author.setUsername("author");
+    author.setEmail("author@mail.com");
+    author.setPassword("author_123");
+
+    saveUsers(loggedUser, author);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    Article article = new Article();
+    article.setTitle("Title");
+    article.setDescription("Description");
+    article.setBody("Body");
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
+    article.setTags(Arrays.asList(tag1, tag2));
+    article.setAuthor(author);
+
+    saveArticle(article);
+
+    Comment comment = new Comment();
+    comment.setArticle(article);
+    comment.setAuthor(loggedUser);
+    comment.setBody("Body");
+
+    saveComment(comment);
+
+    webClient
+        .delete(
+            port, HOST, ARTICLES_PATH + "/" + article.getSlug() + "/comments/" + comment.getId())
         .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
         .as(BodyCodec.string())
         .send(

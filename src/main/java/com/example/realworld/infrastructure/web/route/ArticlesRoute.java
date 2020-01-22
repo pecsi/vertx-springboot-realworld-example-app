@@ -2,6 +2,7 @@ package com.example.realworld.infrastructure.web.route;
 
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.request.NewCommentRequest;
 import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.reactivex.core.MultiMap;
@@ -20,6 +21,9 @@ public class ArticlesRoute extends AbstractHttpRoute {
   private static final String FEED_PATH = ARTICLES_PATH + "/feed";
   private static final String SLUG_PARAM = "slug";
   private static final String SLUG_PATH = ARTICLES_PATH + "/:" + SLUG_PARAM;
+  private static final String COMMENTS_PATH = SLUG_PATH + "/comments";
+  private static final String COMMENT_ID_PARAM = "id";
+  private static final String COMMENTS_DELETE_PATH = COMMENTS_PATH + "/:" + COMMENT_ID_PARAM;
   public static final String OFFSET = "offset";
   public static final String LIMIT = "limit";
   private ArticleOperations articleOperations;
@@ -43,26 +47,56 @@ public class ArticlesRoute extends AbstractHttpRoute {
 
     articlesRouter.get(FEED_PATH).handler(this::feed);
     articlesRouter.get(ARTICLES_PATH).handler(this::getArticles);
-    articlesRouter.post(ARTICLES_PATH).handler(this::create);
-    articlesRouter.get(SLUG_PATH).handler(this::findBySlug);
-    articlesRouter.put(SLUG_PATH).handler(this::updateBySlug);
-    articlesRouter.delete(SLUG_PATH).handler(this::deleteBySlug);
+    articlesRouter.post(ARTICLES_PATH).handler(this::createArticle);
+    articlesRouter.get(SLUG_PATH).handler(this::findArticleBySlug);
+    articlesRouter.put(SLUG_PATH).handler(this::updateArticleBySlug);
+    articlesRouter.delete(SLUG_PATH).handler(this::deleteArticleBySlug);
+    articlesRouter.post(COMMENTS_PATH).handler(this::createComment);
+    articlesRouter.delete(COMMENTS_DELETE_PATH).handler(this::deleteComment);
 
     return articlesRouter;
   }
 
-  private void deleteBySlug(RoutingContext routingContext) {
+  private void deleteComment(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (String userId) -> {
+          String commentId = routingContext.pathParam(COMMENT_ID_PARAM);
+          articleOperations.deleteCommentByIdAndAuthorId(
+              commentId,
+              userId,
+              responseOrFail(routingContext, HttpResponseStatus.OK.code(), false));
+        });
+  }
+
+  private void createComment(RoutingContext routingContext) {
     userId(
         routingContext,
         false,
         (String userId) -> {
           String slug = routingContext.pathParam(SLUG_PARAM);
-          articleOperations.deleteBySlug(
+          NewCommentRequest newCommentRequest = getBody(routingContext, NewCommentRequest.class);
+          articleOperations.createCommentBySlug(
+              slug,
+              userId,
+              newCommentRequest,
+              responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
+        });
+  }
+
+  private void deleteArticleBySlug(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (String userId) -> {
+          String slug = routingContext.pathParam(SLUG_PARAM);
+          articleOperations.deleteArticleBySlug(
               slug, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), false));
         });
   }
 
-  private void updateBySlug(RoutingContext routingContext) {
+  private void updateArticleBySlug(RoutingContext routingContext) {
     userId(
         routingContext,
         false,
@@ -78,7 +112,7 @@ public class ArticlesRoute extends AbstractHttpRoute {
         });
   }
 
-  private void findBySlug(RoutingContext routingContext) {
+  private void findArticleBySlug(RoutingContext routingContext) {
     userId(
         routingContext,
         true,
@@ -89,7 +123,7 @@ public class ArticlesRoute extends AbstractHttpRoute {
         });
   }
 
-  private void create(RoutingContext routingContext) {
+  private void createArticle(RoutingContext routingContext) {
     userId(
         routingContext,
         false,
