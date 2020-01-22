@@ -3,7 +3,6 @@ package com.example.realworld.application;
 import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.tag.exception.TagAlreadyExistsException;
 import com.example.realworld.domain.tag.model.ArticlesTagsRepository;
-import com.example.realworld.domain.tag.model.NewTag;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.tag.model.TagRepository;
 import com.example.realworld.domain.tag.service.TagService;
@@ -30,10 +29,9 @@ public class TagServiceImpl extends ApplicationService implements TagService {
   }
 
   @Override
-  public Single<Tag> create(NewTag newTag) {
-    modelValidator.validate(newTag);
+  public Single<Tag> create(String tagName) {
     Tag tag = new Tag();
-    tag.setName(newTag.getName());
+    tag.setName(tagName);
     return validTagName(tag.getName()).andThen(tagRepository.store(tag));
   }
 

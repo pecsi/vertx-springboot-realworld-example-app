@@ -8,7 +8,6 @@ import com.example.realworld.domain.article.model.*;
 import com.example.realworld.domain.article.service.ArticleService;
 import com.example.realworld.domain.profile.model.UsersFollowedRepository;
 import com.example.realworld.domain.profile.service.ProfileService;
-import com.example.realworld.domain.tag.exception.TagNotFoundException;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.tag.service.TagService;
 import com.example.realworld.domain.user.model.ModelValidator;
@@ -21,6 +20,7 @@ import io.reactivex.Single;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -240,12 +240,24 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
 
   private Completable configTags(Article article, List<String> tags) {
     return Flowable.fromIterable(tags)
-        .flatMapSingle(tag -> tagService.findTagByName(tag))
         .flatMapCompletable(
-            tag -> {
-              article.getTags().add(tag.orElseThrow(TagNotFoundException::new));
-              return Completable.complete();
-            });
+            tagName ->
+                tagService
+                    .findTagByName(tagName)
+                    .flatMap(persistedTag -> createTagIfNotExists(persistedTag, tagName))
+                    .flatMapCompletable(
+                        tag -> {
+                          article.getTags().add(tag);
+                          return Completable.complete();
+                        }));
+  }
+
+  private Single<Tag> createTagIfNotExists(Optional<Tag> tagOptional, String tagName) {
+    if (tagOptional.isPresent()) {
+      return Single.just(tagOptional.get());
+    } else {
+      return tagService.create(tagName);
+    }
   }
 
   private Single<Boolean> isSlugAlreadyExists(String slug) {

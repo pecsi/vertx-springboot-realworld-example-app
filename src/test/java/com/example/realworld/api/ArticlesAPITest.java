@@ -518,8 +518,6 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
     Tag tag2 = new Tag();
     tag2.setName("tag2");
 
-    saveTags(tag1, tag2);
-
     NewArticleRequest newArticleRequest = new NewArticleRequest();
     newArticleRequest.setTitle("title");
     newArticleRequest.setDescription("description");
