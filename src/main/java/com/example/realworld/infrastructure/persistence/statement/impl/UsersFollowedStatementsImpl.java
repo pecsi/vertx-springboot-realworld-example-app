@@ -6,7 +6,8 @@ import io.vertx.core.json.JsonArray;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UsersFollowedStatementsImpl implements UsersFollowedStatements {
+public class UsersFollowedStatementsImpl extends AbstractStatements
+    implements UsersFollowedStatements {
 
   @Override
   public Statement<JsonArray> countByCurrentUserIdAndUserFollowedId(

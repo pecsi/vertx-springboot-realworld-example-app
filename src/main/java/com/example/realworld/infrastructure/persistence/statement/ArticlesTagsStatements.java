@@ -6,4 +6,6 @@ public interface ArticlesTagsStatements {
   Statement<JsonArray> findTagsByArticle(String articleId);
 
   Statement<JsonArray> store(String tagId, String articleId);
+
+  Statement<JsonArray> deleteByArticle(String articleId);
 }

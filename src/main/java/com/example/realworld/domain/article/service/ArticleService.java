@@ -3,6 +3,8 @@ package com.example.realworld.domain.article.service;
 import com.example.realworld.application.data.ArticleData;
 import com.example.realworld.application.data.ArticlesData;
 import com.example.realworld.domain.article.model.NewArticle;
+import com.example.realworld.domain.article.model.UpdateArticle;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 
 import java.util.List;
@@ -26,6 +28,10 @@ public interface ArticleService {
   Single<Long> totalArticles(List<String> tags, List<String> authors, List<String> favorited);
 
   Single<ArticleData> findBySlug(String slug, String currentUserId);
+
+  Single<ArticleData> updateBySlug(String slug, String currentUserId, UpdateArticle updateArticle);
+
+  Completable deleteBySlugAndAuthorId(String slug, String currentUserId);
 
   //
   //  Article create(

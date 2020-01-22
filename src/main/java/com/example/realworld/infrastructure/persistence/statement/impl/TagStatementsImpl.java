@@ -7,7 +7,7 @@ import io.vertx.core.json.JsonArray;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TagStatementsImpl implements TagStatements {
+public class TagStatementsImpl extends AbstractStatements implements TagStatements {
   @Override
   public Statement<JsonArray> store(Tag tag) {
 

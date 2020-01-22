@@ -6,7 +6,8 @@ import io.vertx.core.json.JsonArray;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ArticlesTagsStatementsImpl implements ArticlesTagsStatements {
+public class ArticlesTagsStatementsImpl extends AbstractStatements
+    implements ArticlesTagsStatements {
   @Override
   public Statement<JsonArray> findTagsByArticle(String articleId) {
 
@@ -26,6 +27,16 @@ public class ArticlesTagsStatementsImpl implements ArticlesTagsStatements {
     String sql = "INSERT INTO ARTICLES_TAGS (TAG_ID, ARTICLE_ID) VALUES (?, ?)";
 
     JsonArray params = new JsonArray().add(tagId).add(articleId);
+
+    return new JsonArrayStatement(sql, params);
+  }
+
+  @Override
+  public Statement<JsonArray> deleteByArticle(String articleId) {
+
+    String sql = "DELETE FROM ARTICLES_TAGS WHERE ARTICLE_ID = ?";
+
+    JsonArray params = new JsonArray().add(articleId);
 
     return new JsonArrayStatement(sql, params);
   }

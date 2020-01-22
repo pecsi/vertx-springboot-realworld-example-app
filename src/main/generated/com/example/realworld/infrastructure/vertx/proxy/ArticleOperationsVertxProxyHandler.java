@@ -45,6 +45,7 @@ import java.util.List;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
+import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 /*
@@ -168,6 +169,45 @@ public class ArticleOperationsVertxProxyHandler extends ProxyHandler {
                           msg.reply(res.result() == null ? null : res.result().toJson());
                         }
                      });
+          break;
+        }
+        case "findBySlug": {
+          service.findBySlug((java.lang.String)json.getValue("slug"),
+                        (java.lang.String)json.getValue("currentUserId"),
+                        res -> {
+                        if (res.failed()) {
+                          if (res.cause() instanceof ServiceException) {
+                            msg.reply(res.cause());
+                          } else {
+                            msg.reply(new ServiceException(-1, res.cause().getMessage()));
+                          }
+                        } else {
+                          msg.reply(res.result() == null ? null : res.result().toJson());
+                        }
+                     });
+          break;
+        }
+        case "updateBySlug": {
+          service.updateBySlug((java.lang.String)json.getValue("slug"),
+                        (java.lang.String)json.getValue("currentUserId"),
+                        json.getJsonObject("updateArticleRequest") == null ? null : new com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest(json.getJsonObject("updateArticleRequest")),
+                        res -> {
+                        if (res.failed()) {
+                          if (res.cause() instanceof ServiceException) {
+                            msg.reply(res.cause());
+                          } else {
+                            msg.reply(new ServiceException(-1, res.cause().getMessage()));
+                          }
+                        } else {
+                          msg.reply(res.result() == null ? null : res.result().toJson());
+                        }
+                     });
+          break;
+        }
+        case "deleteBySlug": {
+          service.deleteBySlug((java.lang.String)json.getValue("slug"),
+                        (java.lang.String)json.getValue("currentUserId"),
+                        HelperUtils.createHandler(msg));
           break;
         }
         default: throw new IllegalStateException("Invalid action: " + action);

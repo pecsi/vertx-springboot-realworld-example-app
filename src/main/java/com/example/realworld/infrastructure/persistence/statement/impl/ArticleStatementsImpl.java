@@ -8,16 +8,26 @@ import com.example.realworld.infrastructure.utils.SimpleQueryBuilder;
 import io.vertx.core.json.JsonArray;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class ArticleStatementsImpl implements ArticleStatements {
+public class ArticleStatementsImpl extends AbstractStatements implements ArticleStatements {
   @Override
   public Statement<JsonArray> countBy(String field, String value) {
     String sql =
         String.format("SELECT COUNT(*) FROM ARTICLES WHERE UPPER(%s) = ?", field.toUpperCase());
     JsonArray params = new JsonArray().add(value.toUpperCase().trim());
+    return new JsonArrayStatement(sql, params);
+  }
+
+  @Override
+  public Statement<JsonArray> countBy(String field, String value, String excludeArticleId) {
+    String sql =
+        String.format(
+            "SELECT COUNT(*) FROM ARTICLES WHERE UPPER(%s) = ? AND ID <> ?", field.toUpperCase());
+    JsonArray params = new JsonArray().add(value.toUpperCase().trim()).add(excludeArticleId);
     return new JsonArrayStatement(sql, params);
   }
 
@@ -130,9 +140,43 @@ public class ArticleStatementsImpl implements ArticleStatements {
   @Override
   public Statement<JsonArray> findBySlug(String slug) {
 
-    String sql = "SELECT * FROM ARTICLES WHERE SLUG = ?";
+    String sql = "SELECT * FROM ARTICLES WHERE UPPER(SLUG) = ?";
 
-    JsonArray params = new JsonArray().add(slug);
+    JsonArray params = new JsonArray().add(slug.toUpperCase().trim());
+
+    return new JsonArrayStatement(sql, params);
+  }
+
+  @Override
+  public Statement<JsonArray> update(Article article) {
+
+    List<String> fields = new LinkedList<>();
+    JsonArray params = new JsonArray();
+
+    addFieldIfPresent(fields, params, article.getTitle(), "TITLE = ?");
+    addFieldIfPresent(fields, params, article.getDescription(), "DESCRIPTION = ?");
+    addFieldIfPresent(fields, params, article.getBody(), "BODY = ?");
+    addFieldIfPresent(fields, params, article.getSlug(), "SLUG = ?");
+
+    params.add(article.getId());
+
+    String sql = "UPDATE ARTICLES SET " + String.join(", ", fields) + "WHERE ID = ?";
+
+    return new JsonArrayStatement(sql, params);
+  }
+
+  @Override
+  public Statement<JsonArray> deleteByArticleIdAndAuthorId(String articleId, String authorId) {
+    String sql = "DELETE FROM ARTICLES WHERE ID = ? AND AUTHOR_ID = ?";
+    JsonArray params = new JsonArray().add(articleId).add(authorId);
+    return new JsonArrayStatement(sql, params);
+  }
+
+  @Override
+  public Statement<JsonArray> findBySlugAndAuthorId(String slug, String authorId) {
+    String sql = "SELECT * FROM ARTICLES WHERE UPPER(SLUG) = ? AND AUTHOR_ID = ?";
+
+    JsonArray params = new JsonArray().add(slug.toUpperCase().trim()).add(authorId);
 
     return new JsonArrayStatement(sql, params);
   }

@@ -72,59 +72,73 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
       User author, String title, String description, String body, int quantity, List<Tag> tags) {
     List<Article> articles = new LinkedList<>();
 
-    StringBuilder builder = new StringBuilder();
-
     LocalDateTime now = LocalDateTime.now();
 
     for (int articleIndex = 0; articleIndex < quantity; articleIndex++) {
       String articleIndexIdentifier = "_" + articleIndex;
       Article article = new Article();
-      article.setId(UUID.randomUUID().toString());
+
       article.setTitle(title + articleIndexIdentifier);
       article.setDescription(description + articleIndexIdentifier);
       article.setBody(body + articleIndexIdentifier);
-      article.setSlug(slugProvider.slugify(article.getTitle()));
       article.setAuthor(author);
       article.setTags(tags);
-      article.setCreatedAt(now.plusDays(articleIndex));
+      LocalDateTime articleDate = now.plusDays(articleIndex);
+      article.setCreatedAt(articleDate);
+      article.setUpdatedAt(articleDate);
       articles.add(article);
-      builder.append(
-          String.format(
-              "INSERT INTO ARTICLES (ID, TITLE, DESCRIPTION, BODY, SLUG, AUTHOR_ID, CREATED_AT) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');",
-              article.getId(),
-              article.getTitle(),
-              article.getDescription(),
-              article.getBody(),
-              article.getSlug(),
-              article.getAuthor().getId(),
-              ParserUtils.toTimestamp(article.getCreatedAt())));
-
-      article
-          .getTags()
-          .forEach(
-              tag ->
-                  builder.append(
-                      String.format(
-                          "INSERT INTO ARTICLES_TAGS (ARTICLE_ID, TAG_ID) VALUES ('%s', '%s');",
-                          article.getId(), tag.getId())));
+      saveArticle(article);
     }
-
-    executeSql(builder.toString());
 
     return articles;
   }
 
-  protected void favorite(User user, List<Article> articles) {
+  protected void saveArticles(Article... articles) {
+    for (Article article : articles) {
+      saveArticle(article);
+    }
+  }
 
+  protected void saveArticle(Article article) {
     StringBuilder builder = new StringBuilder();
-    articles.forEach(
-        article ->
-            builder.append(
-                String.format(
-                    "INSERT INTO ARTICLES_USERS (ARTICLE_ID, USER_ID) VALUES ('%s','%s');",
-                    article.getId(), user.getId())));
+
+    article.setId(UUID.randomUUID().toString());
+    article.setSlug(slugProvider.slugify(article.getTitle()));
+
+    builder.append(
+        String.format(
+            "INSERT INTO ARTICLES (ID, TITLE, DESCRIPTION, BODY, SLUG, AUTHOR_ID, CREATED_AT, UPDATED_AT) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');",
+            article.getId(),
+            article.getTitle(),
+            article.getDescription(),
+            article.getBody(),
+            article.getSlug(),
+            article.getAuthor().getId(),
+            ParserUtils.toTimestamp(article.getCreatedAt()),
+            ParserUtils.toTimestamp(article.getUpdatedAt())));
+
+    article
+        .getTags()
+        .forEach(
+            tag ->
+                builder.append(
+                    String.format(
+                        "INSERT INTO ARTICLES_TAGS (ARTICLE_ID, TAG_ID) VALUES ('%s', '%s');",
+                        article.getId(), tag.getId())));
 
     executeSql(builder.toString());
+  }
+
+  protected void favorite(User user, Article article) {
+    String sql =
+        String.format(
+            "INSERT INTO ARTICLES_USERS (ARTICLE_ID, USER_ID) VALUES ('%s','%s');",
+            article.getId(), user.getId());
+    executeSql(sql);
+  }
+
+  protected void favorite(User user, List<Article> articles) {
+    articles.forEach(article -> favorite(user, article));
   }
 
   protected Buffer toBuffer(Object value) {

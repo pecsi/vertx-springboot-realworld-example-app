@@ -6,4 +6,6 @@ public interface ArticlesUsersStatements {
   Statement<JsonArray> countByArticleIdAndUserId(String articleId, String userId);
 
   Statement<JsonArray> countByArticleId(String articleId);
+
+  Statement<JsonArray> deleteByArticle(String articleId);
 }

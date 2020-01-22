@@ -2,6 +2,7 @@ package com.example.realworld.infrastructure.web.route;
 
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.reactivex.core.MultiMap;
 import io.vertx.reactivex.core.Vertx;
@@ -15,7 +16,10 @@ import java.util.List;
 @Component
 public class ArticlesRoute extends AbstractHttpRoute {
 
-  private static final String FEED = "/feed";
+  private static final String ARTICLES_PATH = "/articles";
+  private static final String FEED_PATH = ARTICLES_PATH + "/feed";
+  private static final String SLUG_PARAM = "slug";
+  private static final String SLUG_PATH = ARTICLES_PATH + "/:" + SLUG_PARAM;
   public static final String OFFSET = "offset";
   public static final String LIMIT = "limit";
   private ArticleOperations articleOperations;
@@ -37,11 +41,52 @@ public class ArticlesRoute extends AbstractHttpRoute {
         .route(articlesPath + "/*")
         .handler(routingContext -> jwtHandler(routingContext, true));
 
-    articlesRouter.get(articlesPath + FEED).handler(this::feed);
-    articlesRouter.get(articlesPath).handler(this::getArticles);
-    articlesRouter.post(articlesPath).handler(this::create);
+    articlesRouter.get(FEED_PATH).handler(this::feed);
+    articlesRouter.get(ARTICLES_PATH).handler(this::getArticles);
+    articlesRouter.post(ARTICLES_PATH).handler(this::create);
+    articlesRouter.get(SLUG_PATH).handler(this::findBySlug);
+    articlesRouter.put(SLUG_PATH).handler(this::updateBySlug);
+    articlesRouter.delete(SLUG_PATH).handler(this::deleteBySlug);
 
     return articlesRouter;
+  }
+
+  private void deleteBySlug(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (String userId) -> {
+          String slug = routingContext.pathParam(SLUG_PARAM);
+          articleOperations.deleteBySlug(
+              slug, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), false));
+        });
+  }
+
+  private void updateBySlug(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (String userId) -> {
+          String slug = routingContext.pathParam(SLUG_PARAM);
+          UpdateArticleRequest updateArticleRequest =
+              getBody(routingContext, UpdateArticleRequest.class);
+          articleOperations.updateBySlug(
+              slug,
+              userId,
+              updateArticleRequest,
+              responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
+        });
+  }
+
+  private void findBySlug(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        true,
+        (String userId) -> {
+          String slug = routingContext.pathParam(SLUG_PARAM);
+          articleOperations.findBySlug(
+              slug, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
+        });
   }
 
   private void create(RoutingContext routingContext) {

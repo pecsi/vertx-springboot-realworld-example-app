@@ -146,9 +146,44 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
         .flatMap(article -> toArticleData(article, currentUserId));
   }
 
+  @Override
+  public Single<ArticleData> updateBySlug(
+      String slug, String currentUserId, UpdateArticle updateArticle) {
+    modelValidator.validate(updateArticle);
+    return findBySlugAndAuthorId(slug, currentUserId)
+        .flatMap(
+            article ->
+                configUpdateFields(article, updateArticle)
+                    .flatMapCompletable(this::validAndConfigSlug)
+                    .andThen(articleRepository.update(article))
+                    .flatMap(this::configAuthor)
+                    .flatMap(updatedArticle -> toArticleData(updatedArticle, currentUserId)));
+  }
+
+  @Override
+  public Completable deleteBySlugAndAuthorId(String slug, String currentUserId) {
+    return findBySlugAndAuthorId(slug, currentUserId)
+        .flatMapCompletable(
+            article ->
+                articleRepository.deleteByArticleIdAndAuthorId(article.getId(), currentUserId));
+  }
+
+  private Single<Article> configUpdateFields(Article article, UpdateArticle updateArticle) {
+    article.setTitle(updateArticle.getTitle());
+    article.setDescription(updateArticle.getDescription());
+    article.setBody(updateArticle.getBody());
+    return Single.just(article);
+  }
+
   public Single<Article> findBySlug(String slug) {
     return articleRepository
         .findBySlug(slug)
+        .map(article -> article.orElseThrow(ArticleNotFoundException::new));
+  }
+
+  public Single<Article> findBySlugAndAuthorId(String slug, String authorId) {
+    return articleRepository
+        .findBySlugAndAuthorId(slug, authorId)
         .map(article -> article.orElseThrow(ArticleNotFoundException::new));
   }
 
@@ -183,14 +218,24 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
   }
 
   private Completable validAndConfigSlug(Article article) {
-    return isSlugAlreadyExists(article.getSlug())
-        .flatMapCompletable(
-            isSlugAlreadyExists -> {
-              if (isSlugAlreadyExists) {
-                article.setSlug(article.getSlug() + "_" + UUID.randomUUID().toString());
+    return Single.just(article.getId() != null)
+        .flatMap(
+            isArticleIdPresent -> {
+              if (isArticleIdPresent) {
+                return isSlugAlreadyExists(article.getSlug(), article.getId());
+              } else {
+                return isSlugAlreadyExists(article.getSlug());
               }
-              return Completable.complete();
-            });
+            })
+        .flatMapCompletable(
+            isSlugAlreadyExists -> configNewSlugIfExists(article, isSlugAlreadyExists));
+  }
+
+  private Completable configNewSlugIfExists(Article article, boolean isSlugAlreadyExists) {
+    if (isSlugAlreadyExists) {
+      article.setSlug(article.getSlug() + "_" + UUID.randomUUID().toString());
+    }
+    return Completable.complete();
   }
 
   private Completable configTags(Article article, List<String> tags) {
@@ -205,6 +250,12 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
 
   private Single<Boolean> isSlugAlreadyExists(String slug) {
     return articleRepository.countBySlug(slug).map(this::isCountResultGreaterThanZero);
+  }
+
+  private Single<Boolean> isSlugAlreadyExists(String slug, String excludeArticleId) {
+    return articleRepository
+        .countBySlug(slug, excludeArticleId)
+        .map(this::isCountResultGreaterThanZero);
   }
 
   private Comparator<ArticleData> articleComparator() {
@@ -229,6 +280,16 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     LocalDateTime now = LocalDateTime.now();
     article.setCreatedAt(now);
     article.setUpdatedAt(now);
+    return article;
+  }
+
+  private Article createFromUpdateArticle(String currentUserId, UpdateArticle updateArticle) {
+    Article article = new Article();
+    article.setTitle(updateArticle.getTitle());
+    article.setDescription(updateArticle.getDescription());
+    article.setBody(updateArticle.getBody());
+    article.setSlug(slugProvider.slugify(article.getTitle()));
+    article.setAuthor(new User(currentUserId));
     return article;
   }
 

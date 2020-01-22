@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.vertx.proxy;
 
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -32,4 +33,14 @@ public interface ArticleOperations {
       String currentUserId,
       NewArticleRequest newArticleRequest,
       Handler<AsyncResult<ArticleResponse>> handler);
+
+  void findBySlug(String slug, String currentUserId, Handler<AsyncResult<ArticleResponse>> handler);
+
+  void updateBySlug(
+      String slug,
+      String currentUserId,
+      UpdateArticleRequest updateArticleRequest,
+      Handler<AsyncResult<ArticleResponse>> handler);
+
+  void deleteBySlug(String slug, String currentUserId, Handler<AsyncResult<Void>> handler);
 }

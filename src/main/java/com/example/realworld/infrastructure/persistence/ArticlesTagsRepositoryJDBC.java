@@ -43,4 +43,13 @@ public class ArticlesTagsRepositoryJDBC extends JDBCRepository implements Articl
         .rxUpdateWithParams(tagArticleStatement.sql(), tagArticleStatement.params())
         .flatMapCompletable(updateResult -> Completable.complete());
   }
+
+  @Override
+  public Completable deleteByArticle(String articleId) {
+    Statement<JsonArray> deleteByArticleStatement =
+        articlesTagsStatements.deleteByArticle(articleId);
+    return jdbcClient
+        .rxUpdateWithParams(deleteByArticleStatement.sql(), deleteByArticleStatement.params())
+        .flatMapCompletable(updateResult -> Completable.complete());
+  }
 }

@@ -50,8 +50,10 @@ public class ParserUtils {
   }
 
   public static Optional<Article> toArticleOptional(ResultSet resultSet) {
-    JsonObject row = resultSet.getRows().get(0);
-    return Optional.of(ParserUtils.getArticleFromRow(row));
+    return emptyIfNoResult(
+        resultSet,
+        Optional::empty,
+        () -> Optional.of(ParserUtils.getArticleFromRow(resultSet.getRows().get(0))));
   }
 
   private static List<Article> getArticlesFromResultSet(ResultSet resultSet) {
@@ -80,8 +82,7 @@ public class ParserUtils {
   }
 
   private static Tag getTagFromResultSet(ResultSet resultSet) {
-    JsonObject row = resultSet.getRows().get(0);
-    return getTagFromRow(row);
+    return emptyIfNoResult(resultSet, () -> null, () -> getTagFromRow(resultSet.getRows().get(0)));
   }
 
   private static Tag getTagFromRow(JsonObject row) {
@@ -102,6 +103,15 @@ public class ParserUtils {
     user.setEmail(row.getString("EMAIL"));
     user.setToken(row.getString("TOKEN"));
     return user;
+  }
+
+  private static <T> T emptyIfNoResult(
+      ResultSet resultSet, Supplier<T> emptySupplier, Supplier<T> supplier) {
+    if (resultSet.getRows().isEmpty()) {
+      return emptySupplier.get();
+    } else {
+      return supplier.get();
+    }
   }
 
   private static <T> T parseResultSet(

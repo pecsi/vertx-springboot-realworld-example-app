@@ -8,6 +8,8 @@ import java.util.List;
 public interface ArticleStatements {
   Statement<JsonArray> countBy(String field, String value);
 
+  Statement<JsonArray> countBy(String field, String value, String excludeArticleId);
+
   Statement<JsonArray> store(Article article);
 
   Statement<JsonArray> findArticles(
@@ -17,4 +19,10 @@ public interface ArticleStatements {
       List<String> tags, List<String> authors, List<String> favorited);
 
   Statement<JsonArray> findBySlug(String slug);
+
+  Statement<JsonArray> update(Article article);
+
+  Statement<JsonArray> deleteByArticleIdAndAuthorId(String articleId, String authorId);
+
+  Statement<JsonArray> findBySlugAndAuthorId(String slug, String authorId);
 }

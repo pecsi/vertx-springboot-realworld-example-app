@@ -10,4 +10,6 @@ public interface ArticlesTagsRepository {
   Single<List<Tag>> findTagsByArticle(String articleId);
 
   Completable tagArticle(Tag tag, Article article);
+
+  Completable deleteByArticle(String articleId);
 }

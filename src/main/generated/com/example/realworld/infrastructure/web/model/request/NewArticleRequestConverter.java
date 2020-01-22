@@ -24,14 +24,14 @@ public class NewArticleRequestConverter {
             obj.setDescription((String)member.getValue());
           }
           break;
-        case "tags":
+        case "tagList":
           if (member.getValue() instanceof JsonArray) {
             java.util.ArrayList<java.lang.String> list =  new java.util.ArrayList<>();
             ((Iterable<Object>)member.getValue()).forEach( item -> {
               if (item instanceof String)
                 list.add((String)item);
             });
-            obj.setTags(list);
+            obj.setTagList(list);
           }
           break;
         case "title":
@@ -54,10 +54,10 @@ public class NewArticleRequestConverter {
     if (obj.getDescription() != null) {
       json.put("description", obj.getDescription());
     }
-    if (obj.getTags() != null) {
+    if (obj.getTagList() != null) {
       JsonArray array = new JsonArray();
-      obj.getTags().forEach(item -> array.add(item));
-      json.put("tags", array);
+      obj.getTagList().forEach(item -> array.add(item));
+      json.put("tagList", array);
     }
     if (obj.getTitle() != null) {
       json.put("title", obj.getTitle());

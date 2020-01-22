@@ -1,15 +1,13 @@
 package com.example.realworld.infrastructure.web.model.request;
 
-import com.example.realworld.domain.article.model.NewArticle;
+import com.example.realworld.domain.article.model.UpdateArticle;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
-import java.util.List;
-
 @JsonRootName("article")
 @DataObject(generateConverter = true)
-public class NewArticleRequest {
+public class UpdateArticleRequest {
 
   private String title;
 
@@ -17,17 +15,15 @@ public class NewArticleRequest {
 
   private String body;
 
-  private List<String> tagList;
+  public UpdateArticleRequest() {}
 
-  public NewArticleRequest() {}
-
-  public NewArticleRequest(JsonObject jsonObject) {
-    NewArticleRequestConverter.fromJson(jsonObject, this);
+  public UpdateArticleRequest(JsonObject jsonObject) {
+    UpdateArticleRequestConverter.fromJson(jsonObject, this);
   }
 
   public JsonObject toJson() {
     JsonObject jsonObject = new JsonObject();
-    NewArticleRequestConverter.toJson(this, jsonObject);
+    UpdateArticleRequestConverter.toJson(this, jsonObject);
     return jsonObject;
   }
 
@@ -55,20 +51,11 @@ public class NewArticleRequest {
     this.body = body;
   }
 
-  public List<String> getTagList() {
-    return tagList;
-  }
-
-  public void setTagList(List<String> tagList) {
-    this.tagList = tagList;
-  }
-
-  public NewArticle toNewArticle() {
-    NewArticle newArticle = new NewArticle();
-    newArticle.setTitle(this.title);
-    newArticle.setDescription(this.description);
-    newArticle.setBody(this.body);
-    newArticle.setTags(this.tagList);
-    return newArticle;
+  public UpdateArticle toUpdateArticle() {
+    UpdateArticle updateArticle = new UpdateArticle();
+    updateArticle.setTitle(this.title);
+    updateArticle.setDescription(this.description);
+    updateArticle.setBody(this.body);
+    return updateArticle;
   }
 }

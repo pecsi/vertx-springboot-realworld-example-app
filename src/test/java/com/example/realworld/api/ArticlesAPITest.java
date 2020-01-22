@@ -5,6 +5,7 @@ import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
+import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.example.realworld.infrastructure.web.model.response.ProfileResponse;
@@ -15,6 +16,7 @@ import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -522,7 +524,7 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
     newArticleRequest.setTitle("title");
     newArticleRequest.setDescription("description");
     newArticleRequest.setBody("body");
-    newArticleRequest.setTags(Arrays.asList(tag1.getName(), tag2.getName()));
+    newArticleRequest.setTagList(Arrays.asList(tag1.getName(), tag2.getName()));
 
     webClient
         .post(port, HOST, ARTICLES_PATH)
@@ -545,13 +547,206 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
                           assertThat(articleResponse.getBody(), is(newArticleRequest.getBody()));
                           assertThat(
                               articleResponse.getTagList(),
-                              containsInAnyOrder(newArticleRequest.getTags().toArray()));
+                              containsInAnyOrder(newArticleRequest.getTagList().toArray()));
                           assertThat(articleResponse.getCreatedAt(), notNullValue());
                           assertThat(articleResponse.getUpdatedAt(), notNullValue());
                           assertThat(articleResponse.isFavorited(), is(false));
                           assertThat(articleResponse.getFavoritesCount(), is(0L));
                           ProfileResponse author = articleResponse.getAuthor();
                           assertThat(author.getUsername(), is(loggedUser.getUsername()));
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void
+      givenAnExistentArticle_whenExecuteFindBySlugEndpoint_thenReturnAnArticleWithStatusCode200(
+          VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    User author = new User();
+    author.setUsername("author");
+    author.setEmail("author@mail.com");
+    author.setPassword("author_123");
+
+    saveUsers(loggedUser, author);
+
+    follow(loggedUser, author);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    Article article = new Article();
+    article.setTitle("Title");
+    article.setDescription("Description");
+    article.setBody("Body");
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
+    article.setTags(Arrays.asList(tag1, tag2));
+    article.setAuthor(author);
+
+    saveArticle(article);
+
+    webClient
+        .get(port, HOST, ARTICLES_PATH + "/" + article.getSlug())
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .send(
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ArticleResponse articleResponse =
+                              readValue(response.body(), ArticleResponse.class, true);
+
+                          assertThat(articleResponse.getSlug(), notNullValue());
+                          assertThat(articleResponse.getTitle(), is(article.getTitle()));
+                          assertThat(
+                              articleResponse.getDescription(), is(article.getDescription()));
+                          assertThat(articleResponse.getBody(), is(article.getBody()));
+                          assertThat(
+                              articleResponse.getTagList(),
+                              containsInAnyOrder(tag1.getName(), tag2.getName()));
+                          assertThat(articleResponse.getCreatedAt(), notNullValue());
+                          assertThat(articleResponse.getUpdatedAt(), notNullValue());
+                          assertThat(articleResponse.isFavorited(), is(false));
+                          assertThat(articleResponse.getFavoritesCount(), is(0L));
+                          ProfileResponse authorResponse = articleResponse.getAuthor();
+                          assertThat(authorResponse.getUsername(), is(author.getUsername()));
+                          assertThat(authorResponse.isFollowing(), is(true));
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void
+      givenAnExistentArticle_whenExecuteUpdateArticleBySlugEndpoint_thenReturnAnUpdatedArticleWithStatusCode200(
+          VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    saveUsers(loggedUser);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    Article article = new Article();
+    article.setTitle("Title");
+    article.setDescription("Description");
+    article.setBody("Body");
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
+    article.setTags(Arrays.asList(tag1, tag2));
+    article.setAuthor(loggedUser);
+
+    saveArticle(article);
+
+    UpdateArticleRequest updateArticleRequest = new UpdateArticleRequest();
+    updateArticleRequest.setTitle("new title");
+    updateArticleRequest.setDescription("new description");
+    updateArticleRequest.setBody("new body");
+
+    webClient
+        .put(port, HOST, ARTICLES_PATH + "/" + article.getSlug())
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .sendBuffer(
+            toBuffer(updateArticleRequest),
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ArticleResponse articleResponse =
+                              readValue(response.body(), ArticleResponse.class, true);
+
+                          assertThat(articleResponse.getSlug(), is(article.getSlug()));
+                          assertThat(
+                              articleResponse.getTitle(), is(updateArticleRequest.getTitle()));
+                          assertThat(
+                              articleResponse.getDescription(),
+                              is(updateArticleRequest.getDescription()));
+                          assertThat(articleResponse.getBody(), is(updateArticleRequest.getBody()));
+                          assertThat(
+                              articleResponse.getTagList(),
+                              containsInAnyOrder(tag1.getName(), tag2.getName()));
+                          assertThat(articleResponse.getCreatedAt(), notNullValue());
+                          assertThat(articleResponse.getUpdatedAt(), notNullValue());
+                          assertThat(articleResponse.isFavorited(), is(false));
+                          assertThat(articleResponse.getFavoritesCount(), is(0L));
+                          ProfileResponse authorResponse = articleResponse.getAuthor();
+                          assertThat(authorResponse.getUsername(), is(loggedUser.getUsername()));
+                          assertThat(authorResponse.isFollowing(), is(false));
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void givenAnExistentArticle_whenExecuteDeleteArticleBySlugEndpoint_thenReturnStatusCode200(
+      VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    User user = new User();
+    user.setUsername("user");
+    user.setEmail("user@mail.com");
+    user.setPassword("user_123");
+
+    saveUsers(loggedUser, user);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    Article article = new Article();
+    article.setTitle("Title");
+    article.setDescription("Description");
+    article.setBody("Body");
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
+    article.setTags(Arrays.asList(tag1, tag2));
+    article.setAuthor(loggedUser);
+
+    saveArticle(article);
+
+    favorite(user, article);
+
+    webClient
+        .delete(port, HOST, ARTICLES_PATH + "/" + article.getSlug())
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .send(
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          assertThat(response.statusCode(), is(HttpResponseStatus.OK.code()));
                           vertxTestContext.completeNow();
                         })));
   }

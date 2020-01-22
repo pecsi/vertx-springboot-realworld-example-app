@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Component
-public class UserStatementsImpl implements UserStatements {
+public class UserStatementsImpl extends AbstractStatements implements UserStatements {
 
   @Override
   public Statement<JsonArray> create(User user) {
@@ -54,14 +54,6 @@ public class UserStatementsImpl implements UserStatements {
     String sql = "UPDATE USERS SET " + String.join(", ", fields) + " WHERE ID = ?";
 
     return new JsonArrayStatement(sql, params);
-  }
-
-  private void addFieldIfPresent(
-      List<String> fields, JsonArray params, String fieldValue, String fieldExpression) {
-    if (isPresent(fieldValue)) {
-      fields.add(fieldExpression);
-      params.add(fieldValue);
-    }
   }
 
   @Override
@@ -115,9 +107,5 @@ public class UserStatementsImpl implements UserStatements {
     JsonArray params = new JsonArray().add(username.toUpperCase());
 
     return new JsonArrayStatement(sql, params);
-  }
-
-  private boolean isPresent(String value) {
-    return value != null && !value.isEmpty();
   }
 }
