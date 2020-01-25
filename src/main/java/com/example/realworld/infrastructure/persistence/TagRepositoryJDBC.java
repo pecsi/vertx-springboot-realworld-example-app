@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,5 +48,11 @@ public class TagRepositoryJDBC extends JDBCRepository implements TagRepository {
     return jdbcClient
         .rxQueryWithParams(findTagByNameStatement.sql(), findTagByNameStatement.params())
         .map(ParserUtils::toTagOptional);
+  }
+
+  @Override
+  public Single<List<Tag>> findAll() {
+    String findAllStatement = tagStatements.findAll();
+    return jdbcClient.rxQuery(findAllStatement).map(ParserUtils::toTagList);
   }
 }

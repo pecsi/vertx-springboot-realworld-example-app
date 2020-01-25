@@ -22,9 +22,11 @@ import com.example.realworld.domain.user.service.UserService;
 import com.example.realworld.infrastructure.vertx.configuration.VertxConfiguration;
 import com.example.realworld.infrastructure.vertx.proxy.ArticleOperations;
 import com.example.realworld.infrastructure.vertx.proxy.ProfileOperations;
+import com.example.realworld.infrastructure.vertx.proxy.TagsOperations;
 import com.example.realworld.infrastructure.vertx.proxy.UserOperations;
 import com.example.realworld.infrastructure.vertx.proxy.impl.ArticleOperationsImpl;
 import com.example.realworld.infrastructure.vertx.proxy.impl.ProfileOperationsImpl;
+import com.example.realworld.infrastructure.vertx.proxy.impl.TagsOperationsImpl;
 import com.example.realworld.infrastructure.vertx.proxy.impl.UserOperationsImpl;
 import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -174,6 +176,18 @@ public class RealworldApplicationConfiguration {
         ArticleOperations.class,
         ArticleOperations.SERVICE_ADDRESS,
         new ArticleOperationsImpl(articleService, objectMapper));
+  }
+
+  @Bean
+  public TagsOperations tagsOperations(
+      Vertx vertx,
+      TagService tagService,
+      @Qualifier("defaultObjectMapper") ObjectMapper objectMapper) {
+    return registerServiceAndCreateProxy(
+        vertx,
+        TagsOperations.class,
+        TagsOperations.SERVICE_ADDRESS,
+        new TagsOperationsImpl(tagService, objectMapper));
   }
 
   private <T> T registerServiceAndCreateProxy(

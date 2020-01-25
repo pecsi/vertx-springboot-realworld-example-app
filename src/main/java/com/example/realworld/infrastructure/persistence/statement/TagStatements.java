@@ -9,4 +9,6 @@ public interface TagStatements {
   Statement<JsonArray> countBy(String field, String value);
 
   Statement<JsonArray> findTagByName(String name);
+
+  String findAll();
 }

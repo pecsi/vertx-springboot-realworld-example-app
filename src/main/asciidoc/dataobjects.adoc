@@ -122,6 +122,17 @@
 |[[username]]`@username`|`String`|-
 |===
 
+[[TagsResponse]]
+== TagsResponse
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[tags]]`@tags`|`Array of String`|-
+|===
+
 [[UpdateArticleRequest]]
 == UpdateArticleRequest
 

@@ -1,6 +1,5 @@
 package com.example.realworld.application;
 
-import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.tag.exception.TagAlreadyExistsException;
 import com.example.realworld.domain.tag.model.ArticlesTagsRepository;
 import com.example.realworld.domain.tag.model.Tag;
@@ -46,8 +45,8 @@ public class TagServiceImpl extends ApplicationService implements TagService {
   }
 
   @Override
-  public Completable tagArticle(Tag tag, Article article) {
-    return articlesTagsRepository.tagArticle(tag, article);
+  public Single<List<Tag>> findAll() {
+    return tagRepository.findAll();
   }
 
   private Completable validTagName(String tagName) {

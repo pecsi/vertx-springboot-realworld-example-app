@@ -37,4 +37,9 @@ public class TagStatementsImpl extends AbstractStatements implements TagStatemen
 
     return new JsonArrayStatement(sql, params);
   }
+
+  @Override
+  public String findAll() {
+    return "SELECT * FROM TAGS";
+  }
 }

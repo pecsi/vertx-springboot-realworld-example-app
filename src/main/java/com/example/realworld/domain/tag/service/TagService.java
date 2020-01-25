@@ -1,8 +1,6 @@
 package com.example.realworld.domain.tag.service;
 
-import com.example.realworld.domain.article.model.Article;
 import com.example.realworld.domain.tag.model.Tag;
-import io.reactivex.Completable;
 import io.reactivex.Single;
 
 import java.util.List;
@@ -16,5 +14,5 @@ public interface TagService {
 
   Single<Optional<Tag>> findTagByName(String name);
 
-  Completable tagArticle(Tag tag, Article article);
+  Single<List<Tag>> findAll();
 }
