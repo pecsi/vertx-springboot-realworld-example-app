@@ -10,4 +10,6 @@ public interface ArticlesUsersStatements {
   Statement<JsonArray> deleteByArticle(String articleId);
 
   Statement<JsonArray> store(String articleId, String userId);
+
+  Statement<JsonArray> deleteByArticleAndUser(String articleId, String userId);
 }

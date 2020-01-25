@@ -10,5 +10,7 @@ public interface FavoritesRepository {
 
   Completable deleteByArticle(String articleId);
 
-  Completable store(String articleId, String userId);
+  Completable store(String articleId, String authorId);
+
+  Completable deleteByArticleAndAuthor(String articleId, String authorId);
 }

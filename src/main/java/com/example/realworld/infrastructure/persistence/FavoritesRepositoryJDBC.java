@@ -49,10 +49,21 @@ public class FavoritesRepositoryJDBC extends JDBCRepository implements Favorites
   }
 
   @Override
-  public Completable store(String articleId, String userId) {
-    Statement<JsonArray> storeFavoriteStatement = articlesUsersStatements.store(articleId, userId);
+  public Completable store(String articleId, String authorId) {
+    Statement<JsonArray> storeFavoriteStatement =
+        articlesUsersStatements.store(articleId, authorId);
     return jdbcClient
         .rxUpdateWithParams(storeFavoriteStatement.sql(), storeFavoriteStatement.params())
+        .flatMapCompletable(updateResult -> Completable.complete());
+  }
+
+  @Override
+  public Completable deleteByArticleAndAuthor(String articleId, String authorId) {
+    Statement<JsonArray> deleteByArticleAndAuthorStatement =
+        articlesUsersStatements.deleteByArticleAndUser(articleId, authorId);
+    return jdbcClient
+        .rxUpdateWithParams(
+            deleteByArticleAndAuthorStatement.sql(), deleteByArticleAndAuthorStatement.params())
         .flatMapCompletable(updateResult -> Completable.complete());
   }
 }

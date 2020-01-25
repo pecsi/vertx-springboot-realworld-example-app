@@ -47,4 +47,14 @@ public class ArticlesUsersStatementsImpl extends AbstractStatements
 
     return new JsonArrayStatement(sql, params);
   }
+
+  @Override
+  public Statement<JsonArray> deleteByArticleAndUser(String articleId, String userId) {
+
+    String sql = "DELETE FROM ARTICLES_USERS WHERE ARTICLE_ID = ? AND USER_ID = ?";
+
+    JsonArray params = new JsonArray().add(articleId).add(userId);
+
+    return new JsonArrayStatement(sql, params);
+  }
 }

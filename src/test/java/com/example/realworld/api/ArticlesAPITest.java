@@ -957,6 +957,65 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
 
   @Test
   public void
+      givenAnExistentArticleWithAlreadyFavoriteForLoggedUser_whenExecuteFavoriteEndpoint_shouldReturnStatusCode409(
+          VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    User author = new User();
+    author.setUsername("author");
+    author.setEmail("author@mail.com");
+    author.setPassword("author_123");
+
+    saveUsers(loggedUser, author);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    Article article = new Article();
+    article.setTitle("Title");
+    article.setDescription("Description");
+    article.setBody("Body");
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
+    article.setTags(Arrays.asList(tag1, tag2));
+    article.setAuthor(author);
+
+    saveArticle(article);
+
+    favorite(loggedUser, article);
+
+    webClient
+        .post(port, HOST, ARTICLES_PATH + "/" + article.getSlug() + "/favorite")
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .send(
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ErrorResponse errorResponse =
+                              readValue(response.body(), ErrorResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.CONFLICT.code()));
+                          assertThat(
+                              errorResponse.getBody(),
+                              containsInAnyOrder("article already favorited"));
+
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void
       givenAnExistentArticleWithoutFavorites_whenExecuteFavoriteEndpoint_shouldReturnArticleFavoritedWithStatusCode200(
           VertxTestContext vertxTestContext) {
 
@@ -1021,7 +1080,64 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
 
   @Test
   public void
-      givenAnExistentArticleWithAlreadyFavoriteForLoggedUser_whenExecuteFavoriteEndpoint_shouldReturnStatusCode409(
+      givenAnExistentArticleWithoutFavoritesForLoggedUser_whenExecuteUnfavoriteEndpoint_shouldReturnStatusCode409(
+          VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    User author = new User();
+    author.setUsername("author");
+    author.setEmail("author@mail.com");
+    author.setPassword("author_123");
+
+    saveUsers(loggedUser, author);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    Article article = new Article();
+    article.setTitle("Title");
+    article.setDescription("Description");
+    article.setBody("Body");
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
+    article.setTags(Arrays.asList(tag1, tag2));
+    article.setAuthor(author);
+
+    saveArticle(article);
+
+    webClient
+        .delete(port, HOST, ARTICLES_PATH + "/" + article.getSlug() + "/favorite")
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .send(
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          ErrorResponse errorResponse =
+                              readValue(response.body(), ErrorResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.CONFLICT.code()));
+                          assertThat(
+                              errorResponse.getBody(),
+                              containsInAnyOrder("article already unfavorited"));
+
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void
+      givenAnExistentArticleWithFavoriteForLoggedUser_whenExecuteUnfavoriteEndpoint_shouldReturnUnfavoritedArticleWithStatusCode200(
           VertxTestContext vertxTestContext) {
 
     User loggedUser = new User();
@@ -1059,7 +1175,7 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
     favorite(loggedUser, article);
 
     webClient
-        .post(port, HOST, ARTICLES_PATH + "/" + article.getSlug() + "/favorite")
+        .delete(port, HOST, ARTICLES_PATH + "/" + article.getSlug() + "/favorite")
         .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
         .as(BodyCodec.string())
         .send(
@@ -1067,13 +1183,20 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
                 response ->
                     vertxTestContext.verify(
                         () -> {
-                          ErrorResponse errorResponse =
-                              readValue(response.body(), ErrorResponse.class, true);
-                          assertThat(response.statusCode(), is(HttpResponseStatus.CONFLICT.code()));
-                          assertThat(
-                              errorResponse.getBody(),
-                              containsInAnyOrder("article already favorited"));
-
+                          ArticleResponse articleResponse =
+                              readValue(response.body(), ArticleResponse.class, true);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.OK.code()));
+                          assertThat(articleResponse.getSlug(), notNullValue());
+                          assertThat(articleResponse.getTitle(), notNullValue());
+                          assertThat(articleResponse.getDescription(), notNullValue());
+                          assertThat(articleResponse.getBody(), notNullValue());
+                          assertThat(articleResponse.getTagList(), notNullValue());
+                          assertThat(articleResponse.getCreatedAt(), notNullValue());
+                          assertThat(articleResponse.getUpdatedAt(), notNullValue());
+                          assertThat(articleResponse.isFavorited(), is(false));
+                          assertThat(articleResponse.getFavoritesCount(), is(0L));
+                          ProfileResponse articleResponseAuthor = articleResponse.getAuthor();
+                          assertThat(articleResponseAuthor.getUsername(), is(author.getUsername()));
                           vertxTestContext.completeNow();
                         })));
   }

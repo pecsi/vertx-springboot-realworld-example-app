@@ -56,8 +56,20 @@ public class ArticlesRoute extends AbstractHttpRoute {
     articlesRouter.delete(COMMENTS_DELETE_PATH).handler(this::deleteComment);
     articlesRouter.get(COMMENTS_PATH).handler(this::getComments);
     articlesRouter.post(FAVORITE_PATH).handler(this::favoriteArticle);
+    articlesRouter.delete(FAVORITE_PATH).handler(this::unfavoriteArticle);
 
     return articlesRouter;
+  }
+
+  private void unfavoriteArticle(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (String userId) -> {
+          String slug = routingContext.pathParam(SLUG_PARAM);
+          articleOperations.unfavoriteArticle(
+              slug, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
+        });
   }
 
   private void favoriteArticle(RoutingContext routingContext) {

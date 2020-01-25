@@ -5,6 +5,7 @@ import com.example.realworld.application.data.ArticlesData;
 import com.example.realworld.application.data.CommentData;
 import com.example.realworld.application.data.ProfileData;
 import com.example.realworld.domain.article.exception.ArticleAlreadyFavoritedException;
+import com.example.realworld.domain.article.exception.ArticleAlreadyUnfavoritedException;
 import com.example.realworld.domain.article.exception.ArticleNotFoundException;
 import com.example.realworld.domain.article.model.*;
 import com.example.realworld.domain.article.service.ArticleService;
@@ -228,6 +229,29 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
                 validFavorited(article.getId(), currentUserId)
                     .andThen(favoritesRepository.store(article.getId(), currentUserId)))
         .andThen(findBySlug(slug, currentUserId));
+  }
+
+  @Override
+  public Single<ArticleData> unfavoriteArticle(String slug, String currentUserId) {
+    return findBySlug(slug)
+        .flatMapCompletable(
+            article ->
+                validUnfavorited(article.getId(), currentUserId)
+                    .andThen(
+                        favoritesRepository.deleteByArticleAndAuthor(
+                            article.getId(), currentUserId)))
+        .andThen(findBySlug(slug, currentUserId));
+  }
+
+  private Completable validUnfavorited(String articleId, String currentUserId) {
+    return isFavorited(articleId, currentUserId)
+        .flatMapCompletable(
+            isFavorited -> {
+              if (!isFavorited) {
+                throw new ArticleAlreadyUnfavoritedException();
+              }
+              return Completable.complete();
+            });
   }
 
   private Completable validFavorited(String articleId, String currentUserId) {

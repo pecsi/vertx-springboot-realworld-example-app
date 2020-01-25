@@ -140,4 +140,14 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
             articleData -> handler.handle(Future.succeededFuture(new ArticleResponse(articleData))),
             throwable -> handler.handle(error(throwable)));
   }
+
+  @Override
+  public void unfavoriteArticle(
+      String slug, String currentUserId, Handler<AsyncResult<ArticleResponse>> handler) {
+    articleService
+        .unfavoriteArticle(slug, currentUserId)
+        .subscribe(
+            articleData -> handler.handle(Future.succeededFuture(new ArticleResponse(articleData))),
+            throwable -> handler.handle(error(throwable)));
+  }
 }

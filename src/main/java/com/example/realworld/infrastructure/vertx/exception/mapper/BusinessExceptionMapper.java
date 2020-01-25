@@ -1,6 +1,8 @@
 package com.example.realworld.infrastructure.vertx.exception.mapper;
 
 import com.example.realworld.domain.article.exception.ArticleAlreadyFavoritedException;
+import com.example.realworld.domain.article.exception.ArticleAlreadyUnfavoritedException;
+import com.example.realworld.domain.article.exception.ArticleNotFoundException;
 import com.example.realworld.domain.general.exception.BusinessException;
 import com.example.realworld.domain.profile.exception.SelfFollowException;
 import com.example.realworld.domain.user.exception.EmailAlreadyExistsException;
@@ -45,9 +47,8 @@ public class BusinessExceptionMapper {
     handlerMap.put(UserNotFoundException.class.getName(), notFound());
     handlerMap.put(SelfFollowException.class.getName(), conflict());
     handlerMap.put(ArticleAlreadyFavoritedException.class.getName(), conflict());
-    //    handlerMap.put(ResourceNotFoundException.class, notFound());
-    //    handlerMap.put(TagNotFoundException.class, notFound());
-    //    handlerMap.put(ArticleNotFoundException.class, notFound());
+    handlerMap.put(ArticleAlreadyUnfavoritedException.class.getName(), conflict());
+    handlerMap.put(ArticleNotFoundException.class.getName(), notFound());
 
     return handlerMap;
   }

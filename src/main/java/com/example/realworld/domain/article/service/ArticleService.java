@@ -42,24 +42,5 @@ public interface ArticleService {
 
   Single<ArticleData> favoriteArticle(String slug, String currentUserId);
 
-  //
-  //  Article create(
-  //    String title, String description, String body, List<String> tagList, Long authorId);
-  //
-  //  Article findBySlug(String slug);
-  //
-  //  Article update(String slug, String title, String description, String body, Long authorId);
-  //
-  //  void delete(String slug, Long authorId);
-  //
-  //  List<Comment> findCommentsBySlug(String slug, Long loggedUserId);
-  //
-  //  Comment createComment(String slug, String body, Long commentAuthorId);
-  //
-  //  void deleteComment(String slug, Long commentId, Long loggedUserId);
-  //
-  //  Article favoriteArticle(String slug, Long loggedUserId);
-  //
-  //  Article unfavoriteArticle(String slug, Long loggedUserId);
-
+  Single<ArticleData> unfavoriteArticle(String slug, String currentUserId);
 }

@@ -61,4 +61,7 @@ public interface ArticleOperations {
 
   void favoriteArticle(
       String slug, String currentUserId, Handler<AsyncResult<ArticleResponse>> handler);
+
+  void unfavoriteArticle(
+      String slug, String currentUserId, Handler<AsyncResult<ArticleResponse>> handler);
 }

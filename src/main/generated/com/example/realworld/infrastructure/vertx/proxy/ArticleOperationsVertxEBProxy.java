@@ -275,4 +275,24 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
       }
     });
   }
+  @Override
+  public  void unfavoriteArticle(String slug, String currentUserId, Handler<AsyncResult<ArticleResponse>> handler){
+    if (closed) {
+      handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
+      return;
+    }
+    JsonObject _json = new JsonObject();
+    _json.put("slug", slug);
+    _json.put("currentUserId", currentUserId);
+
+    DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
+    _deliveryOptions.addHeader("action", "unfavoriteArticle");
+    _vertx.eventBus().<JsonObject>send(_address, _json, _deliveryOptions, res -> {
+      if (res.failed()) {
+        handler.handle(Future.failedFuture(res.cause()));
+      } else {
+        handler.handle(Future.succeededFuture(res.result().body() == null ? null : new ArticleResponse(res.result().body())));
+      }
+    });
+  }
 }
