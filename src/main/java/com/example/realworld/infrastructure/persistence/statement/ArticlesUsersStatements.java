@@ -8,4 +8,6 @@ public interface ArticlesUsersStatements {
   Statement<JsonArray> countByArticleId(String articleId);
 
   Statement<JsonArray> deleteByArticle(String articleId);
+
+  Statement<JsonArray> store(String articleId, String userId);
 }

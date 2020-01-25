@@ -4,7 +4,6 @@ import com.example.realworld.domain.article.model.FavoritesRepository;
 import com.example.realworld.infrastructure.persistence.statement.ArticlesUsersStatements;
 import com.example.realworld.infrastructure.persistence.statement.Statement;
 import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
@@ -41,11 +40,19 @@ public class FavoritesRepositoryJDBC extends JDBCRepository implements Favorites
   }
 
   @Override
-  public CompletableSource deleteByArticle(String articleId) {
+  public Completable deleteByArticle(String articleId) {
     Statement<JsonArray> deleteByArticleStatement =
         articlesUsersStatements.deleteByArticle(articleId);
     return jdbcClient
         .rxUpdateWithParams(deleteByArticleStatement.sql(), deleteByArticleStatement.params())
+        .flatMapCompletable(updateResult -> Completable.complete());
+  }
+
+  @Override
+  public Completable store(String articleId, String userId) {
+    Statement<JsonArray> storeFavoriteStatement = articlesUsersStatements.store(articleId, userId);
+    return jdbcClient
+        .rxUpdateWithParams(storeFavoriteStatement.sql(), storeFavoriteStatement.params())
         .flatMapCompletable(updateResult -> Completable.complete());
   }
 }

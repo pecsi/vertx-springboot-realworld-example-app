@@ -4,6 +4,7 @@ import com.example.realworld.application.data.ArticleData;
 import com.example.realworld.application.data.ArticlesData;
 import com.example.realworld.application.data.CommentData;
 import com.example.realworld.application.data.ProfileData;
+import com.example.realworld.domain.article.exception.ArticleAlreadyFavoritedException;
 import com.example.realworld.domain.article.exception.ArticleNotFoundException;
 import com.example.realworld.domain.article.model.*;
 import com.example.realworld.domain.article.service.ArticleService;
@@ -219,6 +220,27 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
                     .toList());
   }
 
+  @Override
+  public Single<ArticleData> favoriteArticle(String slug, String currentUserId) {
+    return findBySlug(slug)
+        .flatMapCompletable(
+            article ->
+                validFavorited(article.getId(), currentUserId)
+                    .andThen(favoritesRepository.store(article.getId(), currentUserId)))
+        .andThen(findBySlug(slug, currentUserId));
+  }
+
+  private Completable validFavorited(String articleId, String currentUserId) {
+    return isFavorited(articleId, currentUserId)
+        .flatMapCompletable(
+            isFavorited -> {
+              if (isFavorited) {
+                throw new ArticleAlreadyFavoritedException();
+              }
+              return Completable.complete();
+            });
+  }
+
   private Single<Comment> createComment(Article article, User author, String commentBody) {
     Comment comment = new Comment();
     comment.setArticle(article);
@@ -354,16 +376,6 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     LocalDateTime now = LocalDateTime.now();
     article.setCreatedAt(now);
     article.setUpdatedAt(now);
-    return article;
-  }
-
-  private Article createFromUpdateArticle(String currentUserId, UpdateArticle updateArticle) {
-    Article article = new Article();
-    article.setTitle(updateArticle.getTitle());
-    article.setDescription(updateArticle.getDescription());
-    article.setBody(updateArticle.getBody());
-    article.setSlug(slugProvider.slugify(article.getTitle()));
-    article.setAuthor(new User(currentUserId));
     return article;
   }
 

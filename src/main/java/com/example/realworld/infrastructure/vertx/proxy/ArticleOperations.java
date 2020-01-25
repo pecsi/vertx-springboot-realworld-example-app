@@ -58,4 +58,7 @@ public interface ArticleOperations {
 
   void findCommentsBySlug(
       String slug, String currentUserId, Handler<AsyncResult<CommentsResponse>> handler);
+
+  void favoriteArticle(
+      String slug, String currentUserId, Handler<AsyncResult<ArticleResponse>> handler);
 }

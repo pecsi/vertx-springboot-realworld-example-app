@@ -130,4 +130,14 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
             comments -> handler.handle(Future.succeededFuture(new CommentsResponse(comments))),
             throwable -> handler.handle(error(throwable)));
   }
+
+  @Override
+  public void favoriteArticle(
+      String slug, String currentUserId, Handler<AsyncResult<ArticleResponse>> handler) {
+    articleService
+        .favoriteArticle(slug, currentUserId)
+        .subscribe(
+            articleData -> handler.handle(Future.succeededFuture(new ArticleResponse(articleData))),
+            throwable -> handler.handle(error(throwable)));
+  }
 }

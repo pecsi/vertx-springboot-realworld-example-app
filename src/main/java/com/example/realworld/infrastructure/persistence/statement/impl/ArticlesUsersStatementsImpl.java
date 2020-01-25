@@ -37,4 +37,14 @@ public class ArticlesUsersStatementsImpl extends AbstractStatements
 
     return new JsonArrayStatement(sql, params);
   }
+
+  @Override
+  public Statement<JsonArray> store(String articleId, String userId) {
+
+    String sql = "INSERT INTO ARTICLES_USERS (ARTICLE_ID, USER_ID) VALUES (?, ?)";
+
+    JsonArray params = new JsonArray().add(articleId).add(userId);
+
+    return new JsonArrayStatement(sql, params);
+  }
 }

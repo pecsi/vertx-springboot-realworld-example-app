@@ -40,6 +40,8 @@ public interface ArticleService {
 
   Single<List<CommentData>> findCommentsBySlug(String slug, String currentUserId);
 
+  Single<ArticleData> favoriteArticle(String slug, String currentUserId);
+
   //
   //  Article create(
   //    String title, String description, String body, List<String> tagList, Long authorId);

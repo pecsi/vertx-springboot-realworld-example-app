@@ -1,6 +1,6 @@
 package com.example.realworld.domain.article.model;
 
-import io.reactivex.CompletableSource;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public interface FavoritesRepository {
@@ -8,5 +8,7 @@ public interface FavoritesRepository {
 
   Single<Long> countByArticleId(String articleId);
 
-  CompletableSource deleteByArticle(String articleId);
+  Completable deleteByArticle(String articleId);
+
+  Completable store(String articleId, String userId);
 }

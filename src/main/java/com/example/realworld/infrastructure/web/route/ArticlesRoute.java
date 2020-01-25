@@ -24,6 +24,7 @@ public class ArticlesRoute extends AbstractHttpRoute {
   private static final String COMMENTS_PATH = SLUG_PATH + "/comments";
   private static final String COMMENT_ID_PARAM = "id";
   private static final String COMMENTS_DELETE_PATH = COMMENTS_PATH + "/:" + COMMENT_ID_PARAM;
+  private static final String FAVORITE_PATH = SLUG_PATH + "/favorite";
   public static final String OFFSET = "offset";
   public static final String LIMIT = "limit";
   private ArticleOperations articleOperations;
@@ -54,8 +55,20 @@ public class ArticlesRoute extends AbstractHttpRoute {
     articlesRouter.post(COMMENTS_PATH).handler(this::createComment);
     articlesRouter.delete(COMMENTS_DELETE_PATH).handler(this::deleteComment);
     articlesRouter.get(COMMENTS_PATH).handler(this::getComments);
+    articlesRouter.post(FAVORITE_PATH).handler(this::favoriteArticle);
 
     return articlesRouter;
+  }
+
+  private void favoriteArticle(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        false,
+        (String userId) -> {
+          String slug = routingContext.pathParam(SLUG_PARAM);
+          articleOperations.favoriteArticle(
+              slug, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), true));
+        });
   }
 
   private void getComments(RoutingContext routingContext) {
