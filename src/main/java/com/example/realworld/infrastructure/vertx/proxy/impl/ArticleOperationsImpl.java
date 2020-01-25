@@ -8,6 +8,7 @@ import com.example.realworld.infrastructure.web.model.request.UpdateArticleReque
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.example.realworld.infrastructure.web.model.response.CommentResponse;
+import com.example.realworld.infrastructure.web.model.response.CommentsResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -117,6 +118,16 @@ public class ArticleOperationsImpl extends AbstractOperations implements Article
         .deleteCommentByIdAndAuthorId(commentId, currentUserId)
         .subscribe(
             () -> handler.handle(Future.succeededFuture()),
+            throwable -> handler.handle(error(throwable)));
+  }
+
+  @Override
+  public void findCommentsBySlug(
+      String slug, String currentUserId, Handler<AsyncResult<CommentsResponse>> handler) {
+    articleService
+        .findCommentsBySlug(slug, currentUserId)
+        .subscribe(
+            comments -> handler.handle(Future.succeededFuture(new CommentsResponse(comments))),
             throwable -> handler.handle(error(throwable)));
   }
 }

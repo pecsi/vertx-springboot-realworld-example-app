@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIntegrationTest {
 
@@ -136,6 +137,10 @@ public class RealworldDataIntegrationTest extends RealworldApplicationDatabaseIn
             "INSERT INTO ARTICLES_USERS (ARTICLE_ID, USER_ID) VALUES ('%s','%s');",
             article.getId(), user.getId());
     executeSql(sql);
+  }
+
+  protected void saveComments(Comment... comments) {
+    Stream.of(comments).forEach(this::saveComment);
   }
 
   protected void saveComment(Comment comment) {

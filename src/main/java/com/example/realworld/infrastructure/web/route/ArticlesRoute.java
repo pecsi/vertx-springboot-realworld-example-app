@@ -53,8 +53,20 @@ public class ArticlesRoute extends AbstractHttpRoute {
     articlesRouter.delete(SLUG_PATH).handler(this::deleteArticleBySlug);
     articlesRouter.post(COMMENTS_PATH).handler(this::createComment);
     articlesRouter.delete(COMMENTS_DELETE_PATH).handler(this::deleteComment);
+    articlesRouter.get(COMMENTS_PATH).handler(this::getComments);
 
     return articlesRouter;
+  }
+
+  private void getComments(RoutingContext routingContext) {
+    userId(
+        routingContext,
+        true,
+        (String userId) -> {
+          String slug = routingContext.pathParam(SLUG_PARAM);
+          articleOperations.findCommentsBySlug(
+              slug, userId, responseOrFail(routingContext, HttpResponseStatus.OK.code(), false));
+        });
   }
 
   private void deleteComment(RoutingContext routingContext) {

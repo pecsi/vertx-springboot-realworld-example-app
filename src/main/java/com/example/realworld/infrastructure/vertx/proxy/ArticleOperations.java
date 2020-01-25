@@ -6,6 +6,7 @@ import com.example.realworld.infrastructure.web.model.request.UpdateArticleReque
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
 import com.example.realworld.infrastructure.web.model.response.CommentResponse;
+import com.example.realworld.infrastructure.web.model.response.CommentsResponse;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
@@ -54,4 +55,7 @@ public interface ArticleOperations {
 
   void deleteCommentByIdAndAuthorId(
       String commentId, String currentUserId, Handler<AsyncResult<Void>> handler);
+
+  void findCommentsBySlug(
+      String slug, String currentUserId, Handler<AsyncResult<CommentsResponse>> handler);
 }

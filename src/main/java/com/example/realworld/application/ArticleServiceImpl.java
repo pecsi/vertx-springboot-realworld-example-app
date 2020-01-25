@@ -203,6 +203,22 @@ public class ArticleServiceImpl extends ApplicationService implements ArticleSer
     return commentRepository.deleteByCommentIdAndAuthorId(commentId, currentUserId);
   }
 
+  @Override
+  public Single<List<CommentData>> findCommentsBySlug(String slug, String currentUserId) {
+    return findBySlug(slug)
+        .flatMap(
+            article ->
+                commentRepository
+                    .findCommentsByArticleId(article.getId())
+                    .flattenAsFlowable(comments -> comments)
+                    .flatMapSingle(
+                        comment ->
+                            profileService
+                                .getProfile(comment.getAuthor().getUsername(), currentUserId)
+                                .map(profileData -> new CommentData(comment, profileData)))
+                    .toList());
+  }
+
   private Single<Comment> createComment(Article article, User author, String commentBody) {
     Comment comment = new Comment();
     comment.setArticle(article);

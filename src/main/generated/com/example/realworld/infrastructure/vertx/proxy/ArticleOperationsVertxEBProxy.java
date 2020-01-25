@@ -38,6 +38,7 @@ import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
 import com.example.realworld.infrastructure.web.model.request.NewCommentRequest;
 import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
+import com.example.realworld.infrastructure.web.model.response.CommentsResponse;
 import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -231,6 +232,26 @@ public class ArticleOperationsVertxEBProxy implements ArticleOperations {
         handler.handle(Future.failedFuture(res.cause()));
       } else {
         handler.handle(Future.succeededFuture(res.result().body()));
+      }
+    });
+  }
+  @Override
+  public  void findCommentsBySlug(String slug, String currentUserId, Handler<AsyncResult<CommentsResponse>> handler){
+    if (closed) {
+      handler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
+      return;
+    }
+    JsonObject _json = new JsonObject();
+    _json.put("slug", slug);
+    _json.put("currentUserId", currentUserId);
+
+    DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
+    _deliveryOptions.addHeader("action", "findCommentsBySlug");
+    _vertx.eventBus().<JsonObject>send(_address, _json, _deliveryOptions, res -> {
+      if (res.failed()) {
+        handler.handle(Future.failedFuture(res.cause()));
+      } else {
+        handler.handle(Future.succeededFuture(res.result().body() == null ? null : new CommentsResponse(res.result().body())));
       }
     });
   }

@@ -8,10 +8,7 @@ import com.example.realworld.domain.user.model.User;
 import com.example.realworld.infrastructure.web.model.request.NewArticleRequest;
 import com.example.realworld.infrastructure.web.model.request.NewCommentRequest;
 import com.example.realworld.infrastructure.web.model.request.UpdateArticleRequest;
-import com.example.realworld.infrastructure.web.model.response.ArticleResponse;
-import com.example.realworld.infrastructure.web.model.response.ArticlesResponse;
-import com.example.realworld.infrastructure.web.model.response.CommentResponse;
-import com.example.realworld.infrastructure.web.model.response.ProfileResponse;
+import com.example.realworld.infrastructure.web.model.response.*;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -871,6 +868,89 @@ public class ArticlesAPITest extends RealworldDataIntegrationTest {
                     vertxTestContext.verify(
                         () -> {
                           assertThat(response.statusCode(), is(HttpResponseStatus.OK.code()));
+                          vertxTestContext.completeNow();
+                        })));
+  }
+
+  @Test
+  public void
+      givenAnExistentArticleWithFiveComments_whenExecuteGetCommentsEndpoint_shouldReturnArticleCommentListWithStatusCode200(
+          VertxTestContext vertxTestContext) {
+
+    User loggedUser = new User();
+    loggedUser.setUsername("loggedUser");
+    loggedUser.setEmail("loggedUser@mail.com");
+    loggedUser.setPassword("loggedUser_123");
+
+    User author = new User();
+    author.setUsername("author");
+    author.setEmail("author@mail.com");
+    author.setPassword("author_123");
+
+    saveUsers(loggedUser, author);
+
+    follow(loggedUser, author);
+
+    Tag tag1 = new Tag();
+    tag1.setName("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setName("tag2");
+
+    saveTags(tag1, tag2);
+
+    Article article = new Article();
+    article.setTitle("Title");
+    article.setDescription("Description");
+    article.setBody("Body");
+    LocalDateTime now = LocalDateTime.now();
+    article.setCreatedAt(now);
+    article.setUpdatedAt(now);
+    article.setTags(Arrays.asList(tag1, tag2));
+    article.setAuthor(author);
+
+    saveArticle(article);
+
+    Comment comment1 = new Comment();
+    comment1.setArticle(article);
+    comment1.setAuthor(loggedUser);
+    comment1.setBody("Comment 1");
+
+    Comment comment2 = new Comment();
+    comment2.setArticle(article);
+    comment2.setAuthor(loggedUser);
+    comment2.setBody("Comment 2");
+
+    Comment comment3 = new Comment();
+    comment3.setArticle(article);
+    comment3.setAuthor(author);
+    comment3.setBody("Comment 3");
+
+    Comment comment4 = new Comment();
+    comment4.setArticle(article);
+    comment4.setAuthor(author);
+    comment4.setBody("Comment 4");
+
+    Comment comment5 = new Comment();
+    comment5.setArticle(article);
+    comment5.setAuthor(loggedUser);
+    comment5.setBody("Comment 5");
+
+    saveComments(comment1, comment2, comment3, comment4, comment5);
+
+    webClient
+        .get(port, HOST, ARTICLES_PATH + "/" + article.getSlug() + "/comments")
+        .putHeader(AUTHORIZATION_HEADER, AUTHORIZATION_HEADER_VALUE_PREFIX + loggedUser.getToken())
+        .as(BodyCodec.string())
+        .send(
+            vertxTestContext.succeeding(
+                response ->
+                    vertxTestContext.verify(
+                        () -> {
+                          CommentsResponse commentsResponse =
+                              readValue(response.body(), CommentsResponse.class, false);
+                          assertThat(response.statusCode(), is(HttpResponseStatus.OK.code()));
+                          assertThat(commentsResponse.getComments().size(), is(5));
                           vertxTestContext.completeNow();
                         })));
   }

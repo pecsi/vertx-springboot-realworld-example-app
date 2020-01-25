@@ -47,6 +47,17 @@
 |[[updatedAt]]`@updatedAt`|`String`|-
 |===
 
+[[CommentsResponse]]
+== CommentsResponse
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[comments]]`@comments`|`Array of link:dataobjects.html#CommentResponse[CommentResponse]`|-
+|===
+
 [[LoginRequest]]
 == LoginRequest
 

@@ -1,6 +1,7 @@
 package com.example.realworld.infrastructure.persistence.utils;
 
 import com.example.realworld.domain.article.model.Article;
+import com.example.realworld.domain.article.model.Comment;
 import com.example.realworld.domain.tag.model.Tag;
 import com.example.realworld.domain.user.model.User;
 import io.vertx.core.json.JsonObject;
@@ -61,6 +62,31 @@ public class ParserUtils {
     return rows.stream().map(ParserUtils::getArticleFromRow).collect(Collectors.toList());
   }
 
+  public static List<Comment> toCommentList(ResultSet resultSet) {
+    return parseResultSet(resultSet, ParserUtils::getCommentsFromResultSet, LinkedList::new);
+  }
+
+  private static List<Comment> getCommentsFromResultSet(ResultSet resultSet) {
+    List<JsonObject> rows = resultSet.getRows();
+    return rows.stream().map(ParserUtils::getCommentFromRow).collect(Collectors.toList());
+  }
+
+  private static Comment getCommentFromRow(JsonObject row) {
+    Comment comment = new Comment();
+    comment.setId(row.getString("ID"));
+    comment.setBody(row.getString("BODY"));
+    comment.setCreatedAt(fromTimestamp(row.getString("CREATED_AT")));
+    comment.setUpdatedAt(fromTimestamp(row.getString("UPDATED_AT")));
+    Article article = new Article();
+    article.setId(row.getString("ARTICLE_ID"));
+    comment.setArticle(article);
+    User user = new User();
+    user.setId(row.getString("AUTHOR_ID"));
+    user.setUsername(row.getString("AUTHOR_USERNAME"));
+    comment.setAuthor(user);
+    return comment;
+  }
+
   private static Article getArticleFromRow(JsonObject row) {
     Article article = new Article();
     article.setId(row.getString("ID"));
@@ -115,11 +141,11 @@ public class ParserUtils {
   }
 
   private static <T> T parseResultSet(
-      ResultSet resultSet, Function<ResultSet, T> function, Supplier<T> suplier) {
+      ResultSet resultSet, Function<ResultSet, T> function, Supplier<T> supplier) {
     if (!resultSet.getRows().isEmpty()) {
       return function.apply(resultSet);
     }
-    return suplier.get();
+    return supplier.get();
   }
 
   public static String toTimestamp(LocalDateTime localDateTime) {
