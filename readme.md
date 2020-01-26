@@ -16,6 +16,8 @@ For more information on how to this works with other frontends/backends, head ov
 
 # How it works
 
+This application demonstrates an approach to using Eclipse Vert.x infrastructure to implement a web api. 
+
 > Describe the general architecture of your app here
 
 # Getting started
