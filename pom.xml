@@ -156,6 +156,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
+        <finalName>vertx-springboot-realworld-example-app</finalName>
     </build>
 
 </project>

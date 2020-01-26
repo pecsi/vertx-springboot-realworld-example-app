@@ -91,7 +91,7 @@ public class RealworldApplicationDatabaseIntegrationTest
   private static Properties properties() {
     Properties properties = new Properties();
     properties.put(Environment.DRIVER, vertxConfiguration.getDatabase().getDriverClass());
-    properties.put(Environment.SHOW_SQL, true);
+    properties.put(Environment.SHOW_SQL, false);
     properties.put(Environment.FORMAT_SQL, true);
     properties.put(Environment.DATASOURCE, dataSource);
     return properties;
