@@ -1,4 +1,4 @@
-package com.example.realworld.infrastructure.slug;
+package com.example.realworld.infrastructure.provider;
 
 import com.example.realworld.domain.article.model.SlugProvider;
 import com.github.slugify.Slugify;

@@ -1,4 +1,4 @@
-package com.example.realworld.infrastructure.cryptography;
+package com.example.realworld.infrastructure.provider;
 
 import com.example.realworld.domain.user.model.HashProvider;
 import org.mindrot.jbcrypt.BCrypt;

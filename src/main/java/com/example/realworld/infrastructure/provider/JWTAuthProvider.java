@@ -1,4 +1,4 @@
-package com.example.realworld.infrastructure.token;
+package com.example.realworld.infrastructure.provider;
 
 import com.example.realworld.domain.user.model.TokenProvider;
 import io.vertx.core.json.JsonObject;

@@ -28,13 +28,14 @@ import com.example.realworld.infrastructure.vertx.proxy.impl.ArticleOperationsIm
 import com.example.realworld.infrastructure.vertx.proxy.impl.ProfileOperationsImpl;
 import com.example.realworld.infrastructure.vertx.proxy.impl.TagsOperationsImpl;
 import com.example.realworld.infrastructure.vertx.proxy.impl.UserOperationsImpl;
-import com.example.realworld.infrastructure.web.config.AuthProviderConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.slugify.Slugify;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.PubSecKeyOptions;
+import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
@@ -118,7 +119,13 @@ public class RealworldApplicationConfiguration {
   @Bean
   public JWTAuth jwtAuth(Vertx vertx, VertxConfiguration vertxConfiguration) {
     VertxConfiguration.Jwt jwt = vertxConfiguration.getJwt();
-    return AuthProviderConfig.jwtProvider(vertx, jwt.getAlgorithm(), jwt.getSecret());
+    PubSecKeyOptions pubSecKeyOptions = new PubSecKeyOptions();
+    pubSecKeyOptions.setAlgorithm(jwt.getAlgorithm());
+    pubSecKeyOptions.setPublicKey(jwt.getSecret());
+    pubSecKeyOptions.setSymmetric(true);
+    JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
+    jwtAuthOptions.addPubSecKey(pubSecKeyOptions);
+    return JWTAuth.create(vertx, jwtAuthOptions);
   }
 
   @Bean("wrapUnwrapRootValueObjectMapper")
