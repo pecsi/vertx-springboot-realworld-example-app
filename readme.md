@@ -69,6 +69,8 @@ The server should be running at http://localhost:8080
 ./mvnw package
 ```
 
+file location: target/vertx-springboot-realworld-example-app.jar
+
 #### Database changes can be made to the application.yml file.
 
 ```yaml
